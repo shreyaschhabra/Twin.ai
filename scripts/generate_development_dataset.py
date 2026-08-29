@@ -50,7 +50,37 @@ def _file_hash(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()[:16]
 
 
+def _git_state(repo_root: Path):
+    """Returns (commit_hash, is_dirty, dirty_files). A frozen dataset's
+    manifest must identify the EXACT source state used to generate it
+    (Step 4 patch 4) — a commit hash alone is a lie if the working tree
+    had uncommitted generator changes at generation time."""
+    try:
+        commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo_root).decode().strip()
+        status = subprocess.check_output(["git", "status", "--porcelain"], cwd=repo_root).decode()
+        dirty_files = [line[3:] for line in status.splitlines() if line.strip()]
+        return commit, bool(dirty_files), dirty_files
+    except Exception:
+        return "unknown", True, ["<git unavailable>"]
+
+
 def main():
+    repo_root = Path(__file__).resolve().parent.parent
+    allow_dirty = "--allow-dirty" in sys.argv
+
+    commit, is_dirty, dirty_files = _git_state(repo_root)
+    if is_dirty and not allow_dirty:
+        print("REFUSING to generate a frozen dataset from a dirty working tree.")
+        print("Uncommitted changes:")
+        for f in dirty_files:
+            print(f"  {f}")
+        print("\nCommit generator changes first (preferred), or pass --allow-dirty to")
+        print("proceed anyway (the manifest will be marked git_dirty=true).")
+        sys.exit(1)
+    if is_dirty:
+        print("WARNING: generating from a DIRTY working tree (--allow-dirty). "
+              "Manifest will record git_dirty=true and the exact dirty file list.")
+
     config_path = CONFIG_DIR / "full_line.yaml"
     station_types_path = CONFIG_DIR / "station_types.yaml"
     sensor_models_path = CONFIG_DIR / "sensor_models_full.yaml"
@@ -77,19 +107,20 @@ def main():
     defect_rate = total_qc.count("DEFECT") / len(total_qc)
     n_abnormal = sum(1 for s in shift_results if s.is_abnormal)
 
-    try:
-        parent_commit = subprocess.check_output(
-            ["git", "rev-parse", "HEAD"], cwd=Path(__file__).resolve().parent.parent
-        ).decode().strip()
-    except Exception:
-        parent_commit = "unknown"
-
     manifest = {
         "generator_version": GENERATOR_VERSION,
-        "git_parent_commit": parent_commit,
-        "note": "git_parent_commit is HEAD at generation time, i.e. the commit BEFORE the "
-                "freeze commit that adds this manifest file (a commit cannot contain its own "
-                "hash) — see the Step 4 completion report for the actual freeze commit hash.",
+        "git_commit": commit,
+        "git_dirty": is_dirty,
+        "git_dirty_files": dirty_files if is_dirty else [],
+        "note": (
+            "git_commit is the exact commit the generator code was at when this dataset "
+            "was produced. If git_dirty is true, generator source may differ from that "
+            "commit — see git_dirty_files. This dataset should be regenerated with a "
+            "clean tree before being treated as frozen."
+            if is_dirty else
+            "git_commit is HEAD at generation time with a clean working tree, so it "
+            "exactly identifies the generator source used to produce this dataset."
+        ),
         "dataset_master_seed": DATASET_MASTER_SEED,
         "n_shifts": N_SHIFTS,
         "vehicles_per_shift": DEFAULT_VEHICLES_PER_SHIFT,

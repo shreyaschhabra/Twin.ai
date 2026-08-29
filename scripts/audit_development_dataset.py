@@ -188,7 +188,80 @@ def main():
     print(f"VEHICLE_MIX_OVERLOAD exposure records: {len(mix_family_records)} (want 0 by design)")
 
     family_rates = exposure.groupby("family").contribution.agg(["count", "mean", "sum"])
-    print("\nException contribution by family:\n", family_rates)
+    print("\nMean/sum latent contribution by family (NOT a defect rate — see Patch 3 below):\n", family_rates)
+
+    # ================================================================ PATCH 3: CONDITIONAL DEFECT RATE BY FAMILY
+    section("PATCH 3. CONDITIONAL DEFECT RATE BY SCENARIO FAMILY")
+    print("Sanity checks only — these do not establish causality, and a vehicle may")
+    print("belong to more than one family's cohort simultaneously (overlap is reported, not hidden).\n")
+
+    is_defect_by_vehicle = gt.set_index("vehicle_id").is_defect
+
+    families_with_exposure = ["EQUIPMENT_DEGRADATION", "BAD_BATCH", "ENVIRONMENTAL_DRIFT", "MANUAL_VARIATION", "RANDOM_QUALITY_EVENT"]
+    rows = []
+    exposed_vehicle_sets = {}
+    for fam in families_with_exposure:
+        fam_exposure = exposure[exposure.family == fam]
+        exposed_vehicles = set(fam_exposure.vehicle_id.unique())
+        exposed_vehicle_sets[fam] = exposed_vehicles
+        n_instances = (scenario_truth.family == fam).sum()
+        n_exposed = len(exposed_vehicles)
+        n_defective = sum(1 for v in exposed_vehicles if is_defect_by_vehicle.get(v, False))
+        cond_rate = n_defective / n_exposed if n_exposed else float("nan")
+        rows.append({
+            "family": fam, "n_instances": n_instances, "n_exposed_vehicles": n_exposed,
+            "n_defective": n_defective, "conditional_defect_rate": cond_rate,
+            "mean_contribution": fam_exposure.contribution.mean() if n_exposed else float("nan"),
+            "median_contribution": fam_exposure.contribution.median() if n_exposed else float("nan"),
+        })
+    print(pd.DataFrame(rows).to_string(index=False))
+
+    # overlap report: how many vehicles belong to >1 family cohort
+    from collections import Counter
+    membership_count = Counter()
+    for fam, vset in exposed_vehicle_sets.items():
+        for v in vset:
+            membership_count[v] += 1
+    overlap_n = sum(1 for c in membership_count.values() if c > 1)
+    print(f"\nVehicles exposed to more than one family's cohort simultaneously: {overlap_n}")
+
+    baseline_rate = gt[gt.total_exposure == 0].is_defect.mean()
+    print(f"\nBaseline (zero-exposure) defect rate for comparison: {baseline_rate*100:.2f}%")
+
+    # families configured to contribute ZERO exposure by design: SENSOR_DROPOUT,
+    # VEHICLE_MIX_OVERLOAD. No exposure-table membership exists for them, so
+    # "affected vehicles" is reconstructed independently: vehicles whose
+    # SENSOR_READING was degraded (dropout) or who were CREATED during an
+    # active mix-overload window (mix), then checked against baseline rate.
+    dropout_scenarios = scenario_truth[scenario_truth.family == "SENSOR_DROPOUT"]
+    degraded_readings = sensors[sensors.measurement_status != "available"]
+    dropout_affected_vehicles = set(degraded_readings.vehicle_id.unique())
+    n_dropout_affected = len(dropout_affected_vehicles)
+    dropout_defect_rate = (
+        sum(1 for v in dropout_affected_vehicles if is_defect_by_vehicle.get(v, False)) / n_dropout_affected
+        if n_dropout_affected else float("nan")
+    )
+    print(f"\nSENSOR_DROPOUT: {len(dropout_scenarios)} instance(s), "
+          f"{n_dropout_affected} vehicle(s) with a degraded reading, "
+          f"defect rate among them = {dropout_defect_rate*100:.2f}% "
+          f"(compare to baseline {baseline_rate*100:.2f}% — want statistically compatible, not elevated)")
+
+    mix_scenarios = scenario_truth[scenario_truth.family == "VEHICLE_MIX_OVERLOAD"]
+    created = events[events.event_type == "VEHICLE_CREATED"][["vehicle_id", "shift_id", "simulation_time"]]
+    mix_affected_vehicles = set()
+    for _, srow in mix_scenarios.iterrows():
+        window = created[created.shift_id == srow.shift_id]
+        start, end = srow.start_time, (srow.end_time if pd.notna(srow.end_time) else float("inf"))
+        mix_affected_vehicles |= set(window[(window.simulation_time >= start) & (window.simulation_time <= end)].vehicle_id)
+    n_mix_affected = len(mix_affected_vehicles)
+    mix_defect_rate = (
+        sum(1 for v in mix_affected_vehicles if is_defect_by_vehicle.get(v, False)) / n_mix_affected
+        if n_mix_affected else float("nan")
+    )
+    print(f"VEHICLE_MIX_OVERLOAD: {len(mix_scenarios)} instance(s), "
+          f"{n_mix_affected} vehicle(s) created during an active window, "
+          f"defect rate among them = {mix_defect_rate*100:.2f}% "
+          f"(compare to baseline {baseline_rate*100:.2f}% — want statistically compatible, not elevated)")
 
     # ================================================================ AE/AF: CAUSAL AUDIT
     section("AE/AF. CAUSAL AUDIT (flow + sensor/quality)")

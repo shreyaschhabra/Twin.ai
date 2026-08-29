@@ -314,6 +314,54 @@ added `tests/test_historical_dataset.py::test_scenario_schedule_reproducible_acr
 which spawns three genuinely separate Python subprocesses and diffs
 their output — the only way to actually catch this class of bug.
 
+## Step 4 post-review patches (pre-ML data-quality pass)
+
+- **Patch 1 (BLOCKED vs. buffer occupancy)**: investigated the reported
+  "412 BLOCKED episodes vs. max occupancy 5/6" discrepancy by fully
+  reconstructing all 412 episodes (station, vehicle, buffer, capacity,
+  release occupancy) by joining `genealogy.blocked_time > 0` against the
+  buffer-entry events. **Root cause: a reporting error in the audit
+  script**, not a simulator bug — the original report's "5/6" line
+  compared an unrelated top-8-by-value buffer occupancy entry against the
+  wrong buffer's capacity, without joining against which buffers the
+  blocked stations actually fed into. Once correctly joined, all 412
+  episodes show `occupancy_after_release == capacity` for their actual
+  buffer (100% match). Added `vehicle_id`/`buffer_id`/`occupancy` fields
+  to the `STATION_STATE_CHANGED`-to-`BLOCKED` event specifically (Event
+  schema already had these fields for other purposes; only the BLOCKED
+  transition now populates them) so this is directly verifiable from the
+  observable event alone in future audits, without a manual join. No
+  change to the underlying blocking mechanics — they were already correct.
+- **Patch 2 (QC recalibration)**: the Step-4 QC parameters put ~51% of
+  all defects in the zero-exposure/background bucket. Re-calibrated via a
+  joint grid search over (background, midpoint, steepness, max) against
+  the real exposure distribution — deliberately not just lowering
+  background alone, which would have dropped the overall rate out of
+  band. New values shrink `background_probability` (0.015→0.0088) while
+  sharpening the exposure response (`steepness` 70→110, `midpoint`
+  0.062→0.0445), shifting the ~4% overall total toward being predominantly
+  exposure-driven while keeping every probabilistic-overlap requirement
+  intact.
+- **Patch 3 (conditional defect rates)**: added a proper per-family
+  conditional-defect-rate table (`scripts/audit_development_dataset.py`)
+  distinct from the earlier "mean exposure contribution" table, which
+  was never a defect rate. Vehicles can belong to more than one family's
+  exposure cohort simultaneously — this is now counted and reported
+  explicitly rather than hidden by disjoint bucketing. SENSOR_DROPOUT and
+  VEHICLE_MIX_OVERLOAD have no exposure-table entries by design, so their
+  "affected vehicle" sets are reconstructed independently (degraded
+  sensor readings; vehicles created during an active mix-overload window)
+  and their defect rates compared directly against the zero-exposure
+  baseline rate.
+- **Patch 4 (manifest code-version pinning)**: `generate_development_dataset.py`
+  now checks `git status --porcelain` before generating and **refuses to
+  run from a dirty working tree** unless `--allow-dirty` is passed (in
+  which case the manifest records `git_dirty: true` and the exact dirty
+  file list). The frozen development dataset for this patch round was
+  generated only after all patch-1/2/3 code was committed with a clean
+  tree, so its manifest's `git_commit` field is the exact commit that
+  produced it — see the completion report for the hash.
+
 ## What is NOT yet assumed
 
 Defect rates, degradation/anomaly injection parameters, ML model

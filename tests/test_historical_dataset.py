@@ -145,3 +145,25 @@ def test_manifest_reproduces_generation_configuration(shift_results, tmp_path):
     from backend.simulation.rng import derive_seed
     for shift_id, recorded_seed in reloaded["shift_seeds"].items():
         assert derive_seed(reloaded["dataset_master_seed"], f"shift_sim::{shift_id}") == recorded_seed
+
+
+def test_dataset_generation_refuses_dirty_tree_by_default(tmp_path):
+    """Step 4 patch 4: the generation script must not silently produce a
+    dataset from an uncommitted generator state without at least being
+    told to via --allow-dirty."""
+    import subprocess
+    import sys
+
+    repo_root = Path(__file__).resolve().parent.parent
+    status = subprocess.check_output(["git", "status", "--porcelain"], cwd=repo_root).decode()
+    is_actually_dirty = bool(status.strip())
+
+    sys.path.insert(0, str(repo_root / "scripts"))
+    import importlib
+    gen_script = importlib.import_module("generate_development_dataset")
+    commit, is_dirty, dirty_files = gen_script._git_state(repo_root)
+
+    assert is_dirty == is_actually_dirty
+    assert commit and commit != "unknown"
+    if is_dirty:
+        assert len(dirty_files) > 0

@@ -109,7 +109,20 @@ class StationRuntime:
         self.state = StationState.IDLE
         self.processed_count = 0
 
-    def _set_state(self, new_state: StationState) -> None:
+    def _set_state(
+        self,
+        new_state: StationState,
+        vehicle_id: Optional[str] = None,
+        buffer_id: Optional[str] = None,
+        occupancy: Optional[int] = None,
+    ) -> None:
+        """vehicle_id/buffer_id/occupancy are populated only for the
+        BLOCKED transition (Step 4 patch 1): they let an audit directly
+        verify, from the observable event alone, that BLOCKED was only
+        ever entered when the named buffer was already at its configured
+        capacity — no reconstruction/heuristic join required. Other
+        transitions (STARVED/PROCESSING/DOWN) don't carry a buffer
+        context and leave these as None, unchanged from before."""
         if new_state == self.state:
             return
         self.event_log.record(
@@ -118,6 +131,9 @@ class StationRuntime:
             station_id=self.station_cfg.station_id,
             from_state=self.state.value,
             to_state=new_state.value,
+            vehicle_id=vehicle_id,
+            buffer_id=buffer_id,
+            occupancy=occupancy,
         )
         self.state = new_state
 
@@ -278,7 +294,12 @@ class StationRuntime:
                 next_station_id = vehicle.next_station_id()
                 out_buffer = self.outgoing_buffer_lookup[next_station_id]
                 if out_buffer.is_full():
-                    self._set_state(StationState.BLOCKED)
+                    self._set_state(
+                        StationState.BLOCKED,
+                        vehicle_id=vehicle.vehicle_id,
+                        buffer_id=out_buffer.buffer_id,
+                        occupancy=len(out_buffer.items),
+                    )
                     while out_buffer.is_full():
                         yield out_buffer.space_available
                 vehicle.position += 1

@@ -63,6 +63,45 @@ def test_no_station_capacity_violation(config, result):
             assert e1 <= s2
 
 
+def test_blocked_transitions_correspond_to_genuinely_full_buffers(config, sensor_models):
+    """Step 4 patch 1 invariant: every BLOCKED transition must carry a
+    buffer_id/occupancy that shows the named buffer was ACTUALLY at its
+    configured capacity at that instant — proving BLOCKED is never
+    entered for any other reason. This was previously only reconstructable
+    by hand-joining genealogy against events; the event itself now says
+    so directly.
+
+    The plain nominal `result` fixture is paced NOT to saturate (by
+    design — see ASSUMPTIONS.md), so it reliably shows zero blocking;
+    this test deliberately forces a slowdown severe enough to guarantee
+    at least one real BLOCKED episode to check the invariant against."""
+    from backend.simulation.scenarios.config import ScenarioDefinition, ScenarioFamily
+
+    scenario = ScenarioDefinition(
+        scenario_id="force_block_s19", family=ScenarioFamily.MANUAL_VARIATION,
+        station_ids=["S19"], start_time=0, duration=100000, severity=0.9,
+        params={"cycle_time_multiplier": 4.0, "variability_multiplier": 1.0},
+    )
+    forced = run_simulation(
+        config, n_vehicles=N_VEHICLES, seed=SEED,
+        mean_interarrival_seconds=MEAN_INTERARRIVAL, std_interarrival_seconds=STD_INTERARRIVAL,
+        sensor_models=sensor_models, scenarios=[scenario],
+    )
+
+    blocked = [e for e in forced.events
+               if e.event_type == EventType.STATION_STATE_CHANGED.value and e.to_state == "BLOCKED"]
+    assert len(blocked) > 0, "expected at least one BLOCKED episode in this run"
+    for e in blocked:
+        assert e.vehicle_id is not None
+        assert e.buffer_id is not None
+        assert e.occupancy is not None
+        capacity = config.buffers[e.buffer_id].capacity
+        assert e.occupancy == capacity, (
+            f"BLOCKED at {e.station_id} for buffer {e.buffer_id} recorded occupancy "
+            f"{e.occupancy} but capacity is {capacity} — buffer was not actually full"
+        )
+
+
 def test_no_buffer_capacity_violation(config, result):
     occupancy = {bid: 0 for bid in config.buffers}
     for e in result.events:
