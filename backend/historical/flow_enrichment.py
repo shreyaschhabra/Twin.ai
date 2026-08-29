@@ -1,15 +1,19 @@
 """
-Coverage-balanced Flow enrichment scheduler (Decision 36, Dataset B).
+Coverage-balanced Flow enrichment scheduler (Decision 36, Dataset B;
+Decision 37, Dataset C mechanistic calibration).
 
-This module NEVER touches scenario effect equations. It reuses the exact
-builder functions from backend.historical.shift_scheduler
-(`_build_station_scenario`, `_build_mix_overload`) — the same code that
-already computes cycle_time_multiplier, stop_probability, etc. from a
-severity value. All this module changes is WHICH shifts get a
-Flow-capable scenario opportunity, at WHICH station, at WHAT severity
-stratum — i.e. the scheduling POLICY, not the physics.
+This module NEVER touches MANUAL_VARIATION's or EQUIPMENT_DEGRADATION's
+effect equations, and reuses shift_scheduler.py's `_build_mix_overload`
+verbatim for VEHICLE_MIX_OVERLOAD. The ONE exception, introduced in
+Decision 37 after a capacity-margin audit proved it mechanically
+necessary, is a locally-scoped, recalibrated MICRO_STOPS builder
+(`_build_recalibrated_micro_stops`) used ONLY by this enrichment path —
+shift_scheduler.py's own MICRO_STOPS branch (used by the unchanged
+background scheduler in every shift, including Datasets A and B) is left
+completely untouched, so neither existing dataset's reproducibility from
+a future commit is affected.
 
-Pipeline boundary (Section 21), enforced by construction:
+Pipeline boundary, enforced by construction:
 
     build_flow_enrichment_plan(seed, n_shifts)   <- pure function of
         |                                           (seed, n_shifts) and
@@ -28,134 +32,174 @@ Pipeline boundary (Section 21), enforced by construction:
         v
     observable events -> Flow labels (downstream, unaffected by this module)
 
-SECTION 8 — CANDIDATE STATION SELECTION (done BEFORE looking at any Flow
-label/outcome from this dataset; based only on the static, already-frozen
-factory config in configs/full_line.yaml):
+===========================================================================
+DECISION 37 -- CAPACITY-MARGIN AUDIT (done BEFORE Dataset C exists, using
+only configs/full_line.yaml, the DEFAULT_VARIANT_MIX, DEFAULT_MEAN_
+INTERARRIVAL_SECONDS=115s, and the existing scenario effect equations)
+===========================================================================
 
-For each station, "bottleneck-proneness" was read off two static
-properties: (a) baseline_cycle_time_seconds relative to the immediately
-preceding station on the shared route (a large ratio means the station is
-a natural pace-setter that the line backs up behind), and (b) the
-capacity of the buffer feeding it (small capacity means backpressure
-propagates upstream fast once the station falls behind). Sensor maturity,
-configured cycle_time_variability, and variant_overrides were used to
-decide which MECHANISM (manual variation vs. micro-stop vs. mix-driven
-load) is physically plausible at that station — never to decide station
-identity was chosen for label-distribution reasons.
+Model: a single-file serial line with buffers behaves, in steady state,
+as a tandem queue where every station sees the SAME long-run average
+arrival rate as the line's overall vehicle-release rate
+(1 / mean_interarrival_seconds = 1/115 veh/s) -- this is flow
+conservation along a lossless tandem queue, not an assumption specific to
+any one station. A station's healthy utilization is therefore
 
-    S11 (Body Finishing / Manual Inspection, zone body_joining):
-        baseline 65s vs. upstream S10's 44s (1.48x); MANUAL_ASSEMBLY,
-        cycle_time_variability=0.22 (among the highest on the line),
-        sensor_maturity=poor. A manual station whose pace is inherently
-        susceptible to real operator-driven slowdowns -> MANUAL_VARIATION.
+    rho_healthy = mix_weighted_mean_cycle_time / mean_interarrival_seconds
 
-    S07 (Closure Panel Fitting, zone body_joining):
-        baseline 48s vs. upstream S06's 30s (1.60x); ROBOTIC_HANDLING_
-        ASSEMBLY described in config notes as an "older robotic cell";
-        sensor_maturity=partial (no force-sensor retrofit). A legacy
-        automated cell where intermittent stoppage is physically
-        plausible -> MICRO_STOPS.
+where mix_weighted_mean_cycle_time accounts for each station's own
+variant_overrides / processing_time_modifiers under DEFAULT_VARIANT_MIX
+(45% ICE_SEDAN / 35% ICE_SUV / 20% EV). The multiplier needed to push a
+station to rho=1 (the breakeven point past which its inbound buffer
+starts filling on average) is
 
-    S20 (Paint Cure + Paint Inspection, zone paint_surface):
-        baseline 66s vs. upstream S19's 48s (1.375x); the paint zone's
-        highest cycle time and its exit gate; CURING_ENVIRONMENTAL, whose
-        station-type template lists belt_speed_drift as a plausible
-        degradation mode -- i.e. a conveyor/oven asset that already
-        acknowledges mechanical intermittency; small feeding buffer B19
-        (capacity 4). The only physically plausible enrichment mechanism
-        for an automated cure/conveyor asset is MICRO_STOPS -- it is not a
-        manual station, and EQUIPMENT_DEGRADATION remains held out.
+    breakeven_multiplier = mean_interarrival_seconds / mix_weighted_mean_cycle_time
 
-    S22 (Wiring Harness Installation, zone final_assembly):
-        baseline 88s -- the single slowest station on the entire 45-station
-        line; cycle_time_variability=0.24 (the line's highest);
-        sensor_maturity=poor; small feeding buffer B21 (capacity 4); also
-        the one MANUAL_ASSEMBLY station with an explicit EV cycle-time
-        multiplier (1.15x, vehicle_variants.EV.processing_time_modifiers)
-        -> MANUAL_VARIATION, and also the station most likely to be
-        stressed by a VEHICLE_MIX_OVERLOAD instance even though that
-        family targets no specific station (see note below).
+Computed for the original 8 Dataset-B candidates plus S21 (added below
+after the audit revealed it, not chosen a priori):
 
-    S24 (HVAC / Interior Module Installation, zone final_assembly):
-        baseline 75s vs. upstream S23's 40s (1.875x); MANUAL_ASSEMBLY,
-        cycle_time_variability=0.20, sensor_maturity=poor, small feeding
-        buffer B23 (capacity 4) -> MANUAL_VARIATION.
+    station  type                      mix_mean(s)  rho_healthy  breakeven_mult  buffer(cap)
+    S11      MANUAL_ASSEMBLY           65.00        0.565        1.769           B10 (4)
+    S07      ROBOTIC_HANDLING_ASSEMBLY 48.00        0.417        2.396           B06 (4)
+    S20      CURING_ENVIRONMENTAL      66.00        0.574        1.742           B19 (4)
+    S21      MANUAL_ASSEMBLY           70.00        0.609        1.643           B20 (5)
+    S22      MANUAL_ASSEMBLY           90.64        0.788        1.269           B21 (4)
+    S24      MANUAL_ASSEMBLY           75.00        0.652        1.533           B23 (4)
+    S26      ROBOTIC_HANDLING_ASSEMBLY 77.40        0.673        1.486           B25 (4)
+    S33      MANUAL_ASSEMBLY           58.00        0.504        1.983           B32 (4)
+    S34      MANUAL_ASSEMBLY           68.00        0.591        1.691           B33 (4)
 
-    S26 (Powertrain / Battery Pack Marriage, zone final_assembly):
-        baseline 72s vs. upstream S25's 36s (2.0x); ROBOTIC_HANDLING_
-        ASSEMBLY performing a high-force insertion (target_insertion_
-        force_n=1850) -- a physically plausible site for a robotic
-        micro-stop; ALSO the station with the line's largest documented
-        variant_overrides cycle-time spread (EV 1.20x, ICE_SUV 1.10x vs.
-        ICE_SEDAN baseline) -> MICRO_STOPS as a station-scoped mechanism,
-        and the primary station a line-level VEHICLE_MIX_OVERLOAD
-        instance is mechanistically expected to stress.
+MANUAL_VARIATION eligibility (equation UNCHANGED per Decision 37 Section
+8: cycle_time_multiplier = 1.15 + 0.5*severity, max at severity=0.95 is
+1.625): a station is mechanically CAPABLE only if 1.625 >= its
+breakeven_multiplier.
 
-    S33 (Door / Closure Finishing, zone final_assembly):
-        baseline 58s vs. upstream S32's 16s (3.6x, the sharpest cycle-time
-        cliff on the line); MANUAL_ASSEMBLY, cycle_time_variability=0.20,
-        sensor_maturity=poor -> MANUAL_VARIATION.
+    S22: breakeven 1.269, margin +0.356  -> CAPABLE (comfortably)
+    S24: breakeven 1.533, margin +0.092  -> capable only at the extreme
+         top of SEVERE; Dataset B's own station breakdown (17 of 574
+         impact events at S24) is consistent with "rare, not reliable".
+    S21: breakeven 1.643, margin -0.018  -> NOT capable in mean terms,
+         but the margin is tiny, and S21 was ALREADY in shift_scheduler's
+         background MANUAL_VARIATION pool (not Decision-36's enrichment
+         candidate list) -- across Datasets A and B combined it is
+         empirically the single largest real contributor of blocking
+         (114/574 events in A, 647/1464 in B), via the UNCHANGED
+         background scheduler alone. The mean-utilization breakeven is a
+         first-order approximation; MANUAL_VARIATION's variability_
+         multiplier (1.5 + 2.0*severity, up to 3.35x noise) inflates
+         processing-time VARIANCE as well as its mean, and with a small
+         buffer (capacity 5) a high-variance server can produce real,
+         repeated blocking even when its MEAN utilization sits just
+         below breakeven -- exactly the mechanism that already explains
+         S21's outsized empirical share in both prior, unmodified
+         datasets. S21 is added to the MANUAL_VARIATION candidate list on
+         this basis (a config+math-derived hypothesis, CONFIRMED by
+         already-existing Dataset A/B evidence -- not a Dataset-C label).
+    S11, S33, S34: margins -0.144 / -0.358 / -0.066 -> NOT capable, and
+         each shows negligible impact-event counts in Datasets A/B.
+         DROPPED from the MANUAL_VARIATION candidate list.
 
-    S34 (Electrical Connection / System Check, zone final_assembly):
-        baseline 68s vs. upstream S33's 58s (1.17x, on top of S33's own
-        cliff -- two slow manual stations back to back); MANUAL_ASSEMBLY,
-        cycle_time_variability=0.16, sensor_maturity=partial ->
-        MANUAL_VARIATION.
+    REVISED MANUAL_VARIATION CANDIDATES: {S21, S22} (both final_assembly).
+    S24 is deliberately excluded despite a nominally positive margin: at
+    only 0.092 above breakeven it produces a negligible conversion rate
+    in practice (consistent with Dataset B) and would mostly just add
+    opportunity-count noise, not real coverage.
 
-No TORQUE_FASTENING station was selected (Section 8's "one fastening ...
-if appropriate" is explicitly conditional): every TORQUE_FASTENING
-station's baseline cycle time is well BELOW its upstream neighbor's
-(S27/S26=0.31x, S28/S27=1.18x, S30/S29=0.33x, S32/S31=0.80x) and their
-configured variability is low (0.08-0.10) -- none is a config-plausible
-pace-setter, so none was forced in. S26 (a marriage station) and S07 (a
-"moderately loaded automated process") already satisfy that soft
-requirement.
+VEHICLE_MIX_OVERLOAD feasibility (Decision 37 Section 5, using the
+EXISTING variant multipliers, no changes):
 
-VEHICLE_MIX_OVERLOAD remains a LINE-LEVEL family exactly as in
-shift_scheduler.py (it overrides the whole line's incoming variant mix,
-not one station's parameters) -- this module schedules it as a
-line-level opportunity with no station_id, consistent with its existing
-semantics; S22 and S26 are documented above only as the stations it is
-mechanistically expected to stress, not as targets the scenario itself
-carries.
+    station  base(s)  multipliers                        100%-slowest mean(s)  rho   breakeven_mult  max_available_mult
+    S22      88       SEDAN 1.00 / SUV 1.00 / EV 1.15     101.2                 0.880 1.307           1.15  -> NOT CAPABLE
+    S26      72       SEDAN 1.00 / SUV 1.10 / EV 1.20     86.4                  0.751 1.597           1.20  -> NOT CAPABLE
+    S36      42       SEDAN 1.00 / SUV 1.05 / EV 1.15     48.3                  0.420 2.738           1.15  -> NOT CAPABLE
 
-SECTION 9 — COMPATIBILITY MAP is exactly STATION_CANDIDATES below:
-MANUAL_VARIATION only at MANUAL_ASSEMBLY stations; MICRO_STOPS only at
-automated/robotic or legacy-mechanical stations; VEHICLE_MIX_OVERLOAD is
-line-level and carries no station compatibility constraint.
+Even 100% concentration of the slowest variant (EV, everywhere) leaves
+every mix-sensitive station well under its own breakeven multiplier -- by
+a wide margin at every station tested. VEHICLE_MIX_OVERLOAD, using the
+existing variant-multiplier design, is therefore classified per Decision
+37 Section 7 as a CONTEXTUAL HARD-NEGATIVE scenario: it changes real
+operating context (arrival composition) but cannot, by itself, physically
+create a bottleneck in this factory configuration. It stays in the
+corpus for exactly that reason -- "unusual mix without blocking" is a
+useful negative example against false alarms -- but its opportunities are
+marked `expected_bottleneck_capable=False` and are not counted toward the
+family's blocking-capable coverage.
 
-SECTION 10 — SEVERITY STRATA were derived mechanistically from the
-EXISTING effect equations in shift_scheduler.py's _build_station_scenario
-/ _build_mix_overload (unchanged), by inspecting how each equation maps
-severity in [0,1] to its physical parameter, BEFORE generating or
-inspecting any Dataset-B outcome:
+MICRO_STOPS mechanics (Decision 37 Section 2) -- the additive channel is
+in backend/simulation/station.py `_maybe_run_micro_stop`:
+`total_time = proc_time + micro_stop_duration`, where a stop fires with
+probability `params["probability"]` and, if it fires, its duration is
+drawn Uniform(min_duration, max_duration). So the EXPECTED extra time
+added to one visit's service time is
 
-    MANUAL_VARIATION cycle_time_multiplier = 1.15 + severity*0.5
-    MICRO_STOPS       stop_probability      = 0.15 + severity*0.45
-    VEHICLE_MIX_OVERLOAD suv_share           = 0.35 + severity*0.45
+    E[extra] = stop_probability * (min_duration + max_duration) / 2
 
-Strata boundaries [0.15, 0.35, 0.65, 0.95] were chosen as a simple
-tercile-like split of the effect equations' usable domain, avoiding the
-bottom decile (severity<0.15 barely perturbs any equation above) and the
-top of the range (severity>0.95, to avoid degenerate maxima) -- not
-chosen to hit any target positive-label count in this dataset, since no
-Dataset-B label has been computed at the time these boundaries were
-fixed.
+OLD equation (shift_scheduler.py, unchanged there): stop_probability =
+0.15 + 0.45*severity, max_duration = 15 + 45*severity, min_duration = 8.
+At the theoretical maximum severity=1.0 (never even reached -- SEVERE was
+capped at 0.95): E[extra] = 0.60 * 34.0 = 20.4s. At the old SEVERE upper
+bound (0.95): E[extra] = 18.99s.
 
-    MILD:     severity in [0.15, 0.35) -> e.g. MANUAL_VARIATION multiplier
-              in [1.1925, 1.2275); MICRO_STOPS stop_probability in
-              [0.2175, 0.3075); mix suv_share in [0.4175, 0.5075).
-    MODERATE: severity in [0.35, 0.65) -> multiplier in [1.3275, 1.475);
-              stop_probability in [0.3075, 0.4425); suv_share in
-              [0.5075, 0.6425).
-    SEVERE:   severity in [0.65, 0.95] -> multiplier in [1.4475, 1.625];
-              stop_probability in [0.4425, 0.5775]; suv_share in
-              [0.6425, 0.7775].
+Comparing to the gap each candidate station needs to close (mean cycle
+time -> mean_interarrival_seconds=115s, i.e. mix_mean subtracted from
+115): S26 needs +37.6s, S20 needs +49.0s, S07 needs +67.0s. The OLD
+equation's absolute maximum (20.4s) is smaller than EVERY candidate's
+gap -- MICRO_STOPS as previously parameterized was mechanically
+INCAPABLE of reaching breakeven at any candidate station, at any
+severity, full stop. This -- not "scenario windows too short" (shift
+duration is many hours, plenty of time) and not "combination of small
+effects" -- is the complete, sufficient explanation for its 0/6
+conversion rate in Dataset B.
 
-Section 11 is enforced structurally: nothing in this module ever reads a
-bottleneck outcome, a buffer occupancy, or a label to decide anything.
-Every field below is a deterministic function of (dataset_master_seed,
-n_shifts) alone.
+NEW equation (Decision 37 Section 3, LOCAL to this module only --
+shift_scheduler.py's own MICRO_STOPS branch, used by the background
+scheduler, is untouched): stop_probability = 0.20 + 0.65*severity,
+max_duration = 15 + 75*severity, min_duration = 8 (unchanged). Chosen
+mechanistically to make S26 (the only candidate whose gap, 37.6s, is
+within reach of a plausible "micro-stop" duration/frequency) show:
+
+    stratum    severity range   E[extra]@bound   fraction of S26's 37.6s gap
+    MILD       [0.15, 0.35)     5.1s  -> 10.5s    14% -> 28%   comfortably below
+    MODERATE   [0.35, 0.65)     10.5s -> 22.3s    28% -> 59%   approaches, usually doesn't cross
+    SEVERE     [0.65, 0.95]     22.3s -> 38.5s    59% -> 102%  genuinely possible near the top,
+                                                                 NOT a guarantee (severity is a
+                                                                 continuous draw across the whole
+                                                                 stratum, and E[extra] is a MEAN --
+                                                                 the realized per-visit roll still
+                                                                 varies around it)
+
+S07 (gap 67.0s) and S20 (gap 49.0s) remain mechanically out of reach even
+under this recalibration (max deliverable ~38.5s) and a further increase
+was deliberately NOT made -- Decision 37 explicitly warns against
+over-strengthening, and pushing stop_probability/duration far enough to
+cover a 49-67s gap would stop looking like an intermittent "micro" stop
+at all. MICRO_STOPS candidates are therefore narrowed to {S26} only.
+
+MICRO_STOPS Quality isolation (Decision 37 Section 4): `get_micro_stop_
+params` is a separate ScenarioManager method from `get_station_effects`
+(which is the only place `_record_exposure` / sensor_mean_shift /
+cycle_time_multiplier are touched) -- MICRO_STOPS was ALREADY, by
+construction, never able to contribute latent Quality exposure or alter
+sensor/cycle_time_multiplier effects. See
+tests/test_flow_enrichment_schedule.py::test_micro_stops_quality_isolation
+for the structural proof (unaffected by the probability/duration
+recalibration above, which only changes numeric coefficients, not which
+channel MICRO_STOPS writes through).
+
+REVISED CANDIDATE LIST (Section 10) -- all three remaining station-scoped
+candidates land in final_assembly; this is NOT a forced choice, it is the
+audit's honest conclusion: every body_joining and paint_surface station
+in this factory has enough headroom (mix_mean well under the 115s pacing
+rate) that no known-family mechanism at a plausible severity can reach
+its breakeven. Zone diversity was not forced (per Decision 37 Section
+10's explicit instruction not to).
+
+    S21 (final_assembly) -- MANUAL_VARIATION (near-breakeven + variance)
+    S22 (final_assembly) -- MANUAL_VARIATION (comfortably capable)
+    S26 (final_assembly) -- MICRO_STOPS, recalibrated (only reachable gap)
+    VEHICLE_MIX_OVERLOAD -- line-level, hard-negative only (not capable
+        anywhere in this configuration); documented expected-context
+        stations remain S22/S26/S36 for reporting purposes only.
 """
 
 from __future__ import annotations
@@ -175,21 +219,30 @@ from backend.historical.shift_scheduler import (
 from backend.simulation.rng import derive_seed
 from backend.simulation.scenarios.config import ScenarioDefinition, ScenarioFamily
 
-# ---- Section 9: explicit scenario-family / station compatibility map ----
-# (rationale for each entry is documented in the module docstring above)
+# ---- Decision 37: revised family/station compatibility map ----
 STATION_CANDIDATES: Dict[str, dict] = {
-    "S11": {"zone": "body_joining", "family": ScenarioFamily.MANUAL_VARIATION},
-    "S07": {"zone": "body_joining", "family": ScenarioFamily.MICRO_STOPS},
-    "S20": {"zone": "paint_surface", "family": ScenarioFamily.MICRO_STOPS},
+    "S21": {"zone": "final_assembly", "family": ScenarioFamily.MANUAL_VARIATION},
     "S22": {"zone": "final_assembly", "family": ScenarioFamily.MANUAL_VARIATION},
-    "S24": {"zone": "final_assembly", "family": ScenarioFamily.MANUAL_VARIATION},
     "S26": {"zone": "final_assembly", "family": ScenarioFamily.MICRO_STOPS},
-    "S33": {"zone": "final_assembly", "family": ScenarioFamily.MANUAL_VARIATION},
-    "S34": {"zone": "final_assembly", "family": ScenarioFamily.MANUAL_VARIATION},
+}
+# Stations considered in the Decision-36 candidate list and DROPPED after
+# the Decision-37 capacity-margin audit showed they are mechanically
+# incapable of reaching breakeven under the (unchanged) MANUAL_VARIATION
+# equation, or (for S07/S20) under even the recalibrated MICRO_STOPS
+# equation. Kept here only as a documented negative result.
+REJECTED_CANDIDATES = {
+    "S11": "MANUAL_VARIATION margin -0.144 (breakeven 1.769 > max deliverable 1.625)",
+    "S24": "MANUAL_VARIATION margin +0.092 -- technically capable but negligible in practice",
+    "S33": "MANUAL_VARIATION margin -0.358",
+    "S34": "MANUAL_VARIATION margin -0.066",
+    "S07": "MICRO_STOPS gap 67.0s vs. max deliverable 38.5s even recalibrated",
+    "S20": "MICRO_STOPS gap 49.0s vs. max deliverable 38.5s even recalibrated",
 }
 # Stations mechanistically expected to be stressed by a line-level
-# VEHICLE_MIX_OVERLOAD instance (documentation only -- the scenario itself
-# carries no station_id, matching shift_scheduler.py's existing semantics).
+# VEHICLE_MIX_OVERLOAD instance -- documentation only; per the Decision-37
+# feasibility audit this family cannot reach breakeven anywhere in this
+# configuration, so these are NOT bottleneck-capable, just the most
+# context-relevant stations to look at in diagnostics.
 MIX_OVERLOAD_EXPECTED_IMPACT_STATIONS = ["S22", "S26", "S36"]
 
 KNOWN_FLOW_FAMILIES = [
@@ -197,13 +250,26 @@ KNOWN_FLOW_FAMILIES = [
     ScenarioFamily.MICRO_STOPS,
     ScenarioFamily.VEHICLE_MIX_OVERLOAD,
 ]
+# Decision 37 Section 8: MANUAL_VARIATION must not dominate the way it
+# would if it were the sole positive mechanism -- rebalanced toward a
+# roughly even three-way split now that MICRO_STOPS is mechanically
+# capable (at S26) and VEHICLE_MIX_OVERLOAD is retained as a deliberate
+# hard-negative rather than dropped.
 FAMILY_OPPORTUNITY_WEIGHTS = {
-    ScenarioFamily.MANUAL_VARIATION: 0.40,
+    ScenarioFamily.MANUAL_VARIATION: 0.35,
     ScenarioFamily.MICRO_STOPS: 0.35,
-    ScenarioFamily.VEHICLE_MIX_OVERLOAD: 0.25,
+    ScenarioFamily.VEHICLE_MIX_OVERLOAD: 0.30,
 }
+# Only MANUAL_VARIATION and MICRO_STOPS were shown capable of reaching
+# breakeven anywhere in this configuration (Decision 37 Sections 1-3);
+# VEHICLE_MIX_OVERLOAD was shown structurally incapable everywhere
+# (Section 5) and is scheduled purely as a contextual hard negative.
+BOTTLENECK_CAPABLE_FAMILIES = {ScenarioFamily.MANUAL_VARIATION, ScenarioFamily.MICRO_STOPS}
 
-# Section 10 (see module docstring for derivation)
+# Severity strata (unchanged shape from Decision 36 -- see original
+# rationale in git history at commit fbd3f9d; still a tercile-like split
+# of the effect equations' usable domain, still fixed before any Dataset-C
+# outcome exists).
 SEVERITY_STRATA = {
     "MILD": (0.15, 0.35),
     "MODERATE": (0.35, 0.65),
@@ -211,17 +277,22 @@ SEVERITY_STRATA = {
 }
 SEVERITY_STRATUM_WEIGHTS = {"MILD": 0.35, "MODERATE": 0.35, "SEVERE": 0.30}
 
-# Section 12: opportunity-coverage targets (shift counts, NOT positive-label
-# quotas), drawn per locked partition.
-FLOW_OPPORTUNITY_RANGE = {"train": (18, 22), "validation": (4, 5), "test": (4, 5)}
-# Section 19: guaranteed EQUIPMENT_DEGRADATION opportunities on top of
-# whatever the unchanged background scheduler already produces, spread
-# across the timeline (not counted toward any Flow viability gate).
+# Decision 37 Section 3: MICRO_STOPS recalibration, LOCAL to this module
+# (shift_scheduler.py's own MICRO_STOPS branch, used by the unchanged
+# background scheduler in every shift including Datasets A and B, is
+# untouched). See module docstring for the derivation.
+MICRO_STOPS_CALIBRATION = {
+    "old": {"stop_probability": "0.15 + 0.45*severity", "max_duration_seconds": "15 + 45*severity", "min_duration_seconds": 8},
+    "new": {"stop_probability": "0.20 + 0.65*severity", "max_duration_seconds": "15 + 75*severity", "min_duration_seconds": 8},
+}
+
+# Decision 37 Section 13: opportunity-coverage targets increased given the
+# observed low, stochastic opportunity->blocking conversion rate. Still
+# shift-opportunity counts, NOT positive-label quotas.
+FLOW_OPPORTUNITY_RANGE = {"train": (24, 30), "validation": (8, 10), "test": (8, 10)}
+# Decision 37 Section 9: EQUIPMENT_DEGRADATION kept completely unchanged,
+# same guaranteed-coverage counts as Dataset B.
 DEGRADATION_OPPORTUNITY_COUNT = {"train": 6, "validation": 2, "test": 2}
-# Same numeric severity range as the existing background scheduler
-# (shift_scheduler.PROBABILITY_SHIFT_IS_ABNORMAL branch) -- deliberately
-# NOT stratified, since EQUIPMENT_DEGRADATION's effect equations and
-# severity distribution must stay exactly as in Dataset A.
 DEGRADATION_SEVERITY_RANGE = (0.3, 0.9)
 
 START_TIME_FRACTION_RANGE = (0.05, 0.65)
@@ -239,6 +310,7 @@ class EnrichmentOpportunity:
     severity: float
     start_time_fraction: float
     duration_fraction: float
+    expected_bottleneck_capable: bool = True
 
 
 def _shift_id(i: int) -> str:
@@ -246,10 +318,6 @@ def _shift_id(i: int) -> str:
 
 
 def _partition_shift_ids() -> Dict[str, List[str]]:
-    # Locked boundaries (Decision 34/36, Section 4) -- imported nowhere
-    # from backend.flow to keep this module free of any dependency on
-    # Flow label/event code; the numbers are simply restated here and
-    # cross-checked against backend.flow.split by a dedicated test.
     return {
         "train": [_shift_id(i) for i in range(1, 71)],
         "validation": [_shift_id(i) for i in range(71, 86)],
@@ -264,8 +332,6 @@ def _thirds(items: List[str]) -> List[List[str]]:
 
 
 def _spread_sample(rng: random.Random, items: List[str], k: int) -> List[str]:
-    """Pick k items spread across early/mid/late thirds of `items`
-    (Section 13), without replacement."""
     k = min(k, len(items))
     parts = _thirds(items)
     counts = [k // 3] * 3
@@ -275,7 +341,6 @@ def _spread_sample(rng: random.Random, items: List[str], k: int) -> List[str]:
     for part, c in zip(parts, counts):
         c = min(c, len(part))
         chosen.extend(rng.sample(part, c))
-    # top up from the whole partition if a third ran short
     remaining = [x for x in items if x not in chosen]
     while len(chosen) < k and remaining:
         pick = rng.choice(remaining)
@@ -291,17 +356,15 @@ def _draw_severity(rng: random.Random, stratum: str) -> float:
 
 def build_flow_enrichment_plan(dataset_master_seed: int, n_shifts: int = 100) -> List[EnrichmentOpportunity]:
     """Pure function of (dataset_master_seed, n_shifts) plus the static
-    tables above. Reads no events, labels, or simulation output -- see
-    tests/test_flow_enrichment_schedule.py::test_plan_has_no_flow_label_dependency."""
+    tables above. Reads no events, labels, or simulation output."""
     if n_shifts != 100:
         raise ValueError("the locked 70/15/15 partition assumes exactly 100 shifts")
 
-    plan_rng = random.Random(derive_seed(dataset_master_seed, "flow_enrichment_plan"))
+    plan_rng = random.Random(derive_seed(dataset_master_seed, "flow_enrichment_plan_v2"))
     partitions = _partition_shift_ids()
 
     opportunities: List[EnrichmentOpportunity] = []
 
-    # ---- Section 12/13/14/15: known Flow-capable opportunities ----
     for partition_name in ["train", "validation", "test"]:
         low, high = FLOW_OPPORTUNITY_RANGE[partition_name]
         count = plan_rng.randint(low, high)
@@ -329,9 +392,9 @@ def build_flow_enrichment_plan(dataset_master_seed: int, n_shifts: int = 100) ->
                 shift_id=shift_id, partition=partition_name, kind="known_flow_enrichment",
                 family=family.value, station_id=station_id, severity_stratum=stratum,
                 severity=severity, start_time_fraction=start_frac, duration_fraction=dur_frac,
+                expected_bottleneck_capable=(family in BOTTLENECK_CAPABLE_FAMILIES),
             ))
 
-    # ---- Section 19: guaranteed EQUIPMENT_DEGRADATION opportunities ----
     degradation_pool = FAMILY_STATION_POOLS[ScenarioFamily.EQUIPMENT_DEGRADATION]
     for partition_name in ["train", "validation", "test"]:
         count = DEGRADATION_OPPORTUNITY_COUNT[partition_name]
@@ -345,7 +408,7 @@ def build_flow_enrichment_plan(dataset_master_seed: int, n_shifts: int = 100) ->
                 shift_id=shift_id, partition=partition_name, kind="unseen_degradation_opportunity",
                 family=ScenarioFamily.EQUIPMENT_DEGRADATION.value, station_id=station_id,
                 severity_stratum=None, severity=severity, start_time_fraction=start_frac,
-                duration_fraction=dur_frac,
+                duration_fraction=dur_frac, expected_bottleneck_capable=False,
             ))
 
     return opportunities
@@ -364,18 +427,31 @@ def save_plan(plan: List[EnrichmentOpportunity], path: Path) -> None:
         json.dump([asdict(o) for o in plan], f, indent=2)
 
 
+def _build_recalibrated_micro_stops(scenario_id, station, start_time, duration, severity) -> ScenarioDefinition:
+    """Decision 37 Section 3: mechanically recalibrated MICRO_STOPS,
+    local to the Flow-enrichment path only. See MICRO_STOPS_CALIBRATION
+    and the module docstring for the derivation. shift_scheduler.py's own
+    MICRO_STOPS branch (background scheduler) is untouched."""
+    return ScenarioDefinition(
+        scenario_id=scenario_id, family=ScenarioFamily.MICRO_STOPS, station_ids=[station],
+        start_time=start_time, duration=duration, severity=severity,
+        params={
+            "stop_probability": 0.20 + severity * 0.65,
+            "min_duration_seconds": 8, "max_duration_seconds": 15 + severity * 75,
+        },
+    )
+
+
 def _opportunity_to_scenario(opp: EnrichmentOpportunity, shift_id: str, shift_duration_seconds: float,
                               scenario_id: str, rng: random.Random) -> ScenarioDefinition:
-    """Translates one frozen opportunity into a ScenarioDefinition using
-    the UNCHANGED builder functions from shift_scheduler.py -- this
-    function makes no decision about effect magnitude itself, only reads
-    already-frozen plan fields."""
     start_time = opp.start_time_fraction * shift_duration_seconds
     duration = opp.duration_fraction * shift_duration_seconds
     family = ScenarioFamily(opp.family)
 
     if family == ScenarioFamily.VEHICLE_MIX_OVERLOAD:
         return _build_mix_overload(scenario_id, start_time, duration, opp.severity, rng)
+    if family == ScenarioFamily.MICRO_STOPS:
+        return _build_recalibrated_micro_stops(scenario_id, opp.station_id, start_time, duration, opp.severity)
     return _build_station_scenario(scenario_id, family, opp.station_id, start_time, duration, opp.severity, rng)
 
 
@@ -387,11 +463,10 @@ def build_shift_schedule_enriched(
     plan_by_shift: Dict[str, List[EnrichmentOpportunity]],
     held_out_family=None,
 ):
-    """Baseline (identical to Dataset A's build_shift_schedule, same RNG
-    stream, same call) PLUS the frozen enrichment opportunities for this
-    shift appended on top. Never mutates or reorders the baseline
-    scenarios -- see
-    tests/test_flow_enrichment_schedule.py::test_enriched_schedule_is_additive_only."""
+    """Baseline (identical to Dataset A/B's build_shift_schedule, same
+    RNG stream, same call) PLUS the frozen enrichment opportunities for
+    this shift appended on top. Never mutates or reorders the baseline
+    scenarios."""
     baseline = build_shift_schedule(
         dataset_master_seed=dataset_master_seed,
         shift_id=shift_id,
@@ -404,7 +479,7 @@ def build_shift_schedule_enriched(
     if not opportunities:
         return baseline
 
-    apply_rng = random.Random(derive_seed(dataset_master_seed, f"flow_enrichment_apply::{shift_id}"))
+    apply_rng = random.Random(derive_seed(dataset_master_seed, f"flow_enrichment_apply_v2::{shift_id}"))
     scenarios = list(baseline.scenarios)
     for i, opp in enumerate(opportunities):
         scenario_id = f"{shift_id}::flow_enrich::{opp.kind}::{i}"
