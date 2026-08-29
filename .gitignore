@@ -18,3 +18,4 @@ artifacts/plots/*
 node_modules/
 frontend/dist/
 .env
+.claude/
