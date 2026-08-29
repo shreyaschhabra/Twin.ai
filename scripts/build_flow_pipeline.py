@@ -199,11 +199,23 @@ def main():
               f"  confusion=\n{m.confusion}")
 
     section("9. EVENT-LEVEL EVALUATION")
-    for name, df, pred in [("VALIDATION (rule)", val, val_rule_pred),
-                           ("TEST (rule)", test, test_rule_pred),
-                           ("VALIDATION (logreg@0.5)", val, (val_scores >= 0.5).astype(int)),
-                           ("TEST (logreg@0.5)", test, (test_scores >= 0.5).astype(int))]:
-        res = event_level_evaluation(df, pred, impacts)
+    # each partition's event-level recall/false-warnings must be computed
+    # against ONLY the impact events that occurred in that partition's own
+    # shifts -- passing the full 1181-event `impacts` table (spanning all
+    # 100 shifts, including TRAIN's) as the denominator for VALIDATION/TEST
+    # would silently understate recall by roughly 3-90x depending on the
+    # partition, since the vast majority of impact events happen in TRAIN
+    # shifts. Caught by manual review of an otherwise-implausible ~1%
+    # event recall alongside ~97-100% row-level recall.
+    val_impacts = impacts[impacts.shift_id.isin(split.validation_shifts)]
+    test_impacts = impacts[impacts.shift_id.isin(split.test_shifts)]
+    for name, df, pred, part_impacts in [
+        ("VALIDATION (rule)", val, val_rule_pred, val_impacts),
+        ("TEST (rule)", test, test_rule_pred, test_impacts),
+        ("VALIDATION (logreg@0.5)", val, (val_scores >= 0.5).astype(int), val_impacts),
+        ("TEST (logreg@0.5)", test, (test_scores >= 0.5).astype(int), test_impacts),
+    ]:
+        res = event_level_evaluation(df, pred, part_impacts)
         lt = lead_time_summary(res.lead_times)
         detected_counts = [n for n in res.warnings_per_event.values() if n > 0]
         mean_warnings_per_detected_event = (sum(detected_counts) / len(detected_counts)) if detected_counts else float("nan")
