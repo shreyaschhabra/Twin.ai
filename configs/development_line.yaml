@@ -1,0 +1,227 @@
+# TrustTwin.ai — 12-STATION DEVELOPMENT LINE
+#
+# Purpose: a small, coherent vehicle assembly line used to build and test
+# the simulation / ML / API / frontend pipeline quickly. This is NOT a
+# reduction of final project scope — the final system is the 45-station
+# configuration (configs/full_line.yaml, built in a later step). Loading
+# either file uses the exact same loader and schema code
+# (backend/config/loader.py, backend/config/schemas.py).
+#
+# All cycle times, variability figures, buffer capacities, and process
+# parameters below are ILLUSTRATIVE SIMULATION ASSUMPTIONS, not sourced
+# from a real plant. See ASSUMPTIONS.md.
+#
+# Flow: Body/Joining (S01-S04) -> Paint (S05-S06) -> Final Assembly
+# (S07-S11) -> Quality Inspection (S12).
+#
+# Final-assembly ordering note (post-review correction): powertrain/battery
+# marriage happens BEFORE fastening/wiring/wheel-mounting, matching real
+# assembly sequence (chassis marriage first, then secure it, then connect
+# it, then wheels). An earlier draft had marriage happen after seat/wheel
+# fastening, which read as sequence-backwards to anyone familiar with
+# automotive assembly.
+
+line_name: "trusttwin_development_line_12"
+
+stations:
+  S01:
+    station_name: "Underbody Weld"
+    station_type: WELDING_BODY_JOINING
+    specific_operation: "Robotic spot welding of underbody floor pan"
+    baseline_cycle_time_seconds: 48
+    cycle_time_variability: 0.06
+    sensor_maturity: rich
+    available_sensors: [weld_current, weld_time, electrode_force, cycle_time]
+    applicable_vehicle_variants: [ICE_SEDAN, ICE_SUV, EV]
+    process_parameters:
+      target_weld_current_amps: 9200
+    notes: "Modern robotic weld cell, fully instrumented."
+
+  S02:
+    station_name: "Body Side Panel Weld"
+    station_type: WELDING_BODY_JOINING
+    specific_operation: "Robotic spot welding of left/right body side panels"
+    baseline_cycle_time_seconds: 52
+    cycle_time_variability: 0.07
+    sensor_maturity: rich
+    available_sensors: [weld_current, weld_voltage, weld_time, cycle_time]
+    applicable_vehicle_variants: [ICE_SEDAN, ICE_SUV, EV]
+    process_parameters:
+      target_weld_current_amps: 8800
+    notes: "Same station TYPE as S01 (welding) but a distinct operation with its own target parameters."
+
+  S03:
+    station_name: "Structural Adhesive / Body Bonding"
+    station_type: ADHESIVE_SEALING
+    specific_operation: "Structural adhesive application for body panel bonding"
+    baseline_cycle_time_seconds: 30
+    cycle_time_variability: 0.12
+    sensor_maturity: partial
+    available_sensors: [adhesive_flow_rate, cycle_time]
+    applicable_vehicle_variants: [ICE_SEDAN, ICE_SUV, EV]
+    process_parameters:
+      target_adhesive_flow_rate_ml_s: 4.2
+    notes: "Generic structural-adhesive naming deliberately used (rather than 'seam sealant') to avoid implying a precise real-plant sequencing claim relative to paint. Legacy dispense rig retrofitted with a flow meter only; no bead-position or dispense-pressure sensing."
+
+  S04:
+    station_name: "Body-in-White Dimensional Check"
+    station_type: DIMENSIONAL_INSPECTION
+    specific_operation: "Automated laser/vision dimensional scan of body-in-white"
+    baseline_cycle_time_seconds: 25
+    cycle_time_variability: 0.05
+    sensor_maturity: rich
+    available_sensors: [laser_scan, vision_camera, cycle_time]
+    applicable_vehicle_variants: [ICE_SEDAN, ICE_SUV, EV]
+    process_parameters: {}
+    notes: "Vision/laser inspection cells are inherently data-rich."
+
+  S05:
+    station_name: "E-Coat / Primer Paint"
+    station_type: PAINT_COATING
+    specific_operation: "Electrocoat dip and primer application"
+    baseline_cycle_time_seconds: 60
+    cycle_time_variability: 0.08
+    sensor_maturity: rich
+    available_sensors: [booth_temperature, booth_humidity, film_thickness, cycle_time]
+    applicable_vehicle_variants: [ICE_SEDAN, ICE_SUV, EV]
+    process_parameters:
+      target_film_thickness_um: 25
+    notes: "Paint booths are typically well-monitored for environmental compliance reasons."
+
+  S06:
+    station_name: "Paint Cure Oven"
+    station_type: CURING_ENVIRONMENTAL
+    specific_operation: "Oven cure of basecoat/clearcoat"
+    baseline_cycle_time_seconds: 180
+    cycle_time_variability: 0.05
+    sensor_maturity: rich
+    available_sensors: [oven_temperature, humidity, belt_speed, cycle_time]
+    applicable_vehicle_variants: [ICE_SEDAN, ICE_SUV, EV]
+    process_parameters:
+      target_oven_temperature_c: 160
+    notes: "Cure time compressed for simulation tractability; illustrative, not a real oven dwell time."
+
+  S07:
+    station_name: "Powertrain / Battery Pack Marriage"
+    station_type: ROBOTIC_HANDLING_ASSEMBLY
+    specific_operation: "Robotic marriage of chassis subframe (powertrain or battery pack) to underbody"
+    baseline_cycle_time_seconds: 70
+    cycle_time_variability: 0.09
+    sensor_maturity: rich
+    available_sensors: [force_sensor, position_sensor, cycle_time]
+    applicable_vehicle_variants: [ICE_SEDAN, ICE_SUV, EV]
+    process_parameters:
+      target_insertion_force_n: 1800
+    variant_overrides:
+      ICE_SEDAN:
+        operation_profile: powertrain_marriage
+        cycle_time_multiplier: 1.0
+      ICE_SUV:
+        operation_profile: powertrain_marriage
+        cycle_time_multiplier: 1.10
+      EV:
+        operation_profile: battery_pack_marriage
+        cycle_time_multiplier: 1.20
+    notes: "Moved earlier in the sequence (before fastening/wiring/wheels) to match real assembly order. Same physical station for all variants, but the ACTUAL OPERATION differs by variant (powertrain vs. battery pack) — modeled via variant_overrides.operation_profile, not just a time multiplier, since these are semantically different processes with potentially different failure/degradation modes."
+
+  S08:
+    station_name: "Powertrain / Pack Mounting Fastening"
+    station_type: TORQUE_FASTENING
+    specific_operation: "Torque-controlled fastening of powertrain/battery-pack mounts to chassis"
+    baseline_cycle_time_seconds: 20
+    cycle_time_variability: 0.08
+    sensor_maturity: rich
+    available_sensors: [torque_value, torque_angle, cycle_time]
+    applicable_vehicle_variants: [ICE_SEDAN, ICE_SUV, EV]
+    process_parameters:
+      target_torque_nm: 45
+    notes: "Modern smart torque wrench logging both torque and angle. Secures the subframe married at S07. (Seat mounting is intentionally not modeled as a separate station in this simplified 12-station line, to keep the corrected macro-sequence clean.)"
+
+  S09:
+    station_name: "Post-Marriage Wiring & Electrical Connections"
+    station_type: MANUAL_ASSEMBLY
+    specific_operation: "Manual connection of powertrain/battery electrical harness and remaining interior wiring"
+    baseline_cycle_time_seconds: 90
+    cycle_time_variability: 0.25
+    sensor_maturity: poor
+    available_sensors: [cycle_time, checklist_completion]
+    applicable_vehicle_variants: [ICE_SEDAN, ICE_SUV, EV]
+    process_parameters: {}
+    notes: "Legacy manual station; only timestamp and checklist-completion data exist, matching the PRD's genuine-blind-spot case. Positioned after marriage/fastening since you connect wiring to hardware that is already physically mounted."
+
+  S10:
+    station_name: "Wheel Mounting Fastening"
+    station_type: TORQUE_FASTENING
+    specific_operation: "Torque-controlled wheel bolt tightening"
+    baseline_cycle_time_seconds: 15
+    cycle_time_variability: 0.10
+    sensor_maturity: partial
+    available_sensors: [torque_value, cycle_time]
+    applicable_vehicle_variants: [ICE_SEDAN, ICE_SUV, EV]
+    process_parameters:
+      target_torque_nm: 140
+    notes: "Same station TYPE as S08 (torque/fastening) but a distinct operation, and an older pneumatic tool that logs final torque only, no angle curve."
+
+  S11:
+    station_name: "Fuel System Fill & Leak Check"
+    station_type: FLUID_FILL_FUNCTIONAL
+    specific_operation: "Fuel system fill and pressure leak check"
+    baseline_cycle_time_seconds: 40
+    cycle_time_variability: 0.12
+    sensor_maturity: partial
+    available_sensors: [flow_rate, cycle_time]
+    applicable_vehicle_variants: [ICE_SEDAN, ICE_SUV]
+    process_parameters:
+      target_fill_volume_l: 55
+    notes: "ICE-only station: EV has no fuel system and skips this station entirely (see EV route). This is the one deliberate route branch/skip in the development line."
+
+  S12:
+    station_name: "Final End-of-Line QC"
+    station_type: INSPECTION_EOL_TESTING
+    specific_operation: "Final functional, visual, and roll test inspection"
+    baseline_cycle_time_seconds: 55
+    cycle_time_variability: 0.07
+    sensor_maturity: rich
+    available_sensors: [functional_test_suite, vision_camera, roll_test_sensor, cycle_time]
+    applicable_vehicle_variants: [ICE_SEDAN, ICE_SUV, EV]
+    process_parameters: {}
+    notes: "Terminal inspection station. This is where ground-truth pass/fail outcomes originate; that outcome must never be fed back as an input feature to earlier predictions. Receives vehicles from EITHER S11 (ICE path) OR directly from S10 (EV bypass) — the merge point proving buffers are edge-based, not station-indexed."
+
+buffers:
+  B01: {upstream_station: S01, downstream_station: S02, capacity: 4}
+  B02: {upstream_station: S02, downstream_station: S03, capacity: 4}
+  B03: {upstream_station: S03, downstream_station: S04, capacity: 4}
+  B04: {upstream_station: S04, downstream_station: S05, capacity: 4}
+  B05: {upstream_station: S05, downstream_station: S06, capacity: 6}
+  B06: {upstream_station: S06, downstream_station: S07, capacity: 5}
+  B07: {upstream_station: S07, downstream_station: S08, capacity: 5}
+  B08: {upstream_station: S08, downstream_station: S09, capacity: 4}
+  B09: {upstream_station: S09, downstream_station: S10, capacity: 4}
+  B10: {upstream_station: S10, downstream_station: S11, capacity: 5}
+  B11: {upstream_station: S11, downstream_station: S12, capacity: 4}
+  B12: {upstream_station: S10, downstream_station: S12, capacity: 5}
+
+vehicle_variants:
+  ICE_SEDAN:
+    display_name: "ICE Sedan"
+    route: [S01, S02, S03, S04, S05, S06, S07, S08, S09, S10, S11, S12]
+    processing_time_modifiers: {}
+    notes: "Reference variant; all modifiers below are relative to this baseline. Its operation profile at S07 is declared explicitly via that station's variant_overrides."
+
+  ICE_SUV:
+    display_name: "ICE SUV"
+    route: [S01, S02, S03, S04, S05, S06, S07, S08, S09, S10, S11, S12]
+    processing_time_modifiers:
+      S01: 1.08
+      S02: 1.08
+      S05: 1.05
+      S08: 1.05
+      S10: 1.05
+    notes: "Heavier body/frame slightly increases weld, paint, and fastening cycle times; same route as ICE Sedan. S07's multiplier is defined via that station's variant_overrides instead, since S07 also has a semantic operation_profile for this variant."
+
+  EV:
+    display_name: "EV"
+    route: [S01, S02, S03, S04, S05, S06, S07, S08, S09, S10, S12]
+    processing_time_modifiers:
+      S09: 1.15
+    notes: "Skips S11 (Fuel System Fill & Leak Check) entirely — no fuel system. Wiring/electrical connection at S09 takes longer due to added high-voltage wiring. S07's multiplier and operation_profile (battery_pack_marriage) are defined via that station's variant_overrides, since EV performs a genuinely different operation there, not just a slower version of the ICE operation."

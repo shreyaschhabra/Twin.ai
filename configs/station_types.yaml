@@ -1,0 +1,200 @@
+# Reusable station-type templates shared by every line configuration
+# (12-station development line and the eventual 45-station final line).
+#
+# A station TYPE describes a family of equipment/process. A station
+# INSTANCE (see e.g. development_line.yaml) picks a type and adds the
+# specific operation, cycle time, and sensor availability for one physical
+# station. Two instances of the same type may perform very different
+# operations (e.g. two TORQUE_FASTENING stations: seat bolts vs. wheel
+# bolts).
+#
+# degradation modes / quality-risk mechanisms below are DESCRIPTIVE
+# METADATA ONLY at this stage — no simulation or ML logic reads them yet.
+
+station_types:
+  WELDING_BODY_JOINING:
+    display_name: "Welding / Body Joining"
+    process_family: "body_construction"
+    possible_sensor_families:
+      - weld_current
+      - weld_voltage
+      - weld_time
+      - electrode_force
+      - vibration
+      - cycle_time
+    relevant_process_variables:
+      - weld_current_amps
+      - weld_time_ms
+      - electrode_force_n
+    plausible_degradation_modes:
+      - electrode_tip_wear
+      - robot_arm_misalignment_drift
+      - gun_pressure_drift
+    plausible_quality_risk_mechanisms:
+      - weak_weld_nugget
+      - weld_porosity
+      - missed_weld_point
+
+  ADHESIVE_SEALING:
+    display_name: "Adhesive / Sealing"
+    process_family: "body_construction"
+    possible_sensor_families:
+      - adhesive_flow_rate
+      - bead_position
+      - dispense_pressure
+      - cycle_time
+    relevant_process_variables:
+      - adhesive_flow_rate_ml_s
+      - bead_width_mm
+    plausible_degradation_modes:
+      - nozzle_clog_drift
+      - applicator_wear
+    plausible_quality_risk_mechanisms:
+      - bead_discontinuity
+      - under_application
+      - adhesive_contamination
+
+  DIMENSIONAL_INSPECTION:
+    display_name: "Dimensional Inspection"
+    process_family: "quality_check"
+    possible_sensor_families:
+      - laser_scan
+      - vision_camera
+      - fixture_position
+      - cycle_time
+    relevant_process_variables:
+      - dimensional_deviation_mm
+      - fixture_alignment_score
+    plausible_degradation_modes:
+      - fixture_calibration_drift
+      - camera_lens_contamination
+    plausible_quality_risk_mechanisms:
+      - out_of_tolerance_panel_gap
+      - undetected_deformation
+
+  PAINT_COATING:
+    display_name: "Paint / Coating"
+    process_family: "paint"
+    possible_sensor_families:
+      - booth_temperature
+      - booth_humidity
+      - film_thickness
+      - flow_rate
+      - cycle_time
+    relevant_process_variables:
+      - film_thickness_um
+      - booth_temperature_c
+      - booth_humidity_pct
+    plausible_degradation_modes:
+      - nozzle_wear
+      - booth_filter_degradation
+    plausible_quality_risk_mechanisms:
+      - thin_coat
+      - orange_peel_defect
+      - contamination_inclusion
+
+  CURING_ENVIRONMENTAL:
+    display_name: "Curing / Environmental Process"
+    process_family: "paint"
+    possible_sensor_families:
+      - oven_temperature
+      - humidity
+      - belt_speed
+      - cycle_time
+    relevant_process_variables:
+      - oven_temperature_c
+      - cure_time_s
+    plausible_degradation_modes:
+      - heater_element_degradation
+      - belt_speed_drift
+    plausible_quality_risk_mechanisms:
+      - undercure
+      - overcure_discoloration
+
+  MANUAL_ASSEMBLY:
+    display_name: "Manual Assembly"
+    process_family: "final_assembly"
+    possible_sensor_families:
+      - cycle_time
+      - checklist_completion
+    relevant_process_variables:
+      - checklist_items_completed
+      - station_dwell_time_s
+    plausible_degradation_modes:
+      - operator_fatigue_variation
+      - parts_supply_delay
+    plausible_quality_risk_mechanisms:
+      - missed_connector
+      - incomplete_fastening
+      - incorrect_routing
+
+  TORQUE_FASTENING:
+    display_name: "Torque / Fastening"
+    process_family: "final_assembly"
+    possible_sensor_families:
+      - torque_value
+      - torque_angle
+      - cycle_time
+    relevant_process_variables:
+      - torque_nm
+      - rotation_angle_deg
+    plausible_degradation_modes:
+      - tool_calibration_drift
+      - socket_wear
+    plausible_quality_risk_mechanisms:
+      - under_torque
+      - over_torque
+      - cross_thread
+
+  ROBOTIC_HANDLING_ASSEMBLY:
+    display_name: "Robotic Handling / Assembly"
+    process_family: "final_assembly"
+    possible_sensor_families:
+      - force_sensor
+      - position_sensor
+      - vibration
+      - cycle_time
+    relevant_process_variables:
+      - insertion_force_n
+      - alignment_deviation_mm
+    plausible_degradation_modes:
+      - gripper_wear
+      - servo_calibration_drift
+    plausible_quality_risk_mechanisms:
+      - misalignment
+      - incomplete_seating
+      - connector_damage
+
+  FLUID_FILL_FUNCTIONAL:
+    display_name: "Fluid Fill / Functional Process"
+    process_family: "final_assembly"
+    possible_sensor_families:
+      - flow_rate
+      - fill_pressure
+      - leak_sensor
+      - cycle_time
+    relevant_process_variables:
+      - fill_volume_l
+      - leak_test_pressure_kpa
+    plausible_degradation_modes:
+      - valve_wear
+      - seal_degradation
+    plausible_quality_risk_mechanisms:
+      - underfill
+      - leak_undetected
+
+  INSPECTION_EOL_TESTING:
+    display_name: "Inspection / End-of-Line Testing"
+    process_family: "quality_check"
+    possible_sensor_families:
+      - functional_test_suite
+      - vision_camera
+      - roll_test_sensor
+      - cycle_time
+    relevant_process_variables:
+      - functional_test_pass_rate
+      - roll_test_deviation
+    plausible_degradation_modes:
+      - test_rig_calibration_drift
+    plausible_quality_risk_mechanisms:
+      - false_pass_undetected_defect
