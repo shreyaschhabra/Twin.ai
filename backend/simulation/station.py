@@ -43,6 +43,7 @@ import simpy
 from backend.config.schemas import FactoryConfig, StationInstance
 from backend.simulation.buffer import SimBuffer
 from backend.simulation.events import EventLog, EventType
+from backend.simulation.material_batches import MaterialBatchScheduler
 from backend.simulation.rng import RNGStreamFactory
 from backend.simulation.scenarios.effects import StationEffectBundle
 from backend.simulation.scenarios.manager import ScenarioManager
@@ -74,6 +75,7 @@ class StationRuntime:
         rng_factory: RNGStreamFactory,
         scenario_manager: ScenarioManager,
         sensor_models: SensorModelRegistry,
+        material_batches: MaterialBatchScheduler,
     ):
         if station_cfg.capacity != 1:
             raise NotImplementedError(
@@ -95,6 +97,7 @@ class StationRuntime:
         self.micro_stop_rng = rng_factory.get(f"micro_stop::{station_cfg.station_id}")
         self.scenario_manager = scenario_manager
         self.sensor_models = sensor_models
+        self.material_batches = material_batches
         self.state = StationState.IDLE
         self.processed_count = 0
 
@@ -166,8 +169,14 @@ class StationRuntime:
 
             effects = self.scenario_manager.get_station_effects(self.env.now, station_id, vehicle.vehicle_id)
 
-            batch_id = self.scenario_manager.assign_batch(vehicle.vehicle_id, self.env.now, station_id)
-            if batch_id is not None:
+            # Baseline material-batch assignment: EVERY vehicle at a
+            # batch-relevant station gets a neutral, observable batch_id,
+            # regardless of whether any scenario exists (Step 3 patch 2).
+            # A BAD_BATCH scenario never changes this assignment — it only
+            # decides, purely latently, whether the already-assigned id is
+            # quality-degraded (check_batch_exposure below).
+            if self.material_batches.is_relevant(station_id):
+                batch_id = self.material_batches.assign(station_id)
                 self.event_log.record(
                     EventType.MATERIAL_BATCH_ASSIGNED,
                     simulation_time=self.env.now,
@@ -176,9 +185,15 @@ class StationRuntime:
                     station_id=station_id,
                     batch_id=batch_id,
                 )
+                self.scenario_manager.check_batch_exposure(vehicle.vehicle_id, self.env.now, station_id, batch_id)
 
-            yield from self._maybe_run_micro_stop(station_id, vehicle)
-
+            # ---- processing, with a possible mid-processing micro-stop interruption ----
+            # Chronology (Step 3 patch 1): STARTED -> PROCESSING -> [DOWN ->
+            # MICRO_STOP_OCCURRED -> PROCESSING] -> COMPLETED. The vehicle
+            # is already "at the station" (VEHICLE_ENTERED_STATION already
+            # logged above) before any micro-stop check runs, so the delay
+            # can never leak into upstream queue waiting_time — it only
+            # ever extends processing_completion_time.
             proc_time = self.compute_processing_time(vehicle.variant_id, effects)
             self.event_log.record(
                 EventType.STATION_PROCESSING_STARTED,
@@ -187,14 +202,18 @@ class StationRuntime:
                 station_id=station_id,
                 value=proc_time,
             )
+
+            micro_stop_duration = yield from self._maybe_run_micro_stop(station_id, vehicle)
+
             yield self.env.timeout(proc_time)
             self.processed_count += 1
+            total_time = proc_time + micro_stop_duration
             self.event_log.record(
                 EventType.STATION_PROCESSING_COMPLETED,
                 simulation_time=self.env.now,
                 vehicle_id=vehicle.vehicle_id,
                 station_id=station_id,
-                value=proc_time,
+                value=total_time,
             )
 
             generate_sensor_readings(
@@ -246,18 +265,21 @@ class StationRuntime:
     def _maybe_run_micro_stop(self, station_id: str, vehicle: Vehicle):
         """Rolls (using this station's own isolated micro_stop RNG stream)
         whether a currently-active micro-stop scenario interrupts the
-        vehicle just acquired. If it fires: transitions to DOWN, logs an
-        observable MICRO_STOP_OCCURRED event with its duration, and blocks
-        for that duration before returning control — the station cannot
-        acquire a different vehicle meanwhile (same structural guarantee
-        as BLOCKED, since this runs before the acquire loop is re-entered).
+        vehicle already being processed (STATION_PROCESSING_STARTED has
+        already been logged by the caller). If it fires: transitions
+        PROCESSING -> DOWN, logs an observable MICRO_STOP_OCCURRED event
+        with its duration, blocks for that duration, then transitions back
+        DOWN -> PROCESSING before returning control. The station cannot
+        acquire a different vehicle meanwhile — same structural guarantee
+        as BLOCKED. Returns the micro-stop duration (0.0 if none fired) so
+        the caller can fold it into the observed total processing time.
         No effect at all when no micro-stop scenario is active (params is
         None), so a no-scenario run never touches this RNG stream."""
         params = self.scenario_manager.get_micro_stop_params(self.env.now, station_id)
         if params is None:
-            return
+            return 0.0
         if self.micro_stop_rng.random() >= params["probability"]:
-            return
+            return 0.0
 
         duration = self.micro_stop_rng.uniform(params["min_duration"], params["max_duration"])
         self._set_state(StationState.DOWN)
@@ -271,6 +293,7 @@ class StationRuntime:
         )
         yield self.env.timeout(duration)
         self._set_state(StationState.PROCESSING)
+        return duration
 
     def _acquire_vehicle(self):
         station_id = self.station_cfg.station_id

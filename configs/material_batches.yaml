@@ -1,0 +1,12 @@
+# Baseline material/component batch schedule (Step 3 patch 2). Every
+# vehicle processed at one of these stations receives a neutral,
+# observable batch_id, rotating every `cohort_size` visits — regardless of
+# whether any BAD_BATCH scenario is configured. This exists so batch
+# presence itself can never distinguish a healthy run from a bad-batch run
+# (see backend/simulation/material_batches.py).
+#
+# Cohort sizes are illustrative simulation assumptions, not sourced.
+
+batch_relevant_stations:
+  S03: 5   # structural adhesive supply lot
+  S08: 8   # fastener/bolt supply lot

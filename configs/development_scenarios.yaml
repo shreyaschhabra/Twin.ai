@@ -48,12 +48,19 @@ scenarios:
       EV: 0.20
 
   bad_batch_demo:
+    # Patch 2: this scenario does NOT create its own batch window. Batch
+    # assignment is a baseline production concern (see
+    # configs/material_batches.yaml + material_batches.py) that happens
+    # for every vehicle at S03 regardless of scenario. This scenario only
+    # declares batch B1002 — the SECOND batch that will occur under the
+    # configured cohort size, given any run of a reasonable number of
+    # vehicles — as latently quality-degraded.
     family: BAD_BATCH
     station_ids: [S03]
-    start_time: 2000
-    duration: 5000
+    start_time: 0
+    # no duration => "wherever/whenever B1002 shows up, it's bad"
     severity: 0.5
-    affected_batch_id: "B1047"
+    affected_batch_id: "B1002"
     params:
       quality_weight_per_visit: 0.15
 

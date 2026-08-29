@@ -188,6 +188,50 @@ add more assumed parameters.
   Step 2's core event stream exactly (verified against a fixture captured
   from commit `57e71f3`, before any Step 3 code existed).
 
+## Step 3 post-review patches
+
+- **Micro-stop chronology corrected**: an earlier draft ran the micro-stop
+  detour BEFORE `STATION_PROCESSING_STARTED`, which made the delay show up
+  as upstream queue `waiting_time` in genealogy — wrong, since a micro-stop
+  is a machine interruption while actively occupied, not a queueing delay.
+  Corrected order: `STATION_PROCESSING_STARTED` → (possible `PROCESSING`→
+  `DOWN`→`MICRO_STOP_OCCURRED`→`DOWN`→`PROCESSING`) → `STATION_PROCESSING_COMPLETED`.
+  `STATION_PROCESSING_COMPLETED.value` (and therefore genealogy's
+  `processing_time`) now equals the normal service draw plus the
+  micro-stop duration when one fires, keeping `processing_completion_time
+  - processing_start_time` consistent with the `value` field. Verified by
+  test: `waiting_time` is now identical between a matched baseline and a
+  micro-stop run for the same vehicle, while the processing span grows by
+  exactly the injected duration.
+- **Baseline material-batch schedule** (`configs/material_batches.yaml`,
+  `backend/simulation/material_batches.py`): every vehicle at a configured
+  batch-relevant station now receives a neutral, observable `batch_id`
+  from a deterministic, per-station rotating schedule (`B1001, B1002, ...`,
+  numbered independently per station since two stations track different
+  material streams) — regardless of whether any scenario is configured.
+  An earlier draft only assigned a `batch_id`/emitted
+  `MATERIAL_BATCH_ASSIGNED` for scenario-affected vehicles, which would
+  have made the mere *presence* of batch data a synthetic tell
+  distinguishing healthy from bad-batch runs. `ScenarioManager` no longer
+  assigns batches at all — it only has `check_batch_exposure()`, which
+  looks at an already-assigned batch_id and decides, purely latently,
+  whether it happens to be the one a `BAD_BATCH` scenario declared
+  degraded. Verified by test: the same seed + same batch-relevant-station
+  config produces a byte-identical observable batch-id sequence whether or
+  not a `BAD_BATCH` scenario is present; only latent exposure differs.
+- **Same-station composition semantics documented** in
+  `backend/simulation/scenarios/manager.py`: cycle-time/variability
+  multipliers multiply across scenarios on the same station; sensor mean
+  shifts sum; sensor noise multipliers multiply; sensor dropout is NOT
+  composed (last-in-list wins for a given sensor, a deliberate
+  simplification); latent exposure contributions from different scenarios
+  simply sum. A safety clamp (`_MAX_MULTIPLIER = 5.0`, illustrative, not a
+  physical claim) prevents stacked multiplicative effects from producing
+  an unbounded cycle time. Verified by test: `EQUIPMENT_DEGRADATION` +
+  `SENSOR_DROPOUT` targeting the same sensor at the same station — cycle
+  time still degrades and latent exposure still accumulates even though
+  the degraded sensor reading itself is fully hidden by the dropout.
+
 ## What is NOT yet assumed
 
 Defect rates, degradation/anomaly injection parameters, ML model

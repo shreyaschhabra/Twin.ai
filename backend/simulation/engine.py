@@ -17,6 +17,7 @@ from backend.config.schemas import FactoryConfig
 from backend.simulation.buffer import SimBuffer
 from backend.simulation.events import Event, EventLog, EventType
 from backend.simulation.genealogy import StationVisitRecord, build_genealogy
+from backend.simulation.material_batches import MaterialBatchScheduler
 from backend.simulation.rng import RNGStreamFactory
 from backend.simulation.scenarios.config import ScenarioDefinition
 from backend.simulation.scenarios.latent import LatentTruthLog
@@ -51,6 +52,7 @@ class FactoryEngine:
         entry_buffer_capacity: int = DEFAULT_ENTRY_BUFFER_CAPACITY,
         scenarios: Optional[List[ScenarioDefinition]] = None,
         sensor_models: Optional[SensorModelRegistry] = None,
+        batch_relevant_stations: Optional[Dict[str, int]] = None,
     ):
         self.config = config
         self.rng_factory = RNGStreamFactory(master_seed=seed)
@@ -60,6 +62,7 @@ class FactoryEngine:
         self.latent_truth = LatentTruthLog()
         self.scenario_manager = ScenarioManager(scenarios or [], self.latent_truth)
         self.sensor_models: SensorModelRegistry = sensor_models or {}
+        self.material_batches = MaterialBatchScheduler(batch_relevant_stations or {})
         self.env = simpy.Environment()
         self.event_log = EventLog()
         self.vehicles: Dict[str, Vehicle] = {}
@@ -104,6 +107,7 @@ class FactoryEngine:
                 rng_factory=self.rng_factory,
                 scenario_manager=self.scenario_manager,
                 sensor_models=self.sensor_models,
+                material_batches=self.material_batches,
             )
             for station_id, station_cfg in config.stations.items()
         }
@@ -291,6 +295,7 @@ def run_simulation(
     entry_buffer_capacity: int = DEFAULT_ENTRY_BUFFER_CAPACITY,
     scenarios: Optional[List[ScenarioDefinition]] = None,
     sensor_models: Optional[SensorModelRegistry] = None,
+    batch_relevant_stations: Optional[Dict[str, int]] = None,
 ) -> RunResult:
     engine = FactoryEngine(
         config,
@@ -298,6 +303,7 @@ def run_simulation(
         entry_buffer_capacity=entry_buffer_capacity,
         scenarios=scenarios,
         sensor_models=sensor_models,
+        batch_relevant_stations=batch_relevant_stations,
     )
     return engine.run(
         n_vehicles=n_vehicles,

@@ -114,13 +114,17 @@ def test_micro_stops(config, sensor_models):
                and e.station_id == "S10" and e.from_state == "DOWN"]
     assert all(e.to_state == "PROCESSING" for e in resumed)
 
-    # actual chronology includes the added delay: processing start on S10
-    # happens strictly after the micro-stop event's own end time
+    # Corrected chronology (patch 1): STATION_PROCESSING_STARTED happens
+    # BEFORE the micro-stop interruption — the vehicle is already being
+    # processed when it gets interrupted, not still waiting to start.
     proc_started = {e.vehicle_id: e.simulation_time for e in abnormal.events
                     if e.event_type == EventType.STATION_PROCESSING_STARTED.value and e.station_id == "S10"}
+    proc_completed = {e.vehicle_id: e.simulation_time for e in abnormal.events
+                      if e.event_type == EventType.STATION_PROCESSING_COMPLETED.value and e.station_id == "S10"}
     for stop in micro_stops:
-        start = proc_started[stop.vehicle_id]
-        assert start >= stop.simulation_time + stop.value
+        assert proc_started[stop.vehicle_id] <= stop.simulation_time
+        # and completion happens only after the micro-stop fully resolves
+        assert proc_completed[stop.vehicle_id] >= stop.simulation_time + stop.value
 
     # downstream flow consequence: vehicles exit S10 later than in baseline
     def exit_time(result, vehicle_id):
@@ -131,6 +135,32 @@ def test_micro_stops(config, sensor_models):
         if vid in baseline.vehicles and exit_time(abnormal, vid) > exit_time(baseline, vid)
     )
     assert delayed_count >= 10
+
+
+def test_micro_stop_delay_lands_in_processing_not_waiting(config, sensor_models):
+    """Patch-1-required test: (completion - start) grows by exactly the
+    micro-stop duration in a matched comparison, while pre-processing
+    waiting_time is unaffected — proving the delay was correctly placed."""
+    scenario = ScenarioDefinition(
+        scenario_id="microstop_s10_precise", family=ScenarioFamily.MICRO_STOPS,
+        station_ids=["S10"], start_time=0, duration=100000, severity=0.5,
+        params={"stop_probability": 1.0, "min_duration_seconds": 15, "max_duration_seconds": 15},
+    )
+    baseline = run_simulation(config, n_vehicles=10, seed=SEED, sensor_models=sensor_models)
+    abnormal = run_simulation(config, n_vehicles=10, seed=SEED, sensor_models=sensor_models, scenarios=[scenario])
+
+    for vid in baseline.vehicles:
+        base_visit = next(v for v in baseline.genealogy[vid] if v.station_id == "S10")
+        abn_visit = next(v for v in abnormal.genealogy[vid] if v.station_id == "S10")
+
+        base_span = base_visit.processing_completion_time - base_visit.processing_start_time
+        abn_span = abn_visit.processing_completion_time - abn_visit.processing_start_time
+        assert abn_span == pytest.approx(base_span + 15.0, abs=1e-6)
+
+        # waiting_time (entry -> start) must be identical: the micro-stop
+        # must never leak into upstream queue waiting time
+        assert abn_visit.waiting_time == pytest.approx(base_visit.waiting_time, abs=1e-6)
+        assert abn_visit.processing_start_time == pytest.approx(base_visit.processing_start_time, abs=1e-6)
 
 
 # ============================================================ 3. VEHICLE-MIX OVERLOAD
@@ -163,28 +193,74 @@ def test_vehicle_mix_overload(config, sensor_models, baseline):
 
 # ============================================================ 4. BAD BATCH
 
+BATCH_STATIONS = {"S03": 5}  # cohort size 5 -> B1001, B1002, B1003, ... at S03
+
+
 def test_bad_batch(config, sensor_models):
     scenario = ScenarioDefinition(
-        scenario_id="bad_batch_b1047", family=ScenarioFamily.BAD_BATCH,
-        station_ids=["S03"], start_time=0, duration=100000, severity=0.5,
-        affected_batch_id="B1047",
+        scenario_id="bad_batch_b1002", family=ScenarioFamily.BAD_BATCH,
+        station_ids=["S03"], start_time=0, duration=None, severity=0.5,
+        affected_batch_id="B1002",
         params={"quality_weight_per_visit": 0.2},
     )
-    result = run_simulation(config, n_vehicles=20, seed=SEED, sensor_models=sensor_models, scenarios=[scenario])
+    result = run_simulation(config, n_vehicles=20, seed=SEED, sensor_models=sensor_models,
+                             scenarios=[scenario], batch_relevant_stations=BATCH_STATIONS)
 
+    # patch 2 requirement: EVERY vehicle at S03 gets a neutral batch_id —
+    # not just the ones in the bad cohort
     assignments = [e for e in result.events if e.event_type == EventType.MATERIAL_BATCH_ASSIGNED.value]
-    assert len(assignments) >= 15  # a coherent cohort, not one arbitrary vehicle
-    assert all(e.batch_id == "B1047" and e.station_id == "S03" for e in assignments)
+    assert len(assignments) == 20
+    assert all(e.station_id == "S03" for e in assignments)
 
-    cohort = {e.vehicle_id for e in assignments}
-    exposures = [r for r in result.latent_truth.quality_exposure if r.scenario_id == "bad_batch_b1047"]
-    assert {r.vehicle_id for r in exposures} == cohort
+    # many distinct normal batches exist (not one batch per vehicle, not
+    # one batch for the whole run)
+    distinct_batches = {e.batch_id for e in assignments}
+    assert len(distinct_batches) >= 3
+    assert "B1002" in distinct_batches
+
+    # only the B1002 cohort accumulates latent exposure from this scenario
+    b1002_cohort = {e.vehicle_id for e in assignments if e.batch_id == "B1002"}
+    assert 1 < len(b1002_cohort) < 20  # a real cohort, not one vehicle, not everyone
+    exposures = [r for r in result.latent_truth.quality_exposure if r.scenario_id == "bad_batch_b1002"]
+    assert {r.vehicle_id for r in exposures} == b1002_cohort
     assert all(r.contribution > 0 for r in exposures)
 
     # no observable "is bad" field anywhere
     for e in result.events:
         blob = str(e.__dict__).lower()
         assert "is_bad" not in blob and "bad_batch_truth" not in blob and "bad=true" not in blob
+
+
+def test_bad_batch_observable_schedule_matches_healthy_baseline(config, sensor_models):
+    """Patch-2-required test: the strongest matched A/B design. Same
+    master seed, same batch_relevant_stations, one run with no scenario
+    and one with B1002 declared bad — the OBSERVABLE batch-id sequence
+    must be byte-identical; only latent exposure should differ."""
+    healthy = run_simulation(config, n_vehicles=20, seed=SEED, sensor_models=sensor_models,
+                              batch_relevant_stations=BATCH_STATIONS)
+    bad_batch_scenario = ScenarioDefinition(
+        scenario_id="bad_batch_b1002", family=ScenarioFamily.BAD_BATCH,
+        station_ids=["S03"], start_time=0, duration=None, severity=0.5,
+        affected_batch_id="B1002", params={"quality_weight_per_visit": 0.2},
+    )
+    abnormal = run_simulation(config, n_vehicles=20, seed=SEED, sensor_models=sensor_models,
+                               scenarios=[bad_batch_scenario], batch_relevant_stations=BATCH_STATIONS)
+
+    def batch_schedule(result):
+        return [(e.vehicle_id, e.station_id, e.batch_id) for e in result.events
+                if e.event_type == EventType.MATERIAL_BATCH_ASSIGNED.value]
+
+    assert batch_schedule(healthy) == batch_schedule(abnormal)
+
+    # healthy run has zero latent exposure; abnormal run has some — the
+    # *only* difference between the two runs
+    assert healthy.latent_truth.quality_exposure == []
+    assert len(abnormal.latent_truth.quality_exposure) > 0
+
+    # and the healthy run's own batch schedule already contains multiple
+    # distinct normal batches, with no scenario involved at all
+    healthy_batches = {b for _, _, b in batch_schedule(healthy)}
+    assert len(healthy_batches) >= 3
 
 
 # ============================================================ 5. ENVIRONMENTAL DRIFT
@@ -321,6 +397,65 @@ def test_scenario_composition_two_compatible_scenarios(config, sensor_models, ba
 
     # unrelated station S01 still byte-identical to the true baseline
     assert processing_times(result, "S01") == processing_times(baseline, "S01")
+
+
+def test_same_station_composition_degradation_and_dropout(config, sensor_models, baseline):
+    """Patch-3-required test: the important same-station case — gradual
+    equipment degradation AND sensor dropout both targeting S02's
+    weld_current. Composition semantics (documented in manager.py):
+    cycle_time_multiplier is a pure function of the degradation scenario
+    (dropout carries no cycle-time effect at all), while the weld_current
+    READING itself becomes unobservable because dropout is checked first
+    in sensors.py — proving a hidden physical effect can coexist with a
+    hidden sensor, without one cancelling the other."""
+    degradation = ScenarioDefinition(
+        scenario_id="same_station_degrade", family=ScenarioFamily.EQUIPMENT_DEGRADATION,
+        station_ids=["S02"], start_time=0, duration=100000, severity=0.7,
+        affected_sensors=["weld_current"],
+        params={"ramp_duration_seconds": 10000, "max_cycle_time_multiplier": 1.8,
+                "max_sensor_mean_shift": -900.0, "quality_weight_per_visit": 0.03},
+    )
+    dropout = ScenarioDefinition(
+        scenario_id="same_station_dropout", family=ScenarioFamily.SENSOR_DROPOUT,
+        station_ids=["S02"], start_time=0, duration=100000, severity=0.5,
+        affected_sensors=["weld_current"], dropout_type="missing",
+        params={"dropout_probability": 1.0},
+    )
+    result = run_simulation(
+        config, n_vehicles=N_VEHICLES, seed=SEED, sensor_models=sensor_models,
+        scenarios=[degradation, dropout],
+    )
+
+    # 1+2. physical degradation still changes cycle time, even though its
+    # target sensor is invisible
+    s02_times = processing_times(result, "S02")
+    assert s02_times[-1] > s02_times[2] * 1.3
+
+    # 3. latent quality exposure from degradation still accumulates
+    exposures = [r for r in result.latent_truth.quality_exposure if r.scenario_id == "same_station_degrade"]
+    assert len(exposures) >= 10
+
+    # 4. the targeted sensor is missing because of dropout — the
+    # degraded VALUE is never actually observable
+    weld = sensor_readings(result, "S02", "weld_current")
+    assert all(r.measurement_status == "missing" and r.value is None for r in weld)
+
+    # 5. dropout does not cancel the physical degradation: cycle time grew
+    # (checked above) despite the sensor being fully hidden the whole time
+    # — process truth and measurement truth are provably separable here.
+
+    # 6a. S02's OTHER sensors (not targeted by either scenario) are
+    # completely unaffected — byte-identical to true baseline
+    assert [r.value for r in sensor_readings(result, "S02", "weld_time")] == \
+           [r.value for r in sensor_readings(baseline, "S02", "weld_time")]
+    # 6b. unrelated station S01 also byte-identical to true baseline
+    assert processing_times(result, "S01") == processing_times(baseline, "S01")
+
+    # 7. no latent scenario fields leak into observable data
+    for e in result.events:
+        blob = str(e.__dict__).lower()
+        for prohibited in PROHIBITED_OBSERVABLE_FIELDS:
+            assert prohibited not in blob
 
 
 # ============================================================ LEAKAGE (Section T)

@@ -23,6 +23,7 @@ import pandas as pd
 
 from backend.config.loader import load_factory_config
 from backend.simulation.engine import run_simulation
+from backend.simulation.material_batches import load_batch_relevant_stations
 from backend.simulation.scenarios.config import load_scenarios
 from backend.simulation.sensors import load_sensor_models
 
@@ -50,17 +51,24 @@ def main():
     config = load_factory_config(CONFIG_DIR / "station_types.yaml", CONFIG_DIR / "development_line.yaml")
     sensor_models = load_sensor_models(CONFIG_DIR / "sensor_models.yaml")
     all_scenarios = {s.scenario_id: s for s in load_scenarios(CONFIG_DIR / "development_scenarios.yaml")}
+    batch_relevant_stations = load_batch_relevant_stations(CONFIG_DIR / "material_batches.yaml")
 
     OBSERVABLE_DIR.mkdir(parents=True, exist_ok=True)
     LATENT_DIR.mkdir(parents=True, exist_ok=True)
 
     baseline_summary = None
+    batch_schedules = {}
     for name, scenario_id in RUNS:
         scenarios = [all_scenarios[scenario_id]] if scenario_id else []
         result = run_simulation(
             config, n_vehicles=N_VEHICLES, seed=SEED,
             sensor_models=sensor_models, scenarios=scenarios,
+            batch_relevant_stations=batch_relevant_stations,
         )
+        batch_schedules[name] = [
+            (e.vehicle_id, e.station_id, e.batch_id) for e in result.events
+            if e.event_type == "MATERIAL_BATCH_ASSIGNED"
+        ]
 
         events_df = pd.DataFrame([e.__dict__ for e in result.events])
         events_df.to_parquet(OBSERVABLE_DIR / f"{name}_events.parquet", index=False)
@@ -95,6 +103,12 @@ def main():
     print("\nBaseline throughput:", f"{baseline_summary['throughput_vehicles_per_hour']:.2f} veh/hr")
     print(f"Observable data -> {OBSERVABLE_DIR}")
     print(f"Latent data (never an ML feature source) -> {LATENT_DIR}")
+
+    healthy_schedule = batch_schedules["01_healthy_baseline"]
+    bad_batch_schedule = batch_schedules["05_bad_batch"]
+    distinct_batches = {b for _, _, b in healthy_schedule}
+    print(f"\nHealthy-vs-bad-batch observable schedule identical: {healthy_schedule == bad_batch_schedule}")
+    print(f"Distinct normal batch IDs observed in healthy baseline: {sorted(distinct_batches)}")
 
 
 if __name__ == "__main__":

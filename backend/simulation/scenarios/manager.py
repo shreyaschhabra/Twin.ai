@@ -4,15 +4,43 @@ configured" and "what effect does that have right now, here". Station code
 never branches on station_id or scenario family — it asks the manager for
 an effect bundle and applies whatever comes back generically.
 
-Design: querying station effects (get_station_effects) and batch
-assignment (assign_batch) are deterministic GIVEN a vehicle/time/station —
-no RNG lives inside this class. Anything genuinely random (whether a
-micro-stop actually fires this visit, its exact duration, whether a rare
-background quality event fires for this vehicle) is rolled by the CALLER
-using its own isolated RNG stream; the manager only supplies the
-parameters (probabilities, ranges) that govern that roll. This keeps the
-manager pure/testable and keeps every random draw traceable to one named,
-isolated stream (see rng.py).
+Design: querying station effects (get_station_effects) is deterministic
+GIVEN a vehicle/time/station — no RNG lives inside this class. Anything
+genuinely random (whether a micro-stop actually fires this visit, its
+exact duration, whether a rare background quality event fires for this
+vehicle) is rolled by the CALLER using its own isolated RNG stream; the
+manager only supplies the parameters (probabilities, ranges) that govern
+that roll. This keeps the manager pure/testable and keeps every random
+draw traceable to one named, isolated stream (see rng.py).
+
+Material/component batches are NOT assigned here (see Step 3 patch 2):
+that is a baseline production concern that must happen for every vehicle
+at a batch-relevant station regardless of whether any scenario exists —
+see backend/simulation/material_batches.py. This manager's only batch-
+related job is check_batch_exposure(): given an already-assigned,
+already-observable batch_id, decide whether a BAD_BATCH scenario has
+latently marked that specific id as quality-degraded. The batch_id itself
+never depends on scenario configuration, which is exactly what makes the
+matched baseline/bad-batch observable-schedule comparison valid.
+
+COMPOSITION SEMANTICS (Step 3 patch 3) — when more than one scenario
+targets the same station, effects combine by simple, fixed rules rather
+than a conflict solver:
+  - cycle_time_multiplier: multiplied across all active scenarios
+  - variability_multiplier: multiplied across all active scenarios
+  - sensor_mean_shift: summed per sensor across all active scenarios
+  - sensor_noise_multiplier: multiplied per sensor
+  - sensor dropout: NOT composed — if more than one SENSOR_DROPOUT
+    scenario targets the same sensor, the last one encountered in
+    `scenarios` list order wins. This is a deliberate, documented
+    simplification (no dropout "severity stacking"), not an oversight.
+  - latent quality exposure: every contributing scenario records its own
+    QualityExposureRecord independently; a vehicle's total exposure is
+    just the sum (see LatentTruthLog.total_exposure_by_vehicle).
+Multiplicative fields are clamped (see _MAX_MULTIPLIER below) so stacking
+several scenarios on one station can't silently produce an unbounded or
+physically nonsensical cycle time — this is a safety clamp, not a
+negotiated interaction between families.
 """
 
 from __future__ import annotations
@@ -27,6 +55,12 @@ from backend.simulation.scenarios.latent import (
     QualityExposureRecord,
     ScenarioTruthRecord,
 )
+
+# Safety clamp on composed multiplicative effects (patch 3): prevents
+# several stacked scenarios on the same station from producing an
+# unbounded/impossible cycle time. Not a claim about any real physical
+# limit — just a sanity ceiling.
+_MAX_MULTIPLIER = 5.0
 
 
 class ScenarioManager:
@@ -114,17 +148,24 @@ class ScenarioManager:
                 bundle.sensor_dropout_probability[sensor] = dropout_prob
             bundle.active_scenario_ids.append(s.scenario_id)
 
+        bundle.cycle_time_multiplier = min(bundle.cycle_time_multiplier, _MAX_MULTIPLIER)
+        bundle.variability_multiplier = min(bundle.variability_multiplier, _MAX_MULTIPLIER)
+        for sensor in bundle.sensor_noise_multiplier:
+            bundle.sensor_noise_multiplier[sensor] = min(bundle.sensor_noise_multiplier[sensor], _MAX_MULTIPLIER)
+
         return bundle
 
-    def assign_batch(self, vehicle_id: str, sim_time: float, station_id: str) -> Optional[str]:
+    def check_batch_exposure(self, vehicle_id: str, sim_time: float, station_id: str, batch_id: str) -> None:
+        """batch_id is already-assigned, already-observable (see
+        material_batches.py) — this only decides whether it's latently
+        marked bad, and if so records exposure. Never returns or creates
+        an observable batch_id itself."""
         for s in self._active(sim_time, {ScenarioFamily.BAD_BATCH}, station_id):
-            if not s.affected_batch_id:
+            if s.affected_batch_id != batch_id:
                 continue
             quality_weight = s.params.get("quality_weight_per_visit", 0.0)
             if quality_weight > 0:
                 self._record_exposure(vehicle_id, sim_time, s, station_id, quality_weight, "bad_batch")
-            return s.affected_batch_id
-        return None
 
     def get_variant_mix_override(self, sim_time: float) -> Optional[Dict[str, float]]:
         for s in self._active(sim_time, {ScenarioFamily.VEHICLE_MIX_OVERLOAD}):
