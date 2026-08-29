@@ -40,6 +40,13 @@ class EventType(str, Enum):
     STATION_PROCESSING_COMPLETED = "STATION_PROCESSING_COMPLETED"
     STATION_STATE_CHANGED = "STATION_STATE_CHANGED"
     VEHICLE_COMPLETED_LINE = "VEHICLE_COMPLETED_LINE"
+    # Step 3 additions — all observable (a real plant could plausibly
+    # produce every field on these). See scenarios/latent.py for the
+    # physically separate latent-truth representation these must never
+    # be confused with.
+    SENSOR_READING = "SENSOR_READING"
+    MICRO_STOP_OCCURRED = "MICRO_STOP_OCCURRED"
+    MATERIAL_BATCH_ASSIGNED = "MATERIAL_BATCH_ASSIGNED"
 
 
 @dataclass
@@ -56,6 +63,11 @@ class Event:
     to_state: Optional[str] = None
     value: Optional[float] = None
     occupancy: Optional[int] = None
+    # Step 3 additions, used only by SENSOR_READING / MATERIAL_BATCH_ASSIGNED
+    sensor_name: Optional[str] = None
+    unit: Optional[str] = None
+    measurement_status: Optional[str] = None
+    batch_id: Optional[str] = None
 
 
 class EventLog:

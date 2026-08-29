@@ -18,6 +18,10 @@ from backend.simulation.buffer import SimBuffer
 from backend.simulation.events import Event, EventLog, EventType
 from backend.simulation.genealogy import StationVisitRecord, build_genealogy
 from backend.simulation.rng import RNGStreamFactory
+from backend.simulation.scenarios.config import ScenarioDefinition
+from backend.simulation.scenarios.latent import LatentTruthLog
+from backend.simulation.scenarios.manager import ScenarioManager
+from backend.simulation.sensors import SensorModelRegistry
 from backend.simulation.station import StationRuntime
 from backend.simulation.vehicle import Vehicle
 
@@ -36,6 +40,7 @@ class RunResult:
     vehicles: Dict[str, Vehicle]
     genealogy: Dict[str, List[StationVisitRecord]]
     summary: dict = field(default_factory=dict)
+    latent_truth: Optional[LatentTruthLog] = None
 
 
 class FactoryEngine:
@@ -44,11 +49,17 @@ class FactoryEngine:
         config: FactoryConfig,
         seed: int,
         entry_buffer_capacity: int = DEFAULT_ENTRY_BUFFER_CAPACITY,
+        scenarios: Optional[List[ScenarioDefinition]] = None,
+        sensor_models: Optional[SensorModelRegistry] = None,
     ):
         self.config = config
         self.rng_factory = RNGStreamFactory(master_seed=seed)
         self.arrival_rng = self.rng_factory.get("vehicle_interarrival")
         self.variant_rng = self.rng_factory.get("vehicle_variant_selection")
+        self.background_quality_rng = self.rng_factory.get("background_quality_disturbance")
+        self.latent_truth = LatentTruthLog()
+        self.scenario_manager = ScenarioManager(scenarios or [], self.latent_truth)
+        self.sensor_models: SensorModelRegistry = sensor_models or {}
         self.env = simpy.Environment()
         self.event_log = EventLog()
         self.vehicles: Dict[str, Vehicle] = {}
@@ -90,7 +101,9 @@ class FactoryEngine:
                 input_buffers=self.incoming_buffers[station_id],
                 outgoing_buffer_lookup=self.outgoing_by_station.get(station_id, {}),
                 event_log=self.event_log,
-                rng=self.rng_factory.get(f"processing_time::{station_id}"),
+                rng_factory=self.rng_factory,
+                scenario_manager=self.scenario_manager,
+                sensor_models=self.sensor_models,
             )
             for station_id, station_cfg in config.stations.items()
         }
@@ -124,6 +137,7 @@ class FactoryEngine:
             vehicles=self.vehicles,
             genealogy=genealogy,
             summary=summary,
+            latent_truth=self.latent_truth,
         )
 
     def _vehicle_generator(
@@ -133,9 +147,6 @@ class FactoryEngine:
         std_interarrival: float,
         variant_mix: Dict[str, float],
     ):
-        variant_ids = list(variant_mix.keys())
-        weights = list(variant_mix.values())
-
         for i in range(1, n_vehicles + 1):
             interarrival = max(
                 self.arrival_rng.gauss(mean_interarrival, std_interarrival),
@@ -143,7 +154,14 @@ class FactoryEngine:
             )
             yield self.env.timeout(interarrival)
 
+            # Vehicle-mix-overload scenarios override the configured mix
+            # for a time window; this is the ONLY thing that scenario
+            # family touches — no station/equipment effect whatsoever.
+            active_mix = self.scenario_manager.get_variant_mix_override(self.env.now) or variant_mix
+            variant_ids = list(active_mix.keys())
+            weights = list(active_mix.values())
             variant_id = self.variant_rng.choices(variant_ids, weights=weights, k=1)[0]
+
             vehicle_id = f"V{i:05d}"
             route = list(self.config.vehicle_variants[variant_id].route)
             vehicle = Vehicle(
@@ -159,6 +177,14 @@ class FactoryEngine:
                 vehicle_id=vehicle_id,
                 vehicle_variant=variant_id,
                 route_position=0,
+            )
+
+            # Rare background quality event (family 8): a no-op unless a
+            # RANDOM_QUALITY_EVENT scenario is configured, using its own
+            # isolated RNG stream so it can never perturb arrival/variant
+            # timing even when active.
+            self.scenario_manager.roll_random_quality_event(
+                vehicle_id, self.env.now, self.background_quality_rng
             )
 
             entry_station = route[0]
@@ -263,8 +289,16 @@ def run_simulation(
     std_interarrival_seconds: float = 20.0,
     variant_mix: Optional[Dict[str, float]] = None,
     entry_buffer_capacity: int = DEFAULT_ENTRY_BUFFER_CAPACITY,
+    scenarios: Optional[List[ScenarioDefinition]] = None,
+    sensor_models: Optional[SensorModelRegistry] = None,
 ) -> RunResult:
-    engine = FactoryEngine(config, seed=seed, entry_buffer_capacity=entry_buffer_capacity)
+    engine = FactoryEngine(
+        config,
+        seed=seed,
+        entry_buffer_capacity=entry_buffer_capacity,
+        scenarios=scenarios,
+        sensor_models=sensor_models,
+    )
     return engine.run(
         n_vehicles=n_vehicles,
         mean_interarrival_seconds=mean_interarrival_seconds,

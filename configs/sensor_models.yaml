@@ -1,0 +1,60 @@
+# Illustrative sensor model parameters for the 12-station development
+# line. Keyed by (station_id, sensor_name) because the same sensor family
+# (e.g. weld_current, torque_value) has a different baseline at different
+# stations. Every entry here corresponds to a sensor actually listed in
+# that station's `available_sensors` in configs/development_line.yaml —
+# "cycle_time" is deliberately excluded everywhere (see sensors.py
+# docstring: it would duplicate STATION_PROCESSING_COMPLETED).
+#
+# All baseline/noise/valid-range values are illustrative simulation
+# assumptions, not sourced from real equipment specs. See ASSUMPTIONS.md.
+
+stations:
+  S01:
+    weld_current:    {unit: amps,          baseline: 9200, noise_std: 150, valid_min: 7000, valid_max: 11000}
+    weld_time:       {unit: ms,            baseline: 380,  noise_std: 15,  valid_min: 200,  valid_max: 600}
+    electrode_force: {unit: newtons,       baseline: 2200, noise_std: 80,  valid_min: 1500, valid_max: 3000}
+
+  S02:
+    weld_current: {unit: amps,  baseline: 8800, noise_std: 140,  valid_min: 6500, valid_max: 10500}
+    weld_voltage: {unit: volts, baseline: 4.2,  noise_std: 0.15, valid_min: 3.0,  valid_max: 6.0}
+    weld_time:    {unit: ms,    baseline: 360,  noise_std: 14,   valid_min: 200,  valid_max: 600}
+
+  S03:
+    adhesive_flow_rate: {unit: ml_per_s, baseline: 4.2, noise_std: 0.3, valid_min: 1.0, valid_max: 8.0}
+
+  S04:
+    laser_scan:    {unit: mm_deviation,    baseline: 0.5,  noise_std: 0.15, valid_min: 0.0, valid_max: 5.0}
+    vision_camera: {unit: alignment_score, baseline: 0.98, noise_std: 0.01, valid_min: 0.0, valid_max: 1.0}
+
+  S05:
+    booth_temperature: {unit: celsius,     baseline: 22.0, noise_std: 0.5, valid_min: 15.0, valid_max: 30.0}
+    booth_humidity:    {unit: percent,     baseline: 55.0, noise_std: 2.0, valid_min: 30.0, valid_max: 80.0}
+    film_thickness:    {unit: micrometers, baseline: 25.0, noise_std: 1.5, valid_min: 10.0, valid_max: 45.0}
+
+  S06:
+    oven_temperature: {unit: celsius,         baseline: 160.0, noise_std: 2.0, valid_min: 120.0, valid_max: 200.0}
+    humidity:         {unit: percent,         baseline: 40.0,  noise_std: 2.0, valid_min: 20.0,  valid_max: 70.0}
+    belt_speed:       {unit: meters_per_min,  baseline: 3.0,   noise_std: 0.1, valid_min: 1.0,   valid_max: 6.0}
+
+  S07:
+    force_sensor:    {unit: newtons,      baseline: 1800, noise_std: 60,  valid_min: 1000, valid_max: 2600}
+    position_sensor: {unit: mm_deviation, baseline: 0.3,  noise_std: 0.1, valid_min: 0.0,  valid_max: 5.0}
+
+  S08:
+    torque_value: {unit: newton_meters, baseline: 45.0, noise_std: 1.5, valid_min: 30.0, valid_max: 60.0}
+    torque_angle: {unit: degrees,       baseline: 90.0, noise_std: 3.0, valid_min: 0.0,  valid_max: 180.0}
+
+  S09:
+    checklist_completion: {unit: fraction_complete, baseline: 1.0, noise_std: 0.02, valid_min: 0.0, valid_max: 1.0}
+
+  S10:
+    torque_value: {unit: newton_meters, baseline: 140.0, noise_std: 4.0, valid_min: 100.0, valid_max: 180.0}
+
+  S11:
+    flow_rate: {unit: liters_per_min, baseline: 3.5, noise_std: 0.3, valid_min: 1.0, valid_max: 8.0}
+
+  S12:
+    functional_test_suite: {unit: pass_score,      baseline: 0.98, noise_std: 0.015, valid_min: 0.0, valid_max: 1.0}
+    vision_camera:         {unit: alignment_score, baseline: 0.97, noise_std: 0.015, valid_min: 0.0, valid_max: 1.0}
+    roll_test_sensor:      {unit: deviation_score, baseline: 0.05, noise_std: 0.02,  valid_min: 0.0, valid_max: 1.0}

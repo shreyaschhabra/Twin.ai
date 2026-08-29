@@ -1,7 +1,7 @@
 """
 Station runtime: the SimPy process loop for one physical station.
 
-STATE SEMANTICS (as approved for Step 2):
+STATE SEMANTICS (as approved for Step 2, DOWN now used starting Step 3):
 
   IDLE       Before the station has ever received a vehicle, and again once
              the shift has genuinely ended (no more vehicles will ever
@@ -18,11 +18,19 @@ STATE SEMANTICS (as approved for Step 2):
              a slot — this is enforced structurally by the loop below
              (there is no code path that acquires a new vehicle while a
              previous one is still being held pending release).
-  DOWN       Reserved for a later step (equipment failure scenarios). Never
-             entered in Step 2.
+  DOWN       A micro-stop scenario interrupting an in-progress vehicle
+             (Step 3). The station holds the vehicle it already acquired;
+             no new vehicle can be acquired until DOWN resolves back to
+             PROCESSING, for the same structural reason as BLOCKED.
 
 State transitions are only logged when the state actually changes — no
 repeated identical-state logging on every simulated tick.
+
+Scenario integration (Step 3): station code never branches on station_id
+or scenario family. It asks `scenario_manager` (a no-op `empty_manager()`
+when no scenarios are configured, so there's never a None-check needed)
+for an effect bundle, a possible batch assignment, and possible micro-stop
+parameters, and applies whatever comes back generically.
 """
 
 from __future__ import annotations
@@ -35,6 +43,10 @@ import simpy
 from backend.config.schemas import FactoryConfig, StationInstance
 from backend.simulation.buffer import SimBuffer
 from backend.simulation.events import EventLog, EventType
+from backend.simulation.rng import RNGStreamFactory
+from backend.simulation.scenarios.effects import StationEffectBundle
+from backend.simulation.scenarios.manager import ScenarioManager
+from backend.simulation.sensors import SensorModelRegistry, generate_sensor_readings
 from backend.simulation.vehicle import Vehicle
 
 
@@ -59,7 +71,9 @@ class StationRuntime:
         input_buffers: List[SimBuffer],
         outgoing_buffer_lookup: Dict[str, SimBuffer],
         event_log: EventLog,
-        rng,
+        rng_factory: RNGStreamFactory,
+        scenario_manager: ScenarioManager,
+        sensor_models: SensorModelRegistry,
     ):
         if station_cfg.capacity != 1:
             raise NotImplementedError(
@@ -76,7 +90,11 @@ class StationRuntime:
         self.input_buffers = input_buffers
         self.outgoing_buffer_lookup = outgoing_buffer_lookup
         self.event_log = event_log
-        self.rng = rng
+        self.rng_factory = rng_factory
+        self.processing_rng = rng_factory.get(f"processing_time::{station_cfg.station_id}")
+        self.micro_stop_rng = rng_factory.get(f"micro_stop::{station_cfg.station_id}")
+        self.scenario_manager = scenario_manager
+        self.sensor_models = sensor_models
         self.state = StationState.IDLE
         self.processed_count = 0
 
@@ -96,30 +114,30 @@ class StationRuntime:
         """Called once after the run completes: a station's natural resting
         state once no more vehicles will ever arrive is IDLE, not an
         eternal STARVED wait. Only fires if the station is actually parked
-        waiting (STARVED) — a station left BLOCKED or PROCESSING at run end
-        indicates a deadlock/bug, not a normal shift end, and is left as-is
-        so tests can catch it."""
+        waiting (STARVED) — a station left BLOCKED, DOWN, or PROCESSING at
+        run end indicates a deadlock/bug, not a normal shift end, and is
+        left as-is so tests can catch it."""
         if self.state == StationState.STARVED:
             self._set_state(StationState.IDLE)
 
-    def compute_processing_time(self, variant_id: str) -> float:
+    def compute_processing_time(self, variant_id: str, effects: StationEffectBundle) -> float:
         override = self.station_cfg.variant_overrides.get(variant_id)
         if override is not None and override.cycle_time_multiplier is not None:
-            multiplier = override.cycle_time_multiplier
+            variant_multiplier = override.cycle_time_multiplier
         else:
             variant_cfg = self.config.vehicle_variants[variant_id]
-            multiplier = variant_cfg.processing_time_modifiers.get(
+            variant_multiplier = variant_cfg.processing_time_modifiers.get(
                 self.station_cfg.station_id, 1.0
             )
-        mean = self.station_cfg.baseline_cycle_time_seconds * multiplier
-        std = mean * self.station_cfg.cycle_time_variability
+        mean = self.station_cfg.baseline_cycle_time_seconds * variant_multiplier * effects.cycle_time_multiplier
+        std = mean * self.station_cfg.cycle_time_variability * effects.variability_multiplier
         if std <= 0:
             return mean
         # Truncated-normal-with-floor: a simple, bounded stochastic method
         # (illustrative simulation assumption, documented in ASSUMPTIONS.md)
         # chosen specifically to guarantee processing time stays comfortably
         # positive without needing a more sophisticated distribution.
-        value = self.rng.gauss(mean, std)
+        value = self.processing_rng.gauss(mean, std)
         floor = mean * 0.3
         return max(value, floor)
 
@@ -127,7 +145,7 @@ class StationRuntime:
         """The station's SimPy process: acquire -> process -> release, in a
         single sequential loop. Because this loop is sequential and never
         starts a new acquire while still holding a vehicle pending release,
-        BLOCKED and single-vehicle-at-a-time are enforced structurally,
+        BLOCKED/DOWN and single-vehicle-at-a-time are enforced structurally,
         not by extra locking."""
         station_id = self.station_cfg.station_id
 
@@ -146,7 +164,22 @@ class StationRuntime:
                 route_position=vehicle.position,
             )
 
-            proc_time = self.compute_processing_time(vehicle.variant_id)
+            effects = self.scenario_manager.get_station_effects(self.env.now, station_id, vehicle.vehicle_id)
+
+            batch_id = self.scenario_manager.assign_batch(vehicle.vehicle_id, self.env.now, station_id)
+            if batch_id is not None:
+                self.event_log.record(
+                    EventType.MATERIAL_BATCH_ASSIGNED,
+                    simulation_time=self.env.now,
+                    vehicle_id=vehicle.vehicle_id,
+                    vehicle_variant=vehicle.variant_id,
+                    station_id=station_id,
+                    batch_id=batch_id,
+                )
+
+            yield from self._maybe_run_micro_stop(station_id, vehicle)
+
+            proc_time = self.compute_processing_time(vehicle.variant_id, effects)
             self.event_log.record(
                 EventType.STATION_PROCESSING_STARTED,
                 simulation_time=self.env.now,
@@ -162,6 +195,16 @@ class StationRuntime:
                 vehicle_id=vehicle.vehicle_id,
                 station_id=station_id,
                 value=proc_time,
+            )
+
+            generate_sensor_readings(
+                station_cfg=self.station_cfg,
+                vehicle=vehicle,
+                sim_time=self.env.now,
+                effects=effects,
+                sensor_models=self.sensor_models,
+                rng_factory=self.rng_factory,
+                event_log=self.event_log,
             )
 
             # ---- release (BLOCKED if downstream buffer is full) ----
@@ -199,6 +242,35 @@ class StationRuntime:
             # loop back to top; next iteration's acquire will correctly
             # report STARVED or immediately PROCESSING depending on
             # whether another vehicle is already waiting.
+
+    def _maybe_run_micro_stop(self, station_id: str, vehicle: Vehicle):
+        """Rolls (using this station's own isolated micro_stop RNG stream)
+        whether a currently-active micro-stop scenario interrupts the
+        vehicle just acquired. If it fires: transitions to DOWN, logs an
+        observable MICRO_STOP_OCCURRED event with its duration, and blocks
+        for that duration before returning control — the station cannot
+        acquire a different vehicle meanwhile (same structural guarantee
+        as BLOCKED, since this runs before the acquire loop is re-entered).
+        No effect at all when no micro-stop scenario is active (params is
+        None), so a no-scenario run never touches this RNG stream."""
+        params = self.scenario_manager.get_micro_stop_params(self.env.now, station_id)
+        if params is None:
+            return
+        if self.micro_stop_rng.random() >= params["probability"]:
+            return
+
+        duration = self.micro_stop_rng.uniform(params["min_duration"], params["max_duration"])
+        self._set_state(StationState.DOWN)
+        self.event_log.record(
+            EventType.MICRO_STOP_OCCURRED,
+            simulation_time=self.env.now,
+            station_id=station_id,
+            vehicle_id=vehicle.vehicle_id,
+            vehicle_variant=vehicle.variant_id,
+            value=duration,
+        )
+        yield self.env.timeout(duration)
+        self._set_state(StationState.PROCESSING)
 
     def _acquire_vehicle(self):
         station_id = self.station_cfg.station_id

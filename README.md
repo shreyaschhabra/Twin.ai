@@ -9,24 +9,32 @@ LIVE / INFERRED / UNKNOWN — instead of silently guessing.
 
 ## Status
 
-**Step 2 of implementation: SimPy core digital twin + master event stream.**
-The 12-station development line now runs as a real discrete-event
-simulation (SimPy): vehicles are generated, routed, queued, processed, and
-completed, with genuine finite-capacity buffers, blocking, starvation, and
-a chronological master event stream that vehicle genealogy is derived
-from. No ML, anomaly detection, defect/scenario generation, API, or
-frontend code exists yet — those are later steps.
+**Step 3 of implementation: sensor generation + controlled abnormal-scenario engine.**
+The 12-station development line now also generates observable sensor
+readings and can inject any of 8 approved abnormal-scenario families
+(equipment degradation, micro-stops, vehicle-mix overload, bad batch,
+environmental drift, sensor dropout, manual variation, rare background
+quality events) against a matched healthy baseline. A physically separate
+latent-truth log (`backend/simulation/scenarios/latent.py`) records why
+each abnormality happened for debugging/evaluation — it is never merged
+into observable data, and automated tests enforce that. No ML, anomaly
+*detection*, FastAPI, or frontend code exists yet — those are later steps.
 
-Run the nominal development shift:
+Run the nominal healthy shift:
 
 ```bash
 python scripts/run_nominal_simulation.py
 ```
 
-This writes `data/generated/step2_nominal_events.parquet` and
-`step2_nominal_genealogy.parquet`, and prints a sanity summary (station
-utilization, blocked/starved time, buffer occupancy — sanity metrics only,
-not final KPIs).
+Run one demonstration of each scenario family against a matched baseline:
+
+```bash
+python scripts/run_scenario_demos.py
+```
+
+Observable output goes to `data/generated/scenario_demos/`; latent
+ground-truth output (never an ML feature source) goes to
+`data/generated/latent/`.
 
 ## Development factory (Step 1)
 

@@ -1,0 +1,103 @@
+# Development scenario definitions — one per approved family, for the
+# 12-station development line. This is SIMULATOR TRUTH: scenario_id and
+# family here must never be injected into the observable master event
+# stream (see backend/simulation/scenarios/latent.py).
+#
+# Each scenario is designed to be run in isolation against a matched
+# healthy baseline (same seed, same config, no scenarios) — see
+# scripts/run_scenario_demos.py and the Section-Q controlled tests. One
+# composition test additionally runs two of these together.
+#
+# All timing/severity/parameter values are illustrative simulation
+# assumptions, not sourced. See ASSUMPTIONS.md.
+
+scenarios:
+  equipment_degradation_demo:
+    family: EQUIPMENT_DEGRADATION
+    station_ids: [S02]
+    start_time: 3000
+    duration: 8000
+    severity: 0.6
+    affected_sensors: [weld_current]
+    params:
+      ramp_duration_seconds: 8000
+      max_cycle_time_multiplier: 1.6
+      max_noise_multiplier: 3.0
+      max_sensor_mean_shift: -600     # weld current drifting down as electrode wears
+      quality_weight_per_visit: 0.02
+
+  micro_stops_demo:
+    family: MICRO_STOPS
+    station_ids: [S10]
+    start_time: 5000
+    duration: 6000
+    severity: 0.3
+    params:
+      stop_probability: 0.3
+      min_duration_seconds: 10
+      max_duration_seconds: 60
+
+  vehicle_mix_overload_demo:
+    family: VEHICLE_MIX_OVERLOAD
+    start_time: 4000
+    duration: 4000
+    severity: 0.5
+    variant_mix_override:
+      ICE_SEDAN: 0.15
+      ICE_SUV: 0.65
+      EV: 0.20
+
+  bad_batch_demo:
+    family: BAD_BATCH
+    station_ids: [S03]
+    start_time: 2000
+    duration: 5000
+    severity: 0.5
+    affected_batch_id: "B1047"
+    params:
+      quality_weight_per_visit: 0.15
+
+  environmental_drift_demo:
+    family: ENVIRONMENTAL_DRIFT
+    station_ids: [S05]
+    start_time: 6000
+    duration: 9000
+    severity: 0.5
+    affected_sensors: [booth_temperature]
+    params:
+      ramp_duration_seconds: 9000
+      max_sensor_mean_shift: 8.0
+      deviation_threshold_fraction: 0.4
+      quality_weight_per_visit: 0.1
+
+  sensor_dropout_demo:
+    family: SENSOR_DROPOUT
+    station_ids: [S04]
+    start_time: 3000
+    duration: 4000
+    severity: 0.5
+    affected_sensors: [laser_scan]
+    dropout_type: missing
+    params:
+      dropout_probability: 0.5
+
+  manual_variation_demo:
+    family: MANUAL_VARIATION
+    station_ids: [S09]
+    start_time: 4000
+    duration: 6000
+    severity: 0.4
+    params:
+      cycle_time_multiplier: 1.3
+      variability_multiplier: 2.5
+      quality_weight_per_visit: 0.03
+
+  random_quality_event_demo:
+    family: RANDOM_QUALITY_EVENT
+    start_time: 0
+    # no duration => active for the whole run
+    severity: 0.2
+    params:
+      per_vehicle_probability: 0.03
+      min_magnitude: 0.02
+      max_magnitude: 0.08

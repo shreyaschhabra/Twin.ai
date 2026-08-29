@@ -140,6 +140,54 @@ add more assumed parameters.
   state is touched, so two runs with the same seed and config are bit-for-
   bit reproducible in event order and timing (verified by test).
 
+## Step 3 — sensor and scenario assumptions
+
+- **Sensor sampling cadence**: one observable summary reading per (vehicle,
+  station, sensor) at processing-completion time — not high-frequency
+  telemetry. The time-series structure anomaly detection needs later comes
+  from comparing many visits to the same station over time (e.g. a slow
+  drift across dozens of visits), not from sampling faster within any one
+  15-180s visit. `cycle_time` is never emitted as a sensor reading since
+  it would duplicate `STATION_PROCESSING_COMPLETED`.
+- **Sensor model values** (`configs/sensor_models.yaml`): baseline/noise/
+  valid-range per (station, sensor) are illustrative, anchored loosely to
+  each station's existing `process_parameters` where one exists (e.g. S01
+  weld_current baseline 9200A matches its configured
+  `target_weld_current_amps`), not sourced from real equipment specs.
+- **Micro-stop placement**: a triggered micro-stop is logged as its own
+  `MICRO_STOP_OCCURRED` event and modeled as a discrete `DOWN`-state delay
+  inserted between `VEHICLE_ENTERED_STATION` and
+  `STATION_PROCESSING_STARTED` — meaning genealogy's `waiting_time` field
+  (start − entry) absorbs the stoppage, while `processing_time` stays a
+  clean measure of pure service time. This was a deliberate choice over
+  folding the stoppage into the processing-time number, since it keeps
+  "how long was this vehicle actually being worked on" separable from
+  "how long was it delayed," while total elapsed time between entry and
+  exit still correctly reflects the full real-world delay either way.
+- **Scenario parameter values** (`configs/development_scenarios.yaml`):
+  ramp durations, severities, magnitudes, and probabilities are
+  illustrative choices picked to make each family's effect clearly
+  demonstrable within a short development run, not calibrated against any
+  real failure-mode data.
+- **Scenario composition rule**: when multiple scenarios target the same
+  station, their numeric effects (cycle-time multiplier, noise multiplier)
+  multiply together in `self.scenarios` list order — a simple, predictable,
+  documented rule, not a negotiated conflict-resolution system. Two
+  scenarios on different stations are fully independent, proven by test
+  (composing an S02 degradation with an S04 sensor dropout leaves S01
+  byte-identical to a true no-scenario baseline).
+- **Latent quality exposure is unitless and relative**, not a probability.
+  It accumulates additively across a vehicle's chronological visits and is
+  explicitly NOT converted into a defect probability/label in Step 3 — the
+  PRD defers that conversion to Step 4's historical-data stage.
+- **RNG streams added this step**: `vehicle_variant_selection` (already
+  existed), plus new isolated streams — `sensor_noise::{station}::{sensor}`
+  (one per station+sensor pair), `micro_stop::{station}`, and
+  `background_quality_disturbance`. None of these existed in Step 2, so a
+  no-scenario, no-sensor-model run touches none of them and reproduces
+  Step 2's core event stream exactly (verified against a fixture captured
+  from commit `57e71f3`, before any Step 3 code existed).
+
 ## What is NOT yet assumed
 
 Defect rates, degradation/anomaly injection parameters, ML model
