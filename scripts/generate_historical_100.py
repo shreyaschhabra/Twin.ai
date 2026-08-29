@@ -32,8 +32,7 @@ from backend.historical.generator import (
     DEFAULT_STD_INTERARRIVAL_SECONDS,
     DEFAULT_VARIANT_MIX,
     DEFAULT_VEHICLES_PER_SHIFT,
-    generate_development_dataset,
-    write_dataset,
+    generate_and_write_dataset_streaming,
 )
 
 CONFIG_DIR = Path(__file__).resolve().parent.parent / "configs"
@@ -83,20 +82,20 @@ def main():
     qc_params = QCParameters()
 
     t0 = time.time()
-    shift_results = generate_development_dataset(
+    shift_metadata, stats = generate_and_write_dataset_streaming(
         config, sensor_models, batch_relevant_stations,
         n_shifts=N_SHIFTS, dataset_master_seed=DATASET_MASTER_SEED,
+        observable_dir=OBSERVABLE_DIR, latent_dir=LATENT_DIR,
         vehicles_per_shift=DEFAULT_VEHICLES_PER_SHIFT, qc_params=qc_params,
+        batch_size=10,
     )
     generation_seconds = time.time() - t0
+    write_seconds = 0.0  # generation and writing are interleaved in the streaming path
 
-    t1 = time.time()
-    stats = write_dataset(shift_results, OBSERVABLE_DIR, LATENT_DIR)
-    write_seconds = time.time() - t1
-
-    total_qc = [r.qc_result for sr in shift_results for r in sr.result.latent_truth.qc_generation]
-    defect_rate = total_qc.count("DEFECT") / len(total_qc)
-    n_abnormal = sum(1 for s in shift_results if s.is_abnormal)
+    import pandas as pd
+    qc_df = pd.read_parquet(OBSERVABLE_DIR / "qc_results.parquet")
+    defect_rate = (qc_df.qc_result == "DEFECT").mean()
+    n_abnormal = sum(1 for m in shift_metadata if m["is_abnormal"])
 
     manifest = {
         "generator_version": GENERATOR_VERSION,
@@ -106,9 +105,9 @@ def main():
         "dataset_master_seed": DATASET_MASTER_SEED,
         "n_shifts": N_SHIFTS,
         "vehicles_per_shift": DEFAULT_VEHICLES_PER_SHIFT,
-        "total_vehicles": len(total_qc),
+        "total_vehicles": len(qc_df),
         "n_abnormal_shifts": n_abnormal,
-        "shift_seeds": {sr.shift_id: sr.shift_seed for sr in shift_results},
+        "shift_seeds": {m["shift_id"]: m["shift_seed"] for m in shift_metadata},
         "mean_interarrival_seconds": DEFAULT_MEAN_INTERARRIVAL_SECONDS,
         "std_interarrival_seconds": DEFAULT_STD_INTERARRIVAL_SECONDS,
         "variant_mix": DEFAULT_VARIANT_MIX,
@@ -131,8 +130,8 @@ def main():
     with MANIFEST_PATH.open("w") as f:
         json.dump(manifest, f, indent=2)
 
-    print(f"Generated {N_SHIFTS} shifts, {len(total_qc)} vehicles in {generation_seconds:.1f}s")
-    print(f"Wrote dataset in {write_seconds:.1f}s -> {OBSERVABLE_DIR.parent}")
+    print(f"Generated {N_SHIFTS} shifts, {len(qc_df)} vehicles in {generation_seconds:.1f}s (streaming)")
+    print(f"Output -> {OBSERVABLE_DIR.parent}")
     print(f"Abnormal shifts: {n_abnormal}/{N_SHIFTS}")
     print(f"Overall defect rate: {defect_rate*100:.3f}%")
     print(f"Output stats: {stats}")
