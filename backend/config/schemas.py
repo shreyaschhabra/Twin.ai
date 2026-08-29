@@ -96,6 +96,7 @@ class StationInstance(BaseModel):
     specific_operation: str = Field(..., min_length=1)
     baseline_cycle_time_seconds: float = Field(..., gt=0)
     cycle_time_variability: float = Field(..., ge=0)
+    capacity: int = Field(default=1, gt=0)
     sensor_maturity: SensorMaturity
     available_sensors: List[str] = Field(default_factory=list)
     applicable_vehicle_variants: List[str] = Field(default_factory=list)

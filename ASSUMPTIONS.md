@@ -66,6 +66,49 @@ add more assumed parameters.
   variant-level modifier instead, so there's exactly one place that defines
   any given station+variant's multiplier.
 
+## Step 2 — simulation assumptions
+
+- **Station capacity**: every station is modeled as a single serving slot
+  (`capacity: 1`, the schema default added in Step 2). This matters most for
+  S06, the paint cure oven: a real oven is a continuous-flow tunnel holding
+  many vehicles at once, not a single-slot server. Modeling it as capacity=1
+  with a 180s baseline makes it the line's clear throughput bottleneck,
+  which is a deliberate simplification, not an oversight — see the
+  "arrival pacing" note below. The schema/engine already support a
+  `capacity` field for a future multi-slot station, but the engine
+  currently raises `NotImplementedError` if any configured capacity != 1,
+  since multi-slot state semantics (what does "BLOCKED" mean for one of
+  several slots?) are unneeded scope for this config and were not built.
+- **Arrival pacing (nominal run)**: mean inter-arrival time is 200s
+  (Normal(200, 20), floored at 60s), deliberately set slightly *above*
+  S06's ~180s mean cycle time. This is standard line-balancing practice,
+  not a tuning hack: pacing arrivals faster than the slowest station's rate
+  guarantees permanent saturation regardless of simulator correctness, for
+  any line, real or simulated. Blocking/starvation mechanics are proven
+  separately by dedicated controlled-configuration tests
+  (`tests/test_simulation_controlled.py`), not relied upon to emerge from
+  nominal randomness.
+- **Entry buffer capacity**: 20 (a vehicle-generator-side staging queue in
+  front of each entry station). Not part of the Step 1 buffer config since
+  it isn't a real inter-station buffer; exists so a fully backed-up line
+  would eventually throttle new arrivals too, rather than queuing them
+  invisibly forever.
+- **Vehicle mix**: ICE Sedan 45% / ICE SUV 35% / EV 20% — an illustrative
+  mix (ICE still dominant, EV a meaningful minority), not sourced from any
+  real production plan.
+- **Processing-time stochastic method**: truncated-normal-with-floor —
+  `Normal(mean, mean * cycle_time_variability)`, floored at `0.3 * mean` to
+  keep every draw comfortably positive. Chosen deliberately as the simplest
+  bounded method that satisfies "processing time must always remain
+  positive," per instructions to avoid a more sophisticated distribution
+  without a demonstrated need for one. The same method is reused for
+  vehicle inter-arrival times.
+- **Random-state management**: one `random.Random(seed)` instance is
+  created per simulation run and threaded explicitly through the vehicle
+  generator and every station's processing-time draw — no global `random`
+  state is touched, so two runs with the same seed and config are bit-for-
+  bit reproducible in event order and timing (verified by test).
+
 ## What is NOT yet assumed
 
 Defect rates, degradation/anomaly injection parameters, ML model

@@ -9,10 +9,24 @@ LIVE / INFERRED / UNKNOWN — instead of silently guessing.
 
 ## Status
 
-**Step 1 of implementation: project foundation + factory configuration.**
-Only data-driven configuration schemas and a 12-station development line
-exist so far. No simulation, ML, anomaly detection, API, or frontend code
-has been implemented yet — those are later steps.
+**Step 2 of implementation: SimPy core digital twin + master event stream.**
+The 12-station development line now runs as a real discrete-event
+simulation (SimPy): vehicles are generated, routed, queued, processed, and
+completed, with genuine finite-capacity buffers, blocking, starvation, and
+a chronological master event stream that vehicle genealogy is derived
+from. No ML, anomaly detection, defect/scenario generation, API, or
+frontend code exists yet — those are later steps.
+
+Run the nominal development shift:
+
+```bash
+python scripts/run_nominal_simulation.py
+```
+
+This writes `data/generated/step2_nominal_events.parquet` and
+`step2_nominal_genealogy.parquet`, and prints a sanity summary (station
+utilization, blocked/starved time, buffer occupancy — sanity metrics only,
+not final KPIs).
 
 ## Development factory (Step 1)
 
@@ -41,7 +55,7 @@ python -m pytest tests/ -v
 ```
 backend/
   config/       station/buffer/vehicle-variant schemas + YAML loader (Step 1)
-  simulation/   SimPy discrete-event line simulator (later step)
+  simulation/   SimPy discrete-event line simulator + event stream (Step 2)
   twin/         live twin state manager (later step)
   features/     Flow/Quality feature engineering (later step)
   models/       trained ML models (later step)
