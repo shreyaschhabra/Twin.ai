@@ -1,10 +1,11 @@
 """
-Step 5 continuation, Sections 9-21: build the full Flow dataset from the
-100-shift historical data (features, holdout, split, sanity audit, save),
-then run Baseline 0/1/2 and report row-level + event-level + lead-time +
-shortcut-audit results.
-
-Only run this AFTER scripts/audit_flow_target_100.py reports PASS.
+Step 5 (minimum viable Flow pipeline): build the full Flow dataset from
+Dataset C (data/generated/historical_100_flow_calibrated/) -- features,
+holdout, split, a BASIC sanity audit, save -- then run Baseline 0/1/2 and
+report row-level + event-level + lead-time + shortcut-audit results.
+Dataset C is APPROVED and frozen for Flow despite TEST's 16 positive
+rows; no further generator/scenario/scheduler/split changes are made
+here regardless of what these results show.
 
 Usage:
     python scripts/build_flow_pipeline.py
@@ -23,7 +24,7 @@ from sklearn.metrics import roc_auc_score
 
 from backend.config.loader import load_factory_config
 from backend.flow.baselines import (
-    ALL_FEATURES, CATEGORICAL_FEATURES, NUMERIC_FEATURES,
+    CATEGORICAL_FEATURES, NUMERIC_FEATURES,
     apply_rule, build_logistic_regression_pipeline, fit_rule_thresholds,
 )
 from backend.flow.bottleneck_events import detect_bottleneck_events
@@ -37,7 +38,8 @@ from backend.flow.split import locked_100_shift_split, validate_split
 from backend.simulation.sensors import load_sensor_models
 
 CONFIG_DIR = Path(__file__).resolve().parent.parent / "configs"
-RAW_BASE = Path(__file__).resolve().parent.parent / "data" / "generated" / "historical_100"
+RAW_BASE = Path(__file__).resolve().parent.parent / "data" / "generated" / "historical_100_flow_calibrated"
+NATURALISTIC_BASE = Path(__file__).resolve().parent.parent / "data" / "generated" / "historical_100"
 OUT_DIR = Path(__file__).resolve().parent.parent / "data" / "processed" / "flow_v1"
 
 
@@ -91,21 +93,47 @@ def main():
     print(f"Train positives: {(train.target == 1).sum()}, Val positives: {(val.target == 1).sum()}, "
           f"Test positives: {(test.target == 1).sum()}")
 
-    section("5. FEATURE SANITY AUDIT")
+    section("5. BASIC FEATURE AUDIT (missingness, constants, exact duplicates, broken values, extreme correlation)")
+    removed_features = []
     for col in NUMERIC_FEATURES:
         miss = train[col].isna().mean()
         nunique = train[col].nunique(dropna=True)
-        flag = " <-- CONSTANT" if nunique <= 1 else ""
-        if miss > 0.5 or flag:
-            print(f"  {col}: missing={miss*100:.1f}% nunique={nunique}{flag}")
-    corr = train[NUMERIC_FEATURES].corr().abs()
+        has_inf = np.isinf(train[col].to_numpy(dtype="float64", na_value=np.nan)).any()
+        flags = []
+        if nunique <= 1:
+            flags.append("CONSTANT")
+        if miss > 0.5:
+            flags.append(f"HIGH_MISSING({miss*100:.1f}%)")
+        if has_inf:
+            flags.append("CONTAINS_INF")
+        if flags:
+            print(f"  {col}: nunique={nunique} missing={miss*100:.1f}% flags={flags}")
+        if "CONSTANT" in flags or "CONTAINS_INF" in flags:
+            removed_features.append((col, ",".join(flags)))
+
+    active_numeric = [c for c in NUMERIC_FEATURES if c not in {c2 for c2, _ in removed_features}]
+    corr = train[active_numeric].corr().abs()
     high_corr_pairs = []
-    for i, a in enumerate(NUMERIC_FEATURES):
-        for b in NUMERIC_FEATURES[i + 1:]:
+    seen_dupe = set()
+    for i, a in enumerate(active_numeric):
+        for b in active_numeric[i + 1:]:
             v = corr.loc[a, b]
             if pd.notna(v) and v > 0.95:
-                high_corr_pairs.append((a, b, v))
+                high_corr_pairs.append((a, b, round(float(v), 4)))
+                if v > 0.9999 and b not in seen_dupe:
+                    removed_features.append((b, f"exact_duplicate_of({a})"))
+                    seen_dupe.add(b)
     print(f"High-correlation (>0.95) pairs: {high_corr_pairs}")
+
+    active_numeric = [c for c in NUMERIC_FEATURES if c not in {c2 for c2, _ in removed_features}]
+    active_categorical = list(CATEGORICAL_FEATURES)
+    active_features = active_numeric + active_categorical
+    if removed_features:
+        print(f"\nREMOVED FEATURES ({len(removed_features)}):")
+        for name, reason in removed_features:
+            print(f"  - {name}: {reason}")
+    else:
+        print("\nNo features removed -- audit found no constants, exact duplicates, or broken values in TRAIN.")
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     train.to_parquet(OUT_DIR / "train.parquet", index=False)
@@ -116,12 +144,36 @@ def main():
     with (OUT_DIR / "feature_manifest.json").open("w") as f:
         json.dump(FEATURE_MANIFEST, f, indent=2)
 
+    dataset_manifest = {
+        "source_dataset": "historical_100_flow_calibrated (Dataset C, Decision 37/38 approved despite "
+                           "TEST's 16 positive rows -- a development sanity guideline, not a hard requirement)",
+        "split": {"train_shifts": "SHIFT001-070", "validation_shifts": "SHIFT071-085", "test_shifts": "SHIFT086-100"},
+        "row_counts": {
+            "train": len(train), "validation": len(val), "test": len(test),
+            "unseen_equipment_degradation": len(holdout), "bottleneck_events": len(impacts),
+        },
+        "positive_counts": {
+            "train": int((train.target == 1).sum()), "validation": int((val.target == 1).sum()),
+            "test": int((test.target == 1).sum()),
+        },
+        "n_features": len(active_features),
+        "numeric_features": active_numeric,
+        "categorical_features": active_categorical,
+        "removed_features": [{"name": n, "reason": r} for n, r in removed_features],
+    }
+    with (OUT_DIR / "dataset_manifest.json").open("w") as f:
+        json.dump(dataset_manifest, f, indent=2)
+
     section("6. BASELINE 0 — ALWAYS NEGATIVE")
     for name, df in [("VALIDATION", val), ("TEST", test)]:
         prevalence = df.target.mean()
         print(f"{name}: accuracy={1-prevalence:.4f} (misleading — recall=0, precision=undefined), prevalence={prevalence:.5f}")
 
     section("7. BASELINE 1 — OPERATIONAL RULE")
+    print("Rule definition: cycle-time deviation elevated AND (buffer occupancy elevated OR "
+          "arrivals outpacing departures) -- i.e. "
+          "(cycle_time_dev_relative >= p75) AND (inbound_occupancy_ratio >= p75 OR arrival_minus_departure_5m >= p75), "
+          "all three p75 thresholds derived from TRAIN only.")
     thresholds = fit_rule_thresholds(train)
     print(f"Thresholds (TRAIN-derived): {thresholds}")
     val_rule_pred = apply_rule(val, thresholds)
@@ -132,10 +184,14 @@ def main():
               f"prevalence={m.prevalence:.5f}\n  confusion=\n{m.confusion}")
 
     section("8. BASELINE 2 — LOGISTIC REGRESSION")
-    pipe = build_logistic_regression_pipeline()
-    pipe.fit(train[ALL_FEATURES], train.target)
-    val_scores = pipe.predict_proba(val[ALL_FEATURES])[:, 1]
-    test_scores = pipe.predict_proba(test[ALL_FEATURES])[:, 1]
+    print("Preprocessing: SimpleImputer(median)+StandardScaler for numeric features, "
+          "SimpleImputer(most_frequent)+OneHotEncoder(handle_unknown='ignore') for categorical -- "
+          "all fitted on TRAIN only via sklearn Pipeline/ColumnTransformer. "
+          "LogisticRegression(class_weight='balanced', max_iter=1000). No SMOTE, no hyperparameter sweep.")
+    pipe = build_logistic_regression_pipeline(active_numeric, active_categorical)
+    pipe.fit(train[active_features], train.target)
+    val_scores = pipe.predict_proba(val[active_features])[:, 1]
+    test_scores = pipe.predict_proba(test[active_features])[:, 1]
     for name, df, scores in [("VALIDATION", val, val_scores), ("TEST", test, test_scores)]:
         m = row_level_metrics(df.target.values, scores, threshold=0.5)
         print(f"{name} logreg: precision={m.precision:.3f} recall={m.recall:.3f} f1={m.f1:.3f} "
@@ -149,9 +205,12 @@ def main():
                            ("TEST (logreg@0.5)", test, (test_scores >= 0.5).astype(int))]:
         res = event_level_evaluation(df, pred, impacts)
         lt = lead_time_summary(res.lead_times)
+        detected_counts = [n for n in res.warnings_per_event.values() if n > 0]
+        mean_warnings_per_detected_event = (sum(detected_counts) / len(detected_counts)) if detected_counts else float("nan")
         print(f"{name}: events={res.total_events} detected={res.detected_events} "
               f"recall={res.event_recall:.3f} missed={res.missed_events} "
-              f"false_warnings/shift={res.false_warnings_per_shift:.3f}")
+              f"false_warnings/shift={res.false_warnings_per_shift:.3f} "
+              f"mean_warnings_per_detected_event={mean_warnings_per_detected_event:.2f}")
         print(f"  lead-time: {lt}")
 
     section("10. TRIVIAL SHORTCUT AUDIT")
@@ -185,7 +244,7 @@ def main():
     if len(holdout) and holdout.target.notna().any():
         holdout_valid = holdout[holdout.label.isin(["POSITIVE", "NEGATIVE"])]
         if len(holdout_valid) and holdout_valid.target.nunique() > 1:
-            hd_scores = pipe.predict_proba(holdout_valid[ALL_FEATURES])[:, 1]
+            hd_scores = pipe.predict_proba(holdout_valid[active_features])[:, 1]
             m = row_level_metrics(holdout_valid.target.values, hd_scores, threshold=0.5)
             print(f"  logreg on holdout: precision={m.precision:.3f} recall={m.recall:.3f} "
                   f"PR-AUC={m.pr_auc:.3f} prevalence={m.prevalence:.5f}")
@@ -193,6 +252,29 @@ def main():
             print(f"  holdout has {len(holdout_valid)} valid rows, insufficient class variety for a diagnostic score.")
     else:
         print("  no valid (POSITIVE/NEGATIVE) rows in the holdout set to diagnose.")
+
+    section("12. NATURALISTIC CORPUS DIAGNOSTIC (Dataset A, read-only, NOT used for tuning)")
+    print("NATURALISTIC CORPUS DIAGNOSTIC — Dataset A is not trained on; this only checks "
+          "false-warning behavior of the Dataset-C-trained rule/logreg under naturalistic conditions.")
+    try:
+        events_a = pd.read_parquet(NATURALISTIC_BASE / "observable" / "events.parquet")
+        impacts_a = detect_bottleneck_events(events_a, config)
+        grid_a = build_station_minute_grid(events_a, station_ids)
+        labeled_a = label_rows(grid_a, impacts_a)
+        feat_a = build_features(labeled_a[["shift_id", "station_id", "window_end_time"]], events_a, config, sensor_models)
+        full_a = labeled_a.merge(feat_a, on=["shift_id", "station_id", "window_end_time"])
+        eval_a = full_a[full_a.label.isin(["POSITIVE", "NEGATIVE"])].copy()
+
+        rule_pred_a = apply_rule(eval_a, thresholds)
+        logreg_scores_a = pipe.predict_proba(eval_a[active_features])[:, 1]
+        logreg_pred_a = (logreg_scores_a >= 0.5).astype(int)
+
+        for name, pred in [("rule", rule_pred_a), ("logreg@0.5", logreg_pred_a)]:
+            res_a = event_level_evaluation(eval_a, pred, impacts_a)
+            print(f"  Dataset A / {name}: false_warnings/shift={res_a.false_warnings_per_shift:.3f} "
+                  f"(events={res_a.total_events}, detected={res_a.detected_events})")
+    except Exception as exc:
+        print(f"  Skipped -- {exc}")
 
     print(f"\nTotal pipeline runtime: {time.time() - t_start:.1f}s")
 

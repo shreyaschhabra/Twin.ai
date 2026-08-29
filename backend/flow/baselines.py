@@ -41,7 +41,9 @@ CATEGORICAL_FEATURES = ["station_type", "sensor_maturity", "zone"]
 ALL_FEATURES = NUMERIC_FEATURES + CATEGORICAL_FEATURES
 
 
-def build_preprocessor() -> ColumnTransformer:
+def build_preprocessor(numeric_features: List[str] = None, categorical_features: List[str] = None) -> ColumnTransformer:
+    numeric_features = numeric_features if numeric_features is not None else NUMERIC_FEATURES
+    categorical_features = categorical_features if categorical_features is not None else CATEGORICAL_FEATURES
     numeric_pipe = Pipeline([
         ("impute", SimpleImputer(strategy="median")),
         ("scale", StandardScaler()),
@@ -51,14 +53,14 @@ def build_preprocessor() -> ColumnTransformer:
         ("onehot", OneHotEncoder(handle_unknown="ignore")),
     ])
     return ColumnTransformer([
-        ("num", numeric_pipe, NUMERIC_FEATURES),
-        ("cat", categorical_pipe, CATEGORICAL_FEATURES),
+        ("num", numeric_pipe, numeric_features),
+        ("cat", categorical_pipe, categorical_features),
     ])
 
 
-def build_logistic_regression_pipeline() -> Pipeline:
+def build_logistic_regression_pipeline(numeric_features: List[str] = None, categorical_features: List[str] = None) -> Pipeline:
     return Pipeline([
-        ("preprocess", build_preprocessor()),
+        ("preprocess", build_preprocessor(numeric_features, categorical_features)),
         ("clf", LogisticRegression(class_weight="balanced", max_iter=1000)),
     ])
 
