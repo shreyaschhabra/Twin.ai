@@ -18,9 +18,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import numpy as np
 import pandas as pd
 
+from backend.config.loader import load_factory_config
+from backend.simulation.sensors import load_sensor_models
+
 BASE = Path(__file__).resolve().parent.parent / "data" / "generated" / "development_45"
 OBS = BASE / "observable"
 LAT = BASE / "latent"
+CONFIG_DIR = Path(__file__).resolve().parent.parent / "configs"
 
 
 def section(title):
@@ -28,6 +32,9 @@ def section(title):
 
 
 def main():
+    config = load_factory_config(CONFIG_DIR / "station_types.yaml", CONFIG_DIR / "full_line.yaml")
+    sensor_models = load_sensor_models(CONFIG_DIR / "sensor_models_full.yaml")
+
     events = pd.read_parquet(OBS / "events.parquet")
     genealogy = pd.read_parquet(OBS / "genealogy.parquet")
     vehicles = pd.read_parquet(OBS / "vehicles.parquet")
@@ -262,6 +269,74 @@ def main():
           f"{n_mix_affected} vehicle(s) created during an active window, "
           f"defect rate among them = {mix_defect_rate*100:.2f}% "
           f"(compare to baseline {baseline_rate*100:.2f}% — want statistically compatible, not elevated)")
+
+    # ================================================================ FINAL PATCH: DEFECT PREDICTABILITY AUDIT
+    section("FINAL PATCH. DEFECT PREDICTABILITY AUDIT")
+    print("Classifies each DEFECTIVE vehicle into an exclusive bucket by precedence A > B > C.")
+    print("Bucket A requires VERIFIED observable evidence (real cycle-time or sensor deviation),")
+    print("not merely 'latent truth says a scenario was active'.\n")
+
+    from backend.historical.shift_scheduler import SENSOR_FOR_STATION
+
+    OBSERVABLE_PROCESS_FAMILIES = {"EQUIPMENT_DEGRADATION", "ENVIRONMENTAL_DRIFT", "MANUAL_VARIATION"}
+    CYCLE_TIME_EVIDENCE_THRESHOLD = 1.10  # >=10% above that station's configured baseline
+
+    exposure_by_vehicle = exposure.groupby("vehicle_id").apply(
+        lambda g: list(zip(g.family, g.station_id)), include_groups=False
+    )
+    geno_pt = genealogy.set_index(["vehicle_id", "station_id"]).processing_time
+    sensor_lookup = sensors.set_index(["vehicle_id", "station_id", "sensor_name"])
+    batch_vehicles = set(exposure[exposure.family == "BAD_BATCH"].vehicle_id.unique())
+
+    def has_observable_evidence(vehicle_id, station_id):
+        baseline = config.stations[station_id].baseline_cycle_time_seconds if station_id in config.stations else None
+        pt = geno_pt.get((vehicle_id, station_id))
+        if baseline and pt is not None and pt > baseline * CYCLE_TIME_EVIDENCE_THRESHOLD:
+            return True
+        sensor_name = SENSOR_FOR_STATION.get(station_id)
+        if sensor_name and (vehicle_id, station_id, sensor_name) in sensor_lookup.index:
+            row = sensor_lookup.loc[(vehicle_id, station_id, sensor_name)]
+            if isinstance(row, pd.DataFrame):
+                row = row.iloc[0]
+            if row.measurement_status == "available":
+                sm = sensor_models.get((station_id, sensor_name))
+                if sm and abs(row.value - sm.baseline) > 1.5 * sm.noise_std:
+                    return True
+        return False
+
+    defective_vehicles = set(gt[gt.is_defect].vehicle_id)
+    bucket_counts = {"A_observable_process_precursor": 0, "B_genealogy_cohort_context": 0, "C_weak_no_precursor": 0}
+    process_exposed_but_no_evidence = 0
+
+    for vid in defective_vehicles:
+        records = exposure_by_vehicle.get(vid, [])
+        process_records = [(fam, sid) for fam, sid in records if fam in OBSERVABLE_PROCESS_FAMILIES]
+        verified = any(has_observable_evidence(vid, sid) for fam, sid in process_records)
+        if verified:
+            bucket_counts["A_observable_process_precursor"] += 1
+        elif process_records:
+            # exposed to a process family per latent truth, but no verified
+            # observable trace found for this specific vehicle+station
+            process_exposed_but_no_evidence += 1
+            if vid in batch_vehicles:
+                bucket_counts["B_genealogy_cohort_context"] += 1
+            else:
+                bucket_counts["C_weak_no_precursor"] += 1
+        elif vid in batch_vehicles:
+            bucket_counts["B_genealogy_cohort_context"] += 1
+        else:
+            bucket_counts["C_weak_no_precursor"] += 1
+
+    total_defects = len(defective_vehicles)
+    print(f"Total defective vehicles: {total_defects}\n")
+    for bucket, count in bucket_counts.items():
+        print(f"  {bucket}: {count} ({count/total_defects*100:.1f}%)")
+    print(f"\nProcess-family-exposed defective vehicles with NO verified observable evidence "
+          f"(fell through to B or C): {process_exposed_but_no_evidence}")
+    predictable_share = (bucket_counts["A_observable_process_precursor"] + bucket_counts["B_genealogy_cohort_context"]) / total_defects
+    print(f"\nShare with SOME evidence (A + B): {predictable_share*100:.1f}% "
+          f"(design target: clear majority)")
+    print(f"Share weak/no-precursor (C): {bucket_counts['C_weak_no_precursor']/total_defects*100:.1f}%")
 
     # ================================================================ AE/AF: CAUSAL AUDIT
     section("AE/AF. CAUSAL AUDIT (flow + sensor/quality)")

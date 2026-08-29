@@ -36,6 +36,18 @@ PROBABILITY_SHIFT_IS_ABNORMAL = 0.55
 N_SCENARIOS_WHEN_ABNORMAL = [1, 1, 2, 2, 3]  # weighted toward 1-2 per abnormal shift
 RANDOM_QUALITY_EVENT_ALWAYS_ON_PROBABILITY = 0.015  # background risk present every shift
 
+# Final Step-4 patch: RANDOM_QUALITY_EVENT's per-event magnitude range.
+# Empirically tested against the recalibrated QC sigmoid (background=0.0088,
+# max=0.8, midpoint=0.0445, steepness=110) — this range maps to individual
+# probabilities of ~2.3%-9.2% (mean exposure 0.0165 -> ~4.8% average
+# conditional probability), landing "low-single-digit to low-teens" as
+# intended. The original (0.02, 0.08) range straddled the sigmoid's steep
+# region and mapped to a ~47% average conditional probability — a
+# coin-flip-strength hidden failure mode, not the "rare, weak,
+# mostly-unobservable" disturbance this family is meant to represent.
+RANDOM_QUALITY_EVENT_MIN_MAGNITUDE = 0.008
+RANDOM_QUALITY_EVENT_MAX_MAGNITUDE = 0.025
+
 # Which stations are plausible targets for each family on the full line.
 # Kept small and specific rather than "any station" so scenario placement
 # stays operationally sensible (e.g. degradation only on automated
@@ -107,7 +119,8 @@ def build_shift_schedule(
             start_time=0, duration=None, severity=0.2,
             params={
                 "per_vehicle_probability": RANDOM_QUALITY_EVENT_ALWAYS_ON_PROBABILITY,
-                "min_magnitude": 0.02, "max_magnitude": 0.08,
+                "min_magnitude": RANDOM_QUALITY_EVENT_MIN_MAGNITUDE,
+                "max_magnitude": RANDOM_QUALITY_EVENT_MAX_MAGNITUDE,
             },
         )
     )
@@ -179,7 +192,15 @@ def _build_station_scenario(scenario_id, family, station, start_time, duration, 
                 "max_cycle_time_multiplier": 1.2 + severity * 0.8,
                 "max_noise_multiplier": 1.5 + severity * 1.5,
                 "max_sensor_mean_shift": -(400 + severity * 800),
-                "quality_weight_per_visit": 0.01 + severity * 0.03,
+                # Final Step-4 patch: modestly strengthened (0.01+sev*0.03 ->
+                # 0.02+sev*0.05) to compensate for weakening
+                # RANDOM_QUALITY_EVENT, which otherwise dropped the overall
+                # defect rate below the 3.5% floor. EQUIPMENT_DEGRADATION was
+                # chosen (along with MANUAL_VARIATION) because it already had
+                # a large exposed population (659 vehicles) but a weak
+                # conditional rate (~4.5%), i.e. room to carry more signal
+                # without approaching determinism.
+                "quality_weight_per_visit": 0.02 + severity * 0.05,
             },
         )
     if family == ScenarioFamily.MICRO_STOPS:
@@ -221,7 +242,12 @@ def _build_station_scenario(scenario_id, family, station, start_time, duration, 
             params={
                 "cycle_time_multiplier": 1.15 + severity * 0.5,
                 "variability_multiplier": 1.5 + severity * 2.0,
-                "quality_weight_per_visit": 0.01 + severity * 0.02,
+                # Same rationale as EQUIPMENT_DEGRADATION above, but a much
+                # smaller bump: a first attempt at 0.02+sev*0.04 (2x) alone
+                # pushed MANUAL_VARIATION's conditional rate from 5.3% to
+                # 36.9% and the overall rate to 4.9%, overshooting both —
+                # dialed back to a modest ~25% increase instead.
+                "quality_weight_per_visit": 0.012 + severity * 0.025,
             },
         )
     raise ValueError(f"no scenario builder for family {family}")

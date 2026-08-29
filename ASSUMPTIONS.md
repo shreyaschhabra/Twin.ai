@@ -362,6 +362,43 @@ their output — the only way to actually catch this class of bug.
   tree, so its manifest's `git_commit` field is the exact commit that
   produced it — see the completion report for the hash.
 
+## Final Step-4 patch: RANDOM_QUALITY_EVENT recalibration
+
+- **RANDOM_QUALITY_EVENT magnitude**: `min_magnitude`/`max_magnitude` in
+  `backend/historical/shift_scheduler.py` reduced from `(0.02, 0.08)` to
+  `(0.008, 0.025)`. The original range straddled the recalibrated QC
+  sigmoid's steep region, mapping to a ~47% average conditional
+  probability — a coin-flip-strength hidden failure mode, not the "rare,
+  weak, mostly-unobservable" disturbance this family is meant to
+  represent. Tested empirically against the actual `QCOutcomeGenerator`
+  (not guessed): the new range maps to individual probabilities of
+  ~2.3%-9.2%, realizing an **11.1% conditional defect rate** on the
+  regenerated dataset — solidly in the intended "low-single-digit to
+  low-teens" band.
+- **Compensating for the resulting rate drop**: weakening
+  RANDOM_QUALITY_EVENT alone dropped overall defects from 3.79% to
+  3.19% (below the 3.5% floor), exactly as anticipated. Per instructions,
+  compensated by strengthening two already-weak PROCESS-linked families
+  rather than raising the background probability: `EQUIPMENT_DEGRADATION`
+  quality_weight (`0.01+sev*0.03` → `0.02+sev*0.05`, given its large
+  659-vehicle exposed population but previously-weak 4.5% conditional
+  rate) and `MANUAL_VARIATION` (`0.01+sev*0.02` → first tried
+  `0.02+sev*0.04`, which overshot badly — 5.3%→36.9% conditional rate,
+  pushing overall to 4.9% — dialed back to `0.012+sev*0.025`, landing at
+  8.5%). `ENVIRONMENTAL_DRIFT` and `BAD_BATCH` were left untouched (already
+  meaningfully strong at 40% and 73% respectively). Final overall rate:
+  **3.917%**. Zero-exposure background rate unaffected (still 1.36%),
+  since none of these changes touch the QC mapping or the always-on
+  background scenario's occurrence probability.
+- **Defect predictability audit** (`scripts/audit_development_dataset.py`):
+  classifies every defective vehicle into bucket A (observable process
+  precursor — VERIFIED via actual cycle-time-vs-baseline or
+  sensor-value-vs-baseline deviation, not assumed from latent truth),
+  B (genealogy/cohort context — bad-batch membership), or C (weak/no
+  useful precursor — background or unverified), with precedence A > B > C
+  and explicit reporting of any process-family-exposed vehicle whose
+  evidence failed verification.
+
 ## What is NOT yet assumed
 
 Defect rates, degradation/anomaly injection parameters, ML model

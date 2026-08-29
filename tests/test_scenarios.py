@@ -362,6 +362,44 @@ def test_random_quality_event(config, sensor_models):
     assert dropout_events == []
 
 
+def test_random_quality_event_is_quality_only_and_latent_only(config, sensor_models, baseline):
+    """Final Step-4 patch requirement: RANDOM_QUALITY_EVENT must remain
+    structurally incapable of touching Flow mechanics or observable
+    sensor generation — not just 'usually doesn't', but architecturally
+    can't, proven by an exact matched-baseline comparison."""
+    scenario = ScenarioDefinition(
+        scenario_id="rqe_isolation_check", family=ScenarioFamily.RANDOM_QUALITY_EVENT,
+        start_time=0, duration=None, severity=0.2,
+        params={"per_vehicle_probability": 0.15, "min_magnitude": 0.008, "max_magnitude": 0.025},
+    )
+    result = run_simulation(config, n_vehicles=N_VEHICLES, seed=SEED, sensor_models=sensor_models, scenarios=[scenario])
+
+    exposures = [r for r in result.latent_truth.quality_exposure if r.family == "RANDOM_QUALITY_EVENT"]
+    assert len(exposures) > 0  # the scenario actually fired for at least one vehicle
+
+    # Flow mechanics byte-identical to a true no-scenario baseline: every
+    # processing time, every buffer event, every state transition
+    core_types = {"STATION_PROCESSING_COMPLETED", "STATION_STATE_CHANGED",
+                  "VEHICLE_ENTERED_BUFFER", "VEHICLE_LEFT_BUFFER"}
+    core_result = [(e.event_type, e.simulation_time, e.station_id, e.buffer_id, e.value)
+                   for e in result.events if e.event_type in core_types]
+    core_baseline = [(e.event_type, e.simulation_time, e.station_id, e.buffer_id, e.value)
+                     for e in baseline.events if e.event_type in core_types]
+    assert core_result == core_baseline
+
+    # every sensor reading identical to baseline too — no fake observable
+    # process anomaly is ever manufactured by this family
+    sensor_result = [(e.station_id, e.sensor_name, e.simulation_time, e.value, e.measurement_status)
+                     for e in result.events if e.event_type == EventType.SENSOR_READING.value]
+    sensor_baseline = [(e.station_id, e.sensor_name, e.simulation_time, e.value, e.measurement_status)
+                       for e in baseline.events if e.event_type == EventType.SENSOR_READING.value]
+    assert sensor_result == sensor_baseline
+
+    # the family name itself never appears anywhere in observable event data
+    for e in result.events:
+        assert "random_quality_event" not in str(e.__dict__).lower()
+
+
 # ============================================================ COMPOSITION (Section R)
 
 def test_scenario_composition_two_compatible_scenarios(config, sensor_models, baseline):
