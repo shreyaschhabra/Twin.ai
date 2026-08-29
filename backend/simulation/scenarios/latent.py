@@ -47,10 +47,25 @@ class QualityExposureRecord:
     reason: str
 
 
+@dataclass
+class QCGenerationRecord:
+    """Step 4: the link between latent exposure and the eventual
+    observable QC label, kept ONLY here (never on the QC_RESULT_RECORDED
+    event) — this is exactly the information a synthetic-data audit needs
+    and an ML pipeline must never see."""
+
+    vehicle_id: str
+    simulation_time: float
+    total_exposure: float
+    probability_used: float
+    qc_result: str  # "PASS" | "DEFECT"
+
+
 class LatentTruthLog:
     def __init__(self) -> None:
         self.scenario_truth: List[ScenarioTruthRecord] = []
         self.quality_exposure: List[QualityExposureRecord] = []
+        self.qc_generation: List[QCGenerationRecord] = []
 
     def record_scenario(self, record: ScenarioTruthRecord) -> None:
         self.scenario_truth.append(record)
@@ -58,11 +73,17 @@ class LatentTruthLog:
     def record_exposure(self, record: QualityExposureRecord) -> None:
         self.quality_exposure.append(record)
 
+    def record_qc_generation(self, record: QCGenerationRecord) -> None:
+        self.qc_generation.append(record)
+
     def total_exposure_by_vehicle(self) -> Dict[str, float]:
         totals: Dict[str, float] = {}
         for rec in self.quality_exposure:
             totals[rec.vehicle_id] = totals.get(rec.vehicle_id, 0.0) + rec.contribution
         return totals
+
+    def total_exposure_for_vehicle(self, vehicle_id: str) -> float:
+        return sum(rec.contribution for rec in self.quality_exposure if rec.vehicle_id == vehicle_id)
 
 
 # Fields that must NEVER appear on an observable Event. Used by tests (and
@@ -82,4 +103,8 @@ PROHIBITED_OBSERVABLE_FIELDS = {
     "batch_is_bad",
     "is_bad_batch",
     "true_degradation_state",
+    # Step 4 additions (QC outcome generation)
+    "total_exposure",
+    "probability_used",
+    "intended_future_bottleneck",
 }

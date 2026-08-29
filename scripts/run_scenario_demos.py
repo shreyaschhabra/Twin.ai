@@ -49,9 +49,9 @@ RUNS = [
 
 def main():
     config = load_factory_config(CONFIG_DIR / "station_types.yaml", CONFIG_DIR / "development_line.yaml")
-    sensor_models = load_sensor_models(CONFIG_DIR / "sensor_models.yaml")
+    sensor_models = load_sensor_models(CONFIG_DIR / "sensor_models_dev.yaml")
     all_scenarios = {s.scenario_id: s for s in load_scenarios(CONFIG_DIR / "development_scenarios.yaml")}
-    batch_relevant_stations = load_batch_relevant_stations(CONFIG_DIR / "material_batches.yaml")
+    batch_relevant_stations = load_batch_relevant_stations(CONFIG_DIR / "material_batches_dev.yaml")
 
     OBSERVABLE_DIR.mkdir(parents=True, exist_ok=True)
     LATENT_DIR.mkdir(parents=True, exist_ok=True)

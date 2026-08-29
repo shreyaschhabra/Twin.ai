@@ -36,7 +36,7 @@ parameters, and applies whatever comes back generically.
 from __future__ import annotations
 
 from enum import Enum
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import simpy
 
@@ -44,8 +44,10 @@ from backend.config.schemas import FactoryConfig, StationInstance
 from backend.simulation.buffer import SimBuffer
 from backend.simulation.events import EventLog, EventType
 from backend.simulation.material_batches import MaterialBatchScheduler
+from backend.simulation.qc import QCOutcomeGenerator
 from backend.simulation.rng import RNGStreamFactory
 from backend.simulation.scenarios.effects import StationEffectBundle
+from backend.simulation.scenarios.latent import LatentTruthLog, QCGenerationRecord
 from backend.simulation.scenarios.manager import ScenarioManager
 from backend.simulation.sensors import SensorModelRegistry, generate_sensor_readings
 from backend.simulation.vehicle import Vehicle
@@ -76,6 +78,9 @@ class StationRuntime:
         scenario_manager: ScenarioManager,
         sensor_models: SensorModelRegistry,
         material_batches: MaterialBatchScheduler,
+        qc_station_id: Optional[str] = None,
+        qc_generator: Optional[QCOutcomeGenerator] = None,
+        latent_truth: Optional[LatentTruthLog] = None,
     ):
         if station_cfg.capacity != 1:
             raise NotImplementedError(
@@ -98,6 +103,9 @@ class StationRuntime:
         self.scenario_manager = scenario_manager
         self.sensor_models = sensor_models
         self.material_batches = material_batches
+        self.qc_station_id = qc_station_id
+        self.qc_generator = qc_generator
+        self.latent_truth = latent_truth
         self.state = StationState.IDLE
         self.processed_count = 0
 
@@ -184,6 +192,7 @@ class StationRuntime:
                     vehicle_variant=vehicle.variant_id,
                     station_id=station_id,
                     batch_id=batch_id,
+                    batch_key=f"{station_id}::{batch_id}",
                 )
                 self.scenario_manager.check_batch_exposure(vehicle.vehicle_id, self.env.now, station_id, batch_id)
 
@@ -225,6 +234,33 @@ class StationRuntime:
                 rng_factory=self.rng_factory,
                 event_log=self.event_log,
             )
+
+            # ---- final QC outcome (Step 4) — only at the configured QC
+            # station, only after its processing has fully completed.
+            # Converts latent exposure into a probabilistic label; the
+            # probability and exposure themselves are recorded ONLY in
+            # latent_truth, never on the observable event.
+            if self.qc_generator is not None and station_id == self.qc_station_id:
+                total_exposure = self.latent_truth.total_exposure_for_vehicle(vehicle.vehicle_id)
+                is_defect, probability = self.qc_generator.draw_outcome(total_exposure)
+                qc_result = "DEFECT" if is_defect else "PASS"
+                self.latent_truth.record_qc_generation(
+                    QCGenerationRecord(
+                        vehicle_id=vehicle.vehicle_id,
+                        simulation_time=self.env.now,
+                        total_exposure=total_exposure,
+                        probability_used=probability,
+                        qc_result=qc_result,
+                    )
+                )
+                self.event_log.record(
+                    EventType.QC_RESULT_RECORDED,
+                    simulation_time=self.env.now,
+                    vehicle_id=vehicle.vehicle_id,
+                    vehicle_variant=vehicle.variant_id,
+                    station_id=station_id,
+                    qc_result=qc_result,
+                )
 
             # ---- release (BLOCKED if downstream buffer is full) ----
             if vehicle.is_last_station():

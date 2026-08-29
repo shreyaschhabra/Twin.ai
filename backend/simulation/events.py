@@ -47,6 +47,12 @@ class EventType(str, Enum):
     SENSOR_READING = "SENSOR_READING"
     MICRO_STOP_OCCURRED = "MICRO_STOP_OCCURRED"
     MATERIAL_BATCH_ASSIGNED = "MATERIAL_BATCH_ASSIGNED"
+    # Step 4 addition. Emitted ONLY at the configured QC station, after
+    # that vehicle's processing there completes. Never carries latent
+    # exposure/probability/scenario-cause information — see
+    # backend/simulation/qc.py and scenarios/latent.py for where that
+    # lives instead.
+    QC_RESULT_RECORDED = "QC_RESULT_RECORDED"
 
 
 @dataclass
@@ -68,6 +74,12 @@ class Event:
     unit: Optional[str] = None
     measurement_status: Optional[str] = None
     batch_id: Optional[str] = None
+    # Step 4: canonical globally-unique batch identity, since batch_id
+    # numbering is per-station (see material_batches.py) — a naked
+    # batch_id like "B1002" is NOT globally unique on its own.
+    batch_key: Optional[str] = None
+    # Step 4 addition, used only by QC_RESULT_RECORDED
+    qc_result: Optional[str] = None
 
 
 class EventLog:

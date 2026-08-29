@@ -25,6 +25,11 @@ they shouldn't share one running counter — and a shared counter would
 make "declare batch B1002 as bad" ambiguous about which station's B1002
 it means once more than one station is configured. Combined with
 station_id, a batch_id is unambiguous.
+
+Like sensor_models_dev.yaml / sensor_models_full.yaml, the batch-relevant-
+station config is per-line-config (material_batches_dev.yaml,
+material_batches_full.yaml), not shared — dev-line and full-line reuse
+the same S01-S12 numbering for different stations.
 """
 
 from __future__ import annotations

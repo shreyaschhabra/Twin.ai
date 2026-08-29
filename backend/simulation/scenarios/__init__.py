@@ -3,6 +3,7 @@ from backend.simulation.scenarios.effects import StationEffectBundle
 from backend.simulation.scenarios.latent import (
     LatentTruthLog,
     QualityExposureRecord,
+    QCGenerationRecord,
     ScenarioTruthRecord,
     PROHIBITED_OBSERVABLE_FIELDS,
 )
@@ -15,6 +16,7 @@ __all__ = [
     "StationEffectBundle",
     "LatentTruthLog",
     "QualityExposureRecord",
+    "QCGenerationRecord",
     "ScenarioTruthRecord",
     "PROHIBITED_OBSERVABLE_FIELDS",
     "ScenarioManager",

@@ -9,32 +9,40 @@ LIVE / INFERRED / UNKNOWN — instead of silently guessing.
 
 ## Status
 
-**Step 3 of implementation: sensor generation + controlled abnormal-scenario engine.**
-The 12-station development line now also generates observable sensor
-readings and can inject any of 8 approved abnormal-scenario families
-(equipment degradation, micro-stops, vehicle-mix overload, bad batch,
-environmental drift, sensor dropout, manual variation, rare background
-quality events) against a matched healthy baseline. A physically separate
-latent-truth log (`backend/simulation/scenarios/latent.py`) records why
-each abnormality happened for debugging/evaluation — it is never merged
-into observable data, and automated tests enforce that. No ML, anomaly
-*detection*, FastAPI, or frontend code exists yet — those are later steps.
+**Step 4 of implementation: full 45-station factory + historical dataset + QC generation.**
+The factory now exists at two scales: `configs/development_line.yaml`
+(12 stations, fast iteration/unit tests) and `configs/full_line.yaml`
+(the locked 45-station, 4-zone factory — the one real dataset/ML work now
+targets). Both run through the exact same simulator, scenario engine,
+sensor engine, batch engine, and RNG architecture with zero code
+branching. The full line generates a 24-shift, 10,800-vehicle
+DEVELOPMENT historical dataset with probabilistic final-QC outcomes
+(~3.9% defect rate) derived from accumulated latent quality exposure —
+never a deterministic threshold. No ML, anomaly *detection*, FastAPI, or
+frontend code exists yet — those are later steps, and this is still only
+the development-scale dataset (20-30 shifts), not the final 100.
 
-Run the nominal healthy shift:
-
-```bash
-python scripts/run_nominal_simulation.py
-```
-
-Run one demonstration of each scenario family against a matched baseline:
+Generate the development dataset:
 
 ```bash
-python scripts/run_scenario_demos.py
+python scripts/generate_development_dataset.py
 ```
 
-Observable output goes to `data/generated/scenario_demos/`; latent
-ground-truth output (never an ML feature source) goes to
-`data/generated/latent/`.
+Run the EDA / synthetic-data validity / leakage / shortcut audit:
+
+```bash
+python scripts/audit_development_dataset.py
+```
+
+Observable data → `data/generated/development_45/observable/`; latent
+ground truth (scenario truth, quality exposure, the exposure→probability
+link — never an ML feature source) → `data/generated/development_45/latent/`.
+A reproducibility manifest is written alongside at
+`data/generated/development_45/manifest.json`.
+
+Earlier per-step demos still work: `scripts/run_nominal_simulation.py`
+(12-station healthy shift) and `scripts/run_scenario_demos.py` (one run
+per scenario family on the 12-station line).
 
 ## Development factory (Step 1)
 

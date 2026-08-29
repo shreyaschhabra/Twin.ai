@@ -32,7 +32,7 @@ def config():
 
 @pytest.fixture(scope="module")
 def sensor_models():
-    return load_sensor_models(CONFIG_DIR / "sensor_models.yaml")
+    return load_sensor_models(CONFIG_DIR / "sensor_models_dev.yaml")
 
 
 @pytest.fixture(scope="module")

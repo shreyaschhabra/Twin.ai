@@ -1,0 +1,13 @@
+# Baseline material/component batch schedule for the 45-station full
+# line (Step 4). Every vehicle processed at one of these stations
+# receives a neutral, observable batch_id, rotating every `cohort_size`
+# visits — regardless of whether any BAD_BATCH scenario is configured.
+#
+# Cohort sizes are illustrative simulation assumptions, not sourced.
+
+batch_relevant_stations:
+  S05: 6    # structural adhesive supply lot
+  S16: 6    # sealer supply lot
+  S25: 5    # glass-bonding adhesive supply lot
+  S27: 10   # powertrain/battery mount fastener lot
+  S32: 12   # wheel bolt fastener lot

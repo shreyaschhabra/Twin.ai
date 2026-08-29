@@ -15,9 +15,15 @@ benefit at this stage and was deliberately avoided (see Step 3
 instructions: avoid high-frequency fake telemetry).
 
 Sensor definitions (name/unit/baseline/noise/valid range) are loaded from
-configs/sensor_models.yaml, keyed by (station_id, sensor_name) — baselines
+a per-line-config YAML file (configs/sensor_models_dev.yaml for the
+12-station development line, configs/sensor_models_full.yaml for the
+45-station full line), keyed by (station_id, sensor_name) — baselines
 differ by station even for the same sensor family (e.g. weld_current at
 S01 vs S02), so a single global per-sensor-name default would be wrong.
+Sensor models are NOT shared across line configs the way station_types.yaml
+is: dev-line and full-line both use IDs S01-S12, but those IDs mean
+different stations with different sensors in each config, so one global
+file keyed by bare station_id would silently collide.
 
 "cycle_time" is deliberately never generated as a SENSOR_READING: it would
 duplicate information the STATION_PROCESSING_COMPLETED event already

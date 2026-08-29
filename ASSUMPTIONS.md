@@ -232,6 +232,88 @@ add more assumed parameters.
   time still degrades and latent exposure still accumulates even though
   the degraded sensor reading itself is fully hidden by the dropout.
 
+## Step 4 — full 45-station line, historical dataset, QC generation
+
+- **Station-type assignment**: all 45 stations reuse the same ~10 Step-1
+  templates — no new template was needed. Zone-level instrumentation
+  follows the same operational logic as the dev line: automated
+  body/paint/torque/inspection stations default rich, legacy manual
+  finishing/trim/wiring stations (S11, S21, S22, S24, S33, S38) are poor,
+  and a deliberate mix of older-but-automated equipment (adhesive/sealing,
+  glass, some torque/fluid stations, plus two manual stations retrofitted
+  with one extra justified sensor each — S29 position_sensor, S34
+  functional_test_suite) are partial. Exactly 29/10/6, verified by test.
+- **S35/S36 routing** (Section G): interpreted "shared route → variant-
+  specific operation profile → rejoin" literally — S36 has NO route skip,
+  both ICE and EV pass through it with different `variant_overrides`
+  (same mechanism as S26). The one actual route skip/bypass in the full
+  line is at S35 (EV has no fuel system), directly carrying forward the
+  dev-line's S11 precedent, and is what the branch/merge validation test
+  exercises.
+- **Line-balance pacing**: mean inter-arrival set to 115s (vs. the dev
+  line's 200s) because the full line's slowest station (S22 Wiring
+  Harness, 88s baseline) is much faster relative to line length than the
+  dev line's old S06 problem — pacing 115s keeps max nominal utilization
+  at ~71% (S22) with a healthy spread down to ~14-21% at the fastest
+  stations, and zero blocked time in the 200-vehicle line-balance check.
+  No station-cycle-time adjustment was needed this time (unlike the S06
+  patch after Step 2) — the config as designed already balanced well.
+- **Batch-relevant stations** (`configs/material_batches_full.yaml`):
+  S05, S16, S25 (adhesive/sealing family) and S27, S32 (fastener family),
+  cohort sizes 5-12, chosen for variety across the two material streams
+  the bad-batch scenario family can target.
+- **Scenario scheduling policy** (`backend/historical/shift_scheduler.py`):
+  simulation design assumptions, not real occurrence-frequency claims —
+  ~55% of shifts are "abnormal" (1-3 non-background scenario instances,
+  weighted toward 1-2), every shift always carries a small always-on
+  RANDOM_QUALITY_EVENT background scenario regardless of abnormal status,
+  severities drawn uniform(0.3, 0.9), start times drawn within the first
+  65% of the shift so effects have room to play out. Family/station pairs
+  are restricted to operationally sensible combinations (e.g. degradation
+  only on automated equipment) rather than "any family, any station."
+- **QC probability mapping** (`backend/simulation/qc.py`): a logistic
+  curve, `p = background + (max - background) * sigmoid(steepness *
+  (exposure - midpoint))`. Calibrated in three rounds against the ACTUAL
+  generated dataset (not a hand-built proxy scenario mix — round 1 was
+  tuned against one and landed at 2.1% once run at the real shift-scheduler
+  scale): final values `background=0.015, max=0.75, midpoint=0.062,
+  steepness=70` realize 3.889% overall on the frozen 24-shift set, inside
+  the 3.5-4.5% target band, with genuine probabilistic overlap (85%+ of
+  exposed vehicles still pass; the most-exposed decile still passes
+  ~33% of the time; some low-exposure vehicles still defect).
+- **Dataset master seed**: 20240002, not the first seed tried (20240001).
+  The first seed landed in-band on defect rate but happened to draw zero
+  SENSOR_DROPOUT scenario instances across all 24 shifts (a ~2.8%-chance
+  outcome of uniform random family selection over 24 draws), which would
+  have left no missingness evidence for the sensor EDA. 20240002 was
+  chosen because it both lands in-band AND draws all 7 non-background
+  scenario families at least once — not cherry-picked for the defect rate
+  alone.
+- **Development shift count**: 24 (within the requested 20-30 range) — a
+  round number giving 10,800 vehicles, enough for the shortcut/leakage
+  audits to be statistically meaningful while keeping each full
+  regeneration under 45 seconds for iterative calibration.
+
+### Bug found and fixed during Step 4: scenario-family draw order was non-deterministic across processes
+
+`build_shift_schedule` originally built its list of candidate scenario
+families from `FAMILY_STATION_POOLS.keys() | LINE_LEVEL_FAMILIES` — a set
+union. `ScenarioFamily` is a `str` Enum, and Python randomizes string
+hashing per process (`PYTHONHASHSEED`) unless explicitly fixed, so that
+set's iteration order (and therefore which family `schedule_rng.choice()`
+picked for a given index) differed on every fresh process invocation,
+even with an identical seed. Three consecutive runs of the generator
+script with the same `dataset_master_seed` produced three different
+defect rates (4.65%, 3.64%, 4.11%) before this was caught — caught by
+literally re-running the script and noticing the number moved, not by
+any test, since a single pytest process has one fixed hash seed for its
+whole lifetime and can't see this. Fixed by replacing the set union with
+`list(FAMILY_STATION_POOLS.keys()) + LINE_LEVEL_FAMILIES` (dict key order
+is insertion-order-guaranteed in Python 3.7+, independent of hashing) and
+added `tests/test_historical_dataset.py::test_scenario_schedule_reproducible_across_separate_processes`,
+which spawns three genuinely separate Python subprocesses and diffs
+their output — the only way to actually catch this class of bug.
+
 ## What is NOT yet assumed
 
 Defect rates, degradation/anomaly injection parameters, ML model
