@@ -19,7 +19,7 @@ from __future__ import annotations
 import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Callable, Dict, List, Optional
 
 from backend.config.schemas import FactoryConfig
 from backend.simulation.engine import RunResult, run_simulation
@@ -58,6 +58,7 @@ def generate_development_dataset(
     variant_mix: Optional[Dict[str, float]] = None,
     qc_params: Optional[QCParameters] = None,
     held_out_family: Optional[ScenarioFamily] = None,
+    schedule_fn: Callable = build_shift_schedule,
 ) -> List[ShiftResult]:
     variant_mix = variant_mix or DEFAULT_VARIANT_MIX
     qc_params = qc_params or QCParameters()
@@ -67,7 +68,7 @@ def generate_development_dataset(
         shift_results.append(_run_one_shift(
             config, sensor_models, batch_relevant_stations, i, dataset_master_seed,
             vehicles_per_shift, mean_interarrival_seconds, std_interarrival_seconds,
-            variant_mix, qc_params, held_out_family,
+            variant_mix, qc_params, held_out_family, schedule_fn,
         ))
 
     return shift_results
@@ -148,15 +149,21 @@ def _extract_rows(shift_results: List[ShiftResult]) -> Dict[str, list]:
 def _run_one_shift(
     config, sensor_models, batch_relevant_stations, shift_index, dataset_master_seed,
     vehicles_per_shift, mean_interarrival_seconds, std_interarrival_seconds,
-    variant_mix, qc_params, held_out_family,
+    variant_mix, qc_params, held_out_family, schedule_fn: Callable = build_shift_schedule,
 ) -> ShiftResult:
     """The exact per-shift logic factored out of generate_development_dataset
-    so the streaming path below cannot silently drift from it."""
+    so the streaming path below cannot silently drift from it.
+
+    `schedule_fn` defaults to the unchanged build_shift_schedule, so every
+    existing call site (Dataset A) is byte-identical to before this
+    parameter existed. It exists solely so Dataset B (Decision 36) can
+    inject build_shift_schedule_enriched via functools.partial without
+    touching this function's own logic."""
     shift_id = f"SHIFT{shift_index:03d}"
     shift_seed = derive_seed(dataset_master_seed, f"shift_sim::{shift_id}")
     shift_duration_estimate = vehicles_per_shift * mean_interarrival_seconds
 
-    plan = build_shift_schedule(
+    plan = schedule_fn(
         dataset_master_seed=dataset_master_seed,
         shift_id=shift_id,
         shift_duration_seconds=shift_duration_estimate,
@@ -201,6 +208,7 @@ def generate_and_write_dataset_streaming(
     qc_params: Optional[QCParameters] = None,
     held_out_family: Optional[ScenarioFamily] = None,
     batch_size: int = 10,
+    schedule_fn: Callable = build_shift_schedule,
 ):
     """Memory-bounded variant of generate_development_dataset() +
     write_dataset(), for dataset sizes where holding every shift's full
@@ -302,7 +310,7 @@ def generate_and_write_dataset_streaming(
         sr = _run_one_shift(
             config, sensor_models, batch_relevant_stations, i, dataset_master_seed,
             vehicles_per_shift, mean_interarrival_seconds, std_interarrival_seconds,
-            variant_mix, qc_params, held_out_family,
+            variant_mix, qc_params, held_out_family, schedule_fn,
         )
         shift_metadata.append({
             "shift_id": sr.shift_id, "shift_seed": sr.shift_seed,
