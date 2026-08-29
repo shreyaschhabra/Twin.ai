@@ -8,7 +8,6 @@ configs/full_line.yaml later without changes here.
 
 from __future__ import annotations
 
-import random
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
@@ -18,6 +17,7 @@ from backend.config.schemas import FactoryConfig
 from backend.simulation.buffer import SimBuffer
 from backend.simulation.events import Event, EventLog, EventType
 from backend.simulation.genealogy import StationVisitRecord, build_genealogy
+from backend.simulation.rng import RNGStreamFactory
 from backend.simulation.station import StationRuntime
 from backend.simulation.vehicle import Vehicle
 
@@ -46,7 +46,9 @@ class FactoryEngine:
         entry_buffer_capacity: int = DEFAULT_ENTRY_BUFFER_CAPACITY,
     ):
         self.config = config
-        self.rng = random.Random(seed)
+        self.rng_factory = RNGStreamFactory(master_seed=seed)
+        self.arrival_rng = self.rng_factory.get("vehicle_interarrival")
+        self.variant_rng = self.rng_factory.get("vehicle_variant_selection")
         self.env = simpy.Environment()
         self.event_log = EventLog()
         self.vehicles: Dict[str, Vehicle] = {}
@@ -88,7 +90,7 @@ class FactoryEngine:
                 input_buffers=self.incoming_buffers[station_id],
                 outgoing_buffer_lookup=self.outgoing_by_station.get(station_id, {}),
                 event_log=self.event_log,
-                rng=self.rng,
+                rng=self.rng_factory.get(f"processing_time::{station_id}"),
             )
             for station_id, station_cfg in config.stations.items()
         }
@@ -136,12 +138,12 @@ class FactoryEngine:
 
         for i in range(1, n_vehicles + 1):
             interarrival = max(
-                self.rng.gauss(mean_interarrival, std_interarrival),
+                self.arrival_rng.gauss(mean_interarrival, std_interarrival),
                 mean_interarrival * 0.3,
             )
             yield self.env.timeout(interarrival)
 
-            variant_id = self.rng.choices(variant_ids, weights=weights, k=1)[0]
+            variant_id = self.variant_rng.choices(variant_ids, weights=weights, k=1)[0]
             vehicle_id = f"V{i:05d}"
             route = list(self.config.vehicle_variants[variant_id].route)
             vehicle = Vehicle(

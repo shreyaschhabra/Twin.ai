@@ -92,14 +92,14 @@ stations:
     station_name: "Paint Cure Oven"
     station_type: CURING_ENVIRONMENTAL
     specific_operation: "Oven cure of basecoat/clearcoat"
-    baseline_cycle_time_seconds: 180
+    baseline_cycle_time_seconds: 65
     cycle_time_variability: 0.05
     sensor_maturity: rich
     available_sensors: [oven_temperature, humidity, belt_speed, cycle_time]
     applicable_vehicle_variants: [ICE_SEDAN, ICE_SUV, EV]
     process_parameters:
       target_oven_temperature_c: 160
-    notes: "Cure time compressed for simulation tractability; illustrative, not a real oven dwell time."
+    notes: "IMPORTANT ABSTRACTION: baseline_cycle_time_seconds here represents effective service/headway, not physical residence time. A real cure oven is a continuous-flow tunnel holding many vehicles at once; its physical dwell time could plausibly be 10-20+ minutes, but that number is irrelevant to a capacity=1 discrete-event abstraction, which only cares about the rate at which vehicles exit. 65s was chosen to match the pace of its immediate neighbors (S05 Paint=60s upstream, S07 Marriage=70s downstream) so this station doesn't stand out as a structural bottleneck by construction — not reverse-engineered from a target utilization percentage. See ASSUMPTIONS.md."
 
   S07:
     station_name: "Powertrain / Battery Pack Marriage"

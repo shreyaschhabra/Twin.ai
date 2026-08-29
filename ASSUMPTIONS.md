@@ -69,25 +69,56 @@ add more assumed parameters.
 ## Step 2 — simulation assumptions
 
 - **Station capacity**: every station is modeled as a single serving slot
-  (`capacity: 1`, the schema default added in Step 2). This matters most for
-  S06, the paint cure oven: a real oven is a continuous-flow tunnel holding
-  many vehicles at once, not a single-slot server. Modeling it as capacity=1
-  with a 180s baseline makes it the line's clear throughput bottleneck,
-  which is a deliberate simplification, not an oversight — see the
-  "arrival pacing" note below. The schema/engine already support a
-  `capacity` field for a future multi-slot station, but the engine
-  currently raises `NotImplementedError` if any configured capacity != 1,
-  since multi-slot state semantics (what does "BLOCKED" mean for one of
-  several slots?) are unneeded scope for this config and were not built.
+  (`capacity: 1`, the schema default added in Step 2). The schema/engine
+  already support a `capacity` field for a future multi-slot station, but
+  the engine currently raises `NotImplementedError` if any configured
+  capacity != 1, since multi-slot state semantics (what does "BLOCKED"
+  mean for one of several slots?) are unneeded scope for this config and
+  were not built.
+- **S06 (paint cure oven) is an effective-service/headway abstraction, not
+  a physical dwell-time model** (patched after Step 2 review). A real cure
+  oven is a continuous-flow tunnel holding many vehicles in transit at
+  once; its physical residence time could plausibly be 10-20+ minutes,
+  but that number is irrelevant to a capacity=1, single-server discrete-
+  event abstraction, which only cares about the rate vehicles exit
+  (headway), not how long any one vehicle physically dwells inside.
+  `baseline_cycle_time_seconds` for every station in this config
+  represents that effective service/headway, not residence time — S06 is
+  just the one station where the two would differ enough in reality to be
+  worth calling out explicitly. An earlier draft set S06 to 180s (implicitly
+  treating dwell time as if it were headway), which made it a structural
+  bottleneck by construction (~87.5% nominal utilization) before any Step-3
+  scenario ever ran. Corrected to **65s**, chosen by matching the pace of
+  its immediate line neighbors — S05 Paint (60s) upstream and S07 Marriage
+  (70s) downstream — not reverse-engineered from a target utilization
+  number. This is an illustrative simulation abstraction, not a claim about
+  real automotive paint-cure engineering.
 - **Arrival pacing (nominal run)**: mean inter-arrival time is 200s
-  (Normal(200, 20), floored at 60s), deliberately set slightly *above*
-  S06's ~180s mean cycle time. This is standard line-balancing practice,
-  not a tuning hack: pacing arrivals faster than the slowest station's rate
-  guarantees permanent saturation regardless of simulator correctness, for
-  any line, real or simulated. Blocking/starvation mechanics are proven
-  separately by dedicated controlled-configuration tests
-  (`tests/test_simulation_controlled.py`), not relied upon to emerge from
-  nominal randomness.
+  (Normal(200, 20), floored at 60s). This was never the source of the S06
+  problem and is unchanged. With S06 corrected, the highest-utilization
+  station is now S09 (wiring, ~90s baseline) at ~45% nominal utilization —
+  comfortably under the 75-80% target, with no station near-permanent
+  saturation, leaving clear headroom for Step 3 scenarios to create
+  bottlenecks intentionally rather than fighting a structural one.
+  Blocking/starvation mechanics are proven separately by dedicated
+  controlled-configuration tests (`tests/test_simulation_controlled.py`),
+  not relied upon to emerge from nominal randomness.
+- **RNG stream isolation** (patched after Step 2 review): a single shared
+  `random.Random(seed)` was replaced with `RNGStreamFactory`
+  (`backend/simulation/rng.py`), which derives one independent
+  `random.Random` instance per named concern (`vehicle_interarrival`,
+  `vehicle_variant_selection`, `processing_time::{station_id}` — one per
+  station) by hashing `(master_seed, stream_name)` with SHA-256, never
+  Python's built-in `hash()` (which is randomized per-process unless
+  `PYTHONHASHSEED` is fixed, and would silently break cross-process/
+  cross-machine reproducibility). Each stream is a fully independent state
+  machine, so consuming values from one can never perturb another —
+  proven by test, including the specific case of draining one station's
+  stream and an end-to-end engine run where a hypothetical Step-3 stream
+  (`sensor_noise::S01`) is drained before running and the resulting event
+  stream is still byte-identical. This is what lets Step 3 add sensor
+  noise, scenario occurrence/severity, and defect background noise as new
+  named streams without touching any Step 2 timing.
 - **Entry buffer capacity**: 20 (a vehicle-generator-side staging queue in
   front of each entry station). Not part of the Step 1 buffer config since
   it isn't a real inter-station buffer; exists so a fully backed-up line
