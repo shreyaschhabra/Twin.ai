@@ -70,6 +70,10 @@ def main():
     print(f"Positive stations: {n_positive_stations} -> {sorted(pos_rows.station_id.unique())}")
     print(f"Positive shifts: {n_positive_shifts} -> {sorted(pos_rows.shift_id.unique())}")
     print(f"\nPositives by station:\n{pos_rows.station_id.value_counts()}")
+    print(f"\ntime_to_impact_seconds distribution (transparency: most positives are near-term precursors "
+          f"in chronic-congestion shifts, since a prior episode's ACTIVE window often consumes most of the "
+          f"next episode's 10-minute lookback -- see episode-level 0-5min vs 5-10min band reporting):")
+    print(pos_rows.time_to_impact_seconds.describe())
 
     section("3. EQUIPMENT_DEGRADATION HOLDOUT (Decision 35, unchanged)")
     holdout_mask = compute_holdout_mask(labeled, scenario_truth)
