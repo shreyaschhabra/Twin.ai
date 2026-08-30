@@ -80,7 +80,13 @@ def _live_flow_trajectory(config, sensor_models, model, contract, scenario, stat
         frame = pd.DataFrame([features])
         for feature in contract["categorical_features"]:
             frame[feature] = pd.Categorical(frame[feature], categories=contract["categorical_levels"][feature])
-        predicted_service_rate = float(model.predict(frame[contract["feature_order"]])[0])
+        for feature in contract["feature_order"]:
+            if feature not in contract["categorical_features"]:
+                frame[feature] = frame[feature].astype(float)
+                
+        lgb_pred = float(model.predict(frame[contract["feature_order"]])[0])
+        recent_service = features["baseline_cycle_time_seconds"] and (3600.0 / features["baseline_cycle_time_seconds"]) / features.get("svc_cycle_time_ratio_to_baseline", 1.0) if features.get("svc_cycle_time_ratio_to_baseline") else lgb_pred
+        predicted_service_rate = 0.6 * lgb_pred + 0.4 * recent_service
 
         current_occupancy = next((occ for time, occ in reversed(occupancy_by_time) if time <= t), 0)
         recent_arrivals = [e for e in entries if t - 300.0 < e.simulation_time <= t]

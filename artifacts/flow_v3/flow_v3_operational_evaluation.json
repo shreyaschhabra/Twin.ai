@@ -1,5 +1,5 @@
 {
-  "frozen_ratio_threshold": 0.9,
+  "frozen_ratio_threshold": 0.8,
   "note": "This measures the ML precursor signal's threshold-crossing behavior alone (predicted_service_rate_vph / baseline < threshold, and not already inside an active congestion regime). The deployed actionable warning additionally passes this through backend.flow_v3.queue_projection, which combines it with real-time buffer occupancy and arrival rate -- demonstrated in scripts/run_final_demo.py rather than in this offline regression-corpus evaluation, since the stored corpus intentionally excludes queue/occupancy state from its feature columns.",
   "predicted_onset_mae": null,
   "predicted_onset_mae_note": "Not computed here for the same reason: onset projection is a queue_projection output, not a raw model output.",
@@ -34,9 +34,9 @@
         "5_10_min": 0,
         "10_15_min": 0
       },
-      "false_alerts": 2,
-      "false_alerts_per_run": 0.058823529411764705,
-      "false_alerts_per_simulated_hour": 0.006544033775556382
+      "false_alerts": 4,
+      "false_alerts_per_run": 0.11764705882352941,
+      "false_alerts_per_simulated_hour": 0.013088067551112763
     },
     {
       "ratio_threshold": 0.65,
@@ -51,94 +51,94 @@
         "5_10_min": 0,
         "10_15_min": 0
       },
-      "false_alerts": 2,
-      "false_alerts_per_run": 0.058823529411764705,
-      "false_alerts_per_simulated_hour": 0.006544033775556382
+      "false_alerts": 12,
+      "false_alerts_per_run": 0.35294117647058826,
+      "false_alerts_per_simulated_hour": 0.03926420265333829
     },
     {
       "ratio_threshold": 0.7,
       "n_regimes": 16,
-      "regimes_with_early_warning": 0,
-      "congestion_regime_recall": 0.0,
-      "median_lead_seconds": null,
-      "p25_lead_seconds": null,
-      "p75_lead_seconds": null,
+      "regimes_with_early_warning": 1,
+      "congestion_regime_recall": 0.0625,
+      "median_lead_seconds": 872.360141883024,
+      "p25_lead_seconds": 872.360141883024,
+      "p75_lead_seconds": 872.360141883024,
       "lead_time_bands": {
         "0_5_min": 0,
         "5_10_min": 0,
-        "10_15_min": 0
+        "10_15_min": 1
       },
-      "false_alerts": 17,
-      "false_alerts_per_run": 0.5,
-      "false_alerts_per_simulated_hour": 0.05562428709222924
+      "false_alerts": 48,
+      "false_alerts_per_run": 1.411764705882353,
+      "false_alerts_per_simulated_hour": 0.15705681061335316
     },
     {
       "ratio_threshold": 0.75,
       "n_regimes": 16,
-      "regimes_with_early_warning": 1,
-      "congestion_regime_recall": 0.0625,
-      "median_lead_seconds": 872.360141883024,
-      "p25_lead_seconds": 872.360141883024,
-      "p75_lead_seconds": 872.360141883024,
-      "lead_time_bands": {
-        "0_5_min": 0,
-        "5_10_min": 0,
-        "10_15_min": 1
-      },
-      "false_alerts": 46,
-      "false_alerts_per_run": 1.3529411764705883,
-      "false_alerts_per_simulated_hour": 0.15051277683779676
-    },
-    {
-      "ratio_threshold": 0.8,
-      "n_regimes": 16,
-      "regimes_with_early_warning": 1,
-      "congestion_regime_recall": 0.0625,
-      "median_lead_seconds": 872.360141883024,
-      "p25_lead_seconds": 872.360141883024,
-      "p75_lead_seconds": 872.360141883024,
-      "lead_time_bands": {
-        "0_5_min": 0,
-        "5_10_min": 0,
-        "10_15_min": 1
-      },
-      "false_alerts": 99,
-      "false_alerts_per_run": 2.911764705882353,
-      "false_alerts_per_simulated_hour": 0.3239296718900409
-    },
-    {
-      "ratio_threshold": 0.85,
-      "n_regimes": 16,
       "regimes_with_early_warning": 2,
       "congestion_regime_recall": 0.125,
-      "median_lead_seconds": 590.7492963108361,
-      "p25_lead_seconds": 449.94387352474223,
-      "p75_lead_seconds": 731.5547190969301,
+      "median_lead_seconds": 689.2049179101905,
+      "p25_lead_seconds": 597.6273059237737,
+      "p75_lead_seconds": 780.7825298966072,
       "lead_time_bands": {
         "0_5_min": 0,
         "5_10_min": 1,
         "10_15_min": 1
       },
-      "false_alerts": 178,
-      "false_alerts_per_run": 5.235294117647059,
-      "false_alerts_per_simulated_hour": 0.5824190060245179
+      "false_alerts": 125,
+      "false_alerts_per_run": 3.676470588235294,
+      "false_alerts_per_simulated_hour": 0.40900211097227385
+    },
+    {
+      "ratio_threshold": 0.8,
+      "n_regimes": 16,
+      "regimes_with_early_warning": 3,
+      "congestion_regime_recall": 0.1875,
+      "median_lead_seconds": 728.8640400417553,
+      "p25_lead_seconds": 423.4499229352432,
+      "p75_lead_seconds": 800.6120909623896,
+      "lead_time_bands": {
+        "0_5_min": 1,
+        "5_10_min": 0,
+        "10_15_min": 2
+      },
+      "false_alerts": 195,
+      "false_alerts_per_run": 5.735294117647059,
+      "false_alerts_per_simulated_hour": 0.6380432931167472
+    },
+    {
+      "ratio_threshold": 0.85,
+      "n_regimes": 16,
+      "regimes_with_early_warning": 3,
+      "congestion_regime_recall": 0.1875,
+      "median_lead_seconds": 728.8640400417553,
+      "p25_lead_seconds": 423.4499229352432,
+      "p75_lead_seconds": 800.6120909623896,
+      "lead_time_bands": {
+        "0_5_min": 1,
+        "5_10_min": 0,
+        "10_15_min": 2
+      },
+      "false_alerts": 316,
+      "false_alerts_per_run": 9.294117647058824,
+      "false_alerts_per_simulated_hour": 1.0339573365379082
     },
     {
       "ratio_threshold": 0.9,
       "n_regimes": 16,
       "regimes_with_early_warning": 3,
       "congestion_regime_recall": 0.1875,
-      "median_lead_seconds": 309.1384507386483,
-      "p25_lead_seconds": 213.5871282836897,
-      "p75_lead_seconds": 590.7492963108361,
+      "median_lead_seconds": 728.8640400417553,
+      "p25_lead_seconds": 423.4499229352432,
+      "p75_lead_seconds": 800.6120909623896,
       "lead_time_bands": {
         "0_5_min": 1,
-        "5_10_min": 1,
-        "10_15_min": 1
+        "5_10_min": 0,
+        "10_15_min": 2
       },
-      "false_alerts": 232,
-      "false_alerts_per_run": 6.823529411764706,
-      "false_alerts_per_simulated_hour": 0.7591079179645402
+      "false_alerts": 1818,
+      "false_alerts_per_run": 53.470588235294116,
+      "false_alerts_per_simulated_hour": 5.948526701980751
     }
   ],
   "validation_regime_mechanisms": {
@@ -150,7 +150,7 @@
   },
   "test_regime_composition_caveat": "All 18 frozen TEST congestion regimes come from a single ARRIVAL_BURST run (repeated short S21<-S22 blocking sub-episodes from a sustained moderate arrival increase, not from an S22 service-capability drop). ARRIVAL_BURST raises arrival pressure, not station service capability -- by this architecture's own design (Section 2/17-18), that class of congestion is meant to be caught by the queue-projection layer's arrival-rate input, not the isolated service-capability ML signal, so a 0% ML-only recall on this specific TEST composition is an expected consequence of the corpus's random regime placement, not evidence the model failed to learn a real signal. VALIDATION's 16 regimes, by contrast, come from MANUAL_VARIATION and MICRO_STOPS (genuine service-capability mechanisms) and the ML-only signal reaches 12.5% recall there at the same threshold search -- still weak, but non-zero and mechanism-appropriate. A larger/more diverse predeclared TEST partition (Section 14's own fallback: add runs, never move existing ones) would be needed for a statistically solid TEST-level regime-recall number; the current TEST regime count (18, from one run) is too thin for that on its own.",
   "test": {
-    "ratio_threshold": 0.9,
+    "ratio_threshold": 0.8,
     "n_regimes": 18,
     "regimes_with_early_warning": 0,
     "congestion_regime_recall": 0.0,
@@ -162,8 +162,8 @@
       "5_10_min": 0,
       "10_15_min": 0
     },
-    "false_alerts": 260,
-    "false_alerts_per_run": 7.647058823529412,
-    "false_alerts_per_simulated_hour": 0.848364794460004
+    "false_alerts": 224,
+    "false_alerts_per_run": 6.588235294117647,
+    "false_alerts_per_simulated_hour": 0.730898899842465
   }
 }

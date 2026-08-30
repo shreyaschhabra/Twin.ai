@@ -1,0 +1,18 @@
+{
+  "vehicle_id": "SHIFT098::V00355",
+  "checkpoint_stations": [
+    "S12",
+    "S20",
+    "S27",
+    "S38",
+    "S44"
+  ],
+  "risk_trajectory": [
+    0.2591,
+    0.3703,
+    0.3703,
+    0.3703,
+    0.3703
+  ],
+  "eventual_outcome": "DEFECT"
+}

@@ -1,0 +1,34 @@
+{
+  "stages": [
+    {
+      "label": "fresh direct reading",
+      "data_state": "LIVE",
+      "inference_method": null,
+      "estimated_value": null,
+      "trust_level": "HIGH",
+      "trust_reasons": [
+        "live_fraction=1.00 >= 0.8, no unknown inputs"
+      ]
+    },
+    {
+      "label": "dropout, same-station recent history available",
+      "data_state": "INFERRED",
+      "inference_method": "same_station_recent",
+      "estimated_value": 9005.0,
+      "trust_level": "MEDIUM",
+      "trust_reasons": [
+        "some inferred evidence, coverage still sufficient"
+      ]
+    },
+    {
+      "label": "dropout, no reliable inference basis",
+      "data_state": "UNKNOWN",
+      "inference_method": null,
+      "estimated_value": null,
+      "trust_level": "LOW",
+      "trust_reasons": [
+        "unknown_fraction=1.00 >= 0.3"
+      ]
+    }
+  ]
+}

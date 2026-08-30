@@ -66,6 +66,73 @@
       }
     ]
   },
+  "prolonged_zone_outage": {
+    "n_scored": 984,
+    "overall_unknown_rate": 0.3333333333333333,
+    "overall_inferred_rate": 0.6666666666666666,
+    "by_position_in_outage": [
+      {
+        "position_in_outage": 0,
+        "unknown_rate": 0.0,
+        "inferred_rate": 1.0
+      },
+      {
+        "position_in_outage": 1,
+        "unknown_rate": 0.0,
+        "inferred_rate": 1.0
+      },
+      {
+        "position_in_outage": 2,
+        "unknown_rate": 0.0,
+        "inferred_rate": 1.0
+      },
+      {
+        "position_in_outage": 3,
+        "unknown_rate": 0.0,
+        "inferred_rate": 1.0
+      },
+      {
+        "position_in_outage": 4,
+        "unknown_rate": 0.0,
+        "inferred_rate": 1.0
+      },
+      {
+        "position_in_outage": 5,
+        "unknown_rate": 0.0,
+        "inferred_rate": 1.0
+      },
+      {
+        "position_in_outage": 6,
+        "unknown_rate": 0.0,
+        "inferred_rate": 1.0
+      },
+      {
+        "position_in_outage": 7,
+        "unknown_rate": 0.0,
+        "inferred_rate": 1.0
+      },
+      {
+        "position_in_outage": 8,
+        "unknown_rate": 1.0,
+        "inferred_rate": 0.0
+      },
+      {
+        "position_in_outage": 9,
+        "unknown_rate": 1.0,
+        "inferred_rate": 0.0
+      },
+      {
+        "position_in_outage": 10,
+        "unknown_rate": 1.0,
+        "inferred_rate": 0.0
+      },
+      {
+        "position_in_outage": 11,
+        "unknown_rate": 1.0,
+        "inferred_rate": 0.0
+      }
+    ]
+  },
   "contiguous_outage_during_degradation": {
     "n_scored": 12,
     "overall_unknown_rate": 0.0,

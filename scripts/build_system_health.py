@@ -51,7 +51,8 @@ def check_public_event_stream():
     assert len(public) <= len(result.events)
     forbidden = {"scenario_id", "hidden_degradation_severity", "latent_quality_exposure"}
     for e in public[:5]:
-        assert forbidden.isdisjoint(vars(e).keys())
+        for f in forbidden:
+            assert not hasattr(e, f), f"PublicEvent leaked forbidden attribute {f}"
     return f"{len(public)} public events projected from {len(result.events)} internal events"
 
 

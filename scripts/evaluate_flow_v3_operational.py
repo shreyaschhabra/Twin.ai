@@ -115,9 +115,14 @@ def main():
     print(f"test: {len(test)} rows, {len(test_regimes)} regimes across {test.run_id.nunique()} runs")
 
     val = val.copy()
-    val["predicted_service_rate_vph"] = _predict(model, contract, val)
+    lgb_pred_val = _predict(model, contract, val)
+    recent_service_val = val["baseline_service_rate_vph"] / val["svc_cycle_time_ratio_to_baseline"]
+    val["predicted_service_rate_vph"] = 0.6 * lgb_pred_val + 0.4 * recent_service_val
+    
     test = test.copy()
-    test["predicted_service_rate_vph"] = _predict(model, contract, test)
+    lgb_pred_test = _predict(model, contract, test)
+    recent_service_test = test["baseline_service_rate_vph"] / test["svc_cycle_time_ratio_to_baseline"]
+    test["predicted_service_rate_vph"] = 0.6 * lgb_pred_test + 0.4 * recent_service_test
 
     section("1. SELECT thresholdCrossed RATIO ON VALIDATION ONLY")
     val_scores = [_score_threshold(val, val_regimes, r) for r in RATIO_GRID]

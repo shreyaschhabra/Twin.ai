@@ -1,0 +1,49 @@
+{
+  "demos": [
+    "flow",
+    "quality",
+    "trust",
+    "hard_negative"
+  ],
+  "flow_summary": {
+    "station_id": "S26",
+    "buffer_capacity": 4,
+    "first_elevated_risk_time": 6226.102562106303,
+    "buffer_occupancy_at_first_elevated_risk": 1,
+    "buffer_not_already_full_at_warning": true,
+    "actual_congestion_onsets": [],
+    "lead_time_seconds": null
+  },
+  "quality_summary": {
+    "vehicle_id": "SHIFT098::V00355",
+    "checkpoint_stations": [
+      "S12",
+      "S20",
+      "S27",
+      "S38",
+      "S44"
+    ],
+    "risk_trajectory": [
+      0.2591,
+      0.3703,
+      0.3703,
+      0.3703,
+      0.3703
+    ],
+    "eventual_outcome": "DEFECT"
+  },
+  "trust_summary": [
+    "LIVE",
+    "INFERRED",
+    "UNKNOWN"
+  ],
+  "hard_negative_summary": {
+    "station_id": "S26",
+    "mix_shift_toward_variant": "EV",
+    "worst_risk_level_reached": "WATCH",
+    "high_or_critical_alert_fired": false,
+    "actual_congestion_onsets": []
+  },
+  "model_id": "flow_v3_lightgbm_service_capability_v1",
+  "git_commit": "496f2148ca814cb6fe21aed67a079660f308f4c5"
+}

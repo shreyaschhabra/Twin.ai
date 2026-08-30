@@ -120,12 +120,58 @@ def main():
     isolated = evaluate_virtual_sensor(readings, sensor_models, mask_fraction=0.2, seed=20260830)
     print(json.dumps(isolated, indent=2))
 
-    section("2. CONTIGUOUS OUTAGE")
+    section("2. CONTIGUOUS OUTAGE (with same-type fallback available)")
     contiguous = _contiguous_outage_eval(readings, sensor_models, outage_readings=8)
     print(json.dumps({k: v for k, v in contiguous.items() if k != "by_position_in_outage"}, indent=2))
     for row in contiguous.get("by_position_in_outage", []):
         print(f"  position {row['position_in_outage']}: UNKNOWN rate={row['unknown_rate']:.3f}, "
               f"INFERRED rate={row['inferred_rate']:.3f}, mean error={row['mean_error']}")
+
+    section("2b. PROLONGED OUTAGE (zone down: same-type fallback unavailable)")
+    # Simulate a condition where the entire zone/type is down, so `type_history` is empty
+    def _zone_down_outage_eval(readings: pd.DataFrame, sensor_models, outage_readings: int = 8) -> dict:
+        available = readings[readings.measurement_status == "available"].sort_values("simulation_time")
+        results = []
+        for (station_id, sensor_name), group in available.groupby(["station_id", "sensor_name"]):
+            group = group.reset_index(drop=True)
+            if len(group) < outage_readings + 5:
+                continue
+            start = len(group) // 3
+            outage = group.iloc[start:start + outage_readings]
+            history_before = group.iloc[:start].value.tolist()
+            
+            for position, row in enumerate(outage.itertuples()):
+                # Simulate aging out: same-station history drops as the outage prolongs
+                aged_history = history_before[-(10 - position):] if (10 - position) > 0 else []
+                # Pass empty type_history to simulate the entire station type being unavailable
+                est, method, reliable = estimate_virtual_sensor_value(
+                    station_id, sensor_name, group.station_type.iloc[0],
+                    {(station_id, sensor_name): aged_history},
+                    {},  # NO same-type fallback available
+                    sensor_models,
+                )
+                data_state = "INFERRED" if (est is not None and reliable) else "UNKNOWN"
+                results.append({"position_in_outage": position, "data_state": data_state})
+                
+        df = pd.DataFrame(results)
+        if df.empty:
+            return {"n_scored": 0}
+        by_position = df.groupby("position_in_outage").agg(
+            unknown_rate=("data_state", lambda s: float((s == "UNKNOWN").mean())),
+            inferred_rate=("data_state", lambda s: float((s == "INFERRED").mean()))
+        )
+        return {
+            "n_scored": int(len(df)),
+            "overall_unknown_rate": float((df.data_state == "UNKNOWN").mean()),
+            "overall_inferred_rate": float((df.data_state == "INFERRED").mean()),
+            "by_position_in_outage": by_position.reset_index().to_dict(orient="records"),
+        }
+        
+    prolonged = _zone_down_outage_eval(readings, sensor_models, outage_readings=12)
+    print(json.dumps({k: v for k, v in prolonged.items() if k != "by_position_in_outage"}, indent=2))
+    for row in prolonged.get("by_position_in_outage", []):
+        print(f"  position {row['position_in_outage']}: UNKNOWN rate={row['unknown_rate']:.3f}, "
+              f"INFERRED rate={row['inferred_rate']:.3f}")
 
     section("3. OUTAGE DURING EQUIPMENT_DEGRADATION (unseen family; evaluation only)")
     degraded_station = "S27"
@@ -147,6 +193,7 @@ def main():
     out = {
         "isolated_missing_point": isolated,
         "contiguous_outage": {k: v for k, v in contiguous.items()},
+        "prolonged_zone_outage": {k: v for k, v in prolonged.items()},
         "contiguous_outage_during_degradation": {k: v for k, v in degraded_contiguous.items()},
         "note": (
             "error_by_maturity/mean_error are raw absolute units, not normalized across sensors of "

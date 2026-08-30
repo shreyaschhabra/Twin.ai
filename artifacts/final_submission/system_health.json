@@ -1,0 +1,45 @@
+{
+  "overall": "PASS",
+  "components": [
+    {
+      "component": "simulator",
+      "status": "PASS",
+      "detail": "3171 internal events from a 10-vehicle smoke run"
+    },
+    {
+      "component": "public_event_stream",
+      "status": "PASS",
+      "detail": "2899 public events projected from 3171 internal events"
+    },
+    {
+      "component": "flow_model",
+      "status": "PASS",
+      "detail": "loaded, 11 features, test MAE=4.96 vph"
+    },
+    {
+      "component": "flow_projection",
+      "status": "PASS",
+      "detail": "NORMAL/CRITICAL cases both project correctly"
+    },
+    {
+      "component": "quality_model",
+      "status": "PASS",
+      "detail": "loaded, 26 features"
+    },
+    {
+      "component": "anomaly",
+      "status": "PASS",
+      "detail": "loaded, fit on 15870 genuinely-healthy rows, separation confirmed"
+    },
+    {
+      "component": "trust",
+      "status": "PASS",
+      "detail": "UNKNOWN-with-no-exposed-baseline-value semantics confirmed live"
+    },
+    {
+      "component": "feature_contract",
+      "status": "PASS",
+      "detail": "contract complete, 11 features, no raw station_id"
+    }
+  ]
+}

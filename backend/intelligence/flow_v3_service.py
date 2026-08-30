@@ -81,7 +81,10 @@ class FlowV3Service:
             public_events_upto_t=visible, station_id=station_id,
             observation_time=observation_time, config=config,
         )
-        predicted_service_rate = self._predict_service_rate(features)
+        lgb_pred = self._predict_service_rate(features)
+        recent_service = features["baseline_cycle_time_seconds"] and (3600.0 / features["baseline_cycle_time_seconds"]) / features.get("svc_cycle_time_ratio_to_baseline", 1.0) if features.get("svc_cycle_time_ratio_to_baseline") else lgb_pred
+        predicted_service_rate = 0.6 * lgb_pred + 0.4 * recent_service
+        
         projection = project_queue_risk(
             current_occupancy=current_occupancy, buffer_capacity=buffer_capacity,
             arrival_rate_vph=arrival_rate_vph, predicted_service_rate_vph=predicted_service_rate,
