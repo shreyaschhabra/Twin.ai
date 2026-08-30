@@ -1,0 +1,520 @@
+{
+  "scenario": "bottleneck",
+  "shift_id": "SHIFT088",
+  "station_id": "S22",
+  "actual_onset_time_s": 44161.81392770156,
+  "actual_blocked_duration_s": 51.032586418965366,
+  "timeline": [
+    {
+      "window_end_time": 43320.0,
+      "label": "NEGATIVE",
+      "cycle_time_dev_relative": 0.7290588452885362,
+      "inbound_occupancy_ratio": 0.25,
+      "bottleneck_risk": 0.0,
+      "evidence": [
+        {
+          "feature": "inbound_occupancy_mean_5m",
+          "value": 0.2916666666666667,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "prop_processing_5m",
+          "value": 1.0,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "prop_starved_5m",
+          "value": 0.0,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "cycle_time_mean_5m",
+          "value": 115.77073002755856,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "inbound_occupancy_ratio",
+          "value": 0.25,
+          "effect": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "window_end_time": 43380.0,
+      "label": "NEGATIVE",
+      "cycle_time_dev_relative": 0.7290588452885362,
+      "inbound_occupancy_ratio": 0.25,
+      "bottleneck_risk": 0.0,
+      "evidence": [
+        {
+          "feature": "prop_processing_5m",
+          "value": 1.0,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "inbound_occupancy_mean_5m",
+          "value": 0.25,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "prop_starved_5m",
+          "value": 0.0,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "inbound_occupancy_ratio",
+          "value": 0.25,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "inbound_occupancy_max_5m",
+          "value": 0.5,
+          "effect": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "window_end_time": 43440.0,
+      "label": "NEGATIVE",
+      "cycle_time_dev_relative": 0.7290588452885362,
+      "inbound_occupancy_ratio": 0.5,
+      "bottleneck_risk": 1.0,
+      "evidence": [
+        {
+          "feature": "inbound_occupancy_ratio",
+          "value": 0.5,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "sensor_mean_dev_5m",
+          "value": 0.0,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "inbound_occupancy_mean_5m",
+          "value": 0.3,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "prop_starved_5m",
+          "value": 0.0,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "prop_processing_5m",
+          "value": 1.0,
+          "effect": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "window_end_time": 43500.0,
+      "label": "NEGATIVE",
+      "cycle_time_dev_relative": 0.7290588452885362,
+      "inbound_occupancy_ratio": 0.5,
+      "bottleneck_risk": 1.0,
+      "evidence": [
+        {
+          "feature": "inbound_occupancy_ratio",
+          "value": 0.5,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "sensor_mean_dev_5m",
+          "value": 0.0,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "inbound_occupancy_mean_5m",
+          "value": 0.25,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "prop_processing_5m",
+          "value": 1.0,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "inbound_growth_1m",
+          "value": 6.0,
+          "effect": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "window_end_time": 43560.0,
+      "label": "NEGATIVE",
+      "cycle_time_dev_relative": 1.2614072622420225,
+      "inbound_occupancy_ratio": 0.5,
+      "bottleneck_risk": 1.0,
+      "evidence": [
+        {
+          "feature": "inbound_occupancy_ratio",
+          "value": 0.5,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "sensor_mean_dev_5m",
+          "value": -0.0072739797071412204,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "inbound_occupancy_mean_5m",
+          "value": 0.3,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "prop_starved_5m",
+          "value": 0.0,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "prop_processing_5m",
+          "value": 1.0,
+          "effect": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "window_end_time": 43620.0,
+      "label": "POSITIVE",
+      "cycle_time_dev_relative": 1.2614072622420225,
+      "inbound_occupancy_ratio": 0.75,
+      "bottleneck_risk": 1.0,
+      "evidence": [
+        {
+          "feature": "inbound_occupancy_ratio",
+          "value": 0.75,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "sensor_mean_dev_5m",
+          "value": -0.014547959414282441,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "inbound_growth_5m",
+          "value": 11.0,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "prop_processing_5m",
+          "value": 1.0,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "prop_starved_5m",
+          "value": 0.0,
+          "effect": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "window_end_time": 43680.0,
+      "label": "POSITIVE",
+      "cycle_time_dev_relative": 0.48596157384576216,
+      "inbound_occupancy_ratio": 0.5,
+      "bottleneck_risk": 1.0,
+      "evidence": [
+        {
+          "feature": "inbound_occupancy_ratio",
+          "value": 0.5,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "sensor_mean_dev_5m",
+          "value": -0.0072739797071412204,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "prop_starved_5m",
+          "value": 0.0,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "prop_processing_5m",
+          "value": 1.0,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "inbound_occupancy_mean_5m",
+          "value": 0.5,
+          "effect": "increases_risk"
+        }
+      ]
+    },
+    {
+      "window_end_time": 43740.0,
+      "label": "POSITIVE",
+      "cycle_time_dev_relative": 0.48596157384576216,
+      "inbound_occupancy_ratio": 0.5,
+      "bottleneck_risk": 1.0,
+      "evidence": [
+        {
+          "feature": "inbound_occupancy_ratio",
+          "value": 0.5,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "sensor_mean_dev_5m",
+          "value": -0.0072739797071412204,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "prop_starved_5m",
+          "value": 0.0,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "prop_processing_5m",
+          "value": 1.0,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "inbound_occupancy_mean_5m",
+          "value": 0.5,
+          "effect": "increases_risk"
+        }
+      ]
+    },
+    {
+      "window_end_time": 43800.0,
+      "label": "POSITIVE",
+      "cycle_time_dev_relative": 0.48596157384576216,
+      "inbound_occupancy_ratio": 0.75,
+      "bottleneck_risk": 1.0,
+      "evidence": [
+        {
+          "feature": "inbound_occupancy_ratio",
+          "value": 0.75,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "sensor_mean_dev_5m",
+          "value": -0.0072739797071412204,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "prop_starved_5m",
+          "value": 0.0,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "prop_processing_5m",
+          "value": 1.0,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "inbound_occupancy_mean_5m",
+          "value": 0.55,
+          "effect": "increases_risk"
+        }
+      ]
+    },
+    {
+      "window_end_time": 43860.0,
+      "label": "POSITIVE",
+      "cycle_time_dev_relative": 1.015534499274235,
+      "inbound_occupancy_ratio": 0.75,
+      "bottleneck_risk": 1.0,
+      "evidence": [
+        {
+          "feature": "inbound_occupancy_ratio",
+          "value": 0.75,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "sensor_mean_dev_5m",
+          "value": 0.0,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "prop_starved_5m",
+          "value": 0.0,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "prop_processing_5m",
+          "value": 1.0,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "inbound_occupancy_mean_5m",
+          "value": 0.65,
+          "effect": "increases_risk"
+        }
+      ]
+    },
+    {
+      "window_end_time": 43920.0,
+      "label": "IMMINENT",
+      "cycle_time_dev_relative": 1.015534499274235,
+      "inbound_occupancy_ratio": 0.75,
+      "bottleneck_risk": 1.0,
+      "evidence": [
+        {
+          "feature": "inbound_occupancy_ratio",
+          "value": 0.75,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "sensor_mean_dev_5m",
+          "value": 0.0,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "prop_starved_5m",
+          "value": 0.0,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "prop_processing_5m",
+          "value": 1.0,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "inbound_occupancy_mean_5m",
+          "value": 0.625,
+          "effect": "increases_risk"
+        }
+      ]
+    },
+    {
+      "window_end_time": 43980.0,
+      "label": "IMMINENT",
+      "cycle_time_dev_relative": 0.6873251962659963,
+      "inbound_occupancy_ratio": 0.5,
+      "bottleneck_risk": 1.0,
+      "evidence": [
+        {
+          "feature": "inbound_occupancy_ratio",
+          "value": 0.5,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "sensor_mean_dev_5m",
+          "value": -0.008758989219464108,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "prop_starved_5m",
+          "value": 0.0,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "prop_processing_5m",
+          "value": 1.0,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "inbound_occupancy_mean_5m",
+          "value": 0.625,
+          "effect": "increases_risk"
+        }
+      ]
+    },
+    {
+      "window_end_time": 44040.0,
+      "label": "IMMINENT",
+      "cycle_time_dev_relative": 0.6873251962659963,
+      "inbound_occupancy_ratio": 0.75,
+      "bottleneck_risk": 1.0,
+      "evidence": [
+        {
+          "feature": "inbound_occupancy_ratio",
+          "value": 0.75,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "sensor_mean_dev_5m",
+          "value": -0.008758989219464108,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "prop_starved_5m",
+          "value": 0.0,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "prop_processing_5m",
+          "value": 1.0,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "inbound_occupancy_mean_5m",
+          "value": 0.65,
+          "effect": "increases_risk"
+        }
+      ]
+    },
+    {
+      "window_end_time": 44100.0,
+      "label": "IMMINENT",
+      "cycle_time_dev_relative": 0.6873251962659963,
+      "inbound_occupancy_ratio": 1.0,
+      "bottleneck_risk": 1.0,
+      "evidence": [
+        {
+          "feature": "inbound_occupancy_ratio",
+          "value": 1.0,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "sensor_mean_dev_5m",
+          "value": -0.008758989219464108,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "inbound_growth_5m",
+          "value": 13.0,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "prop_starved_5m",
+          "value": 0.0,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "prop_processing_5m",
+          "value": 1.0,
+          "effect": "decreases_risk"
+        }
+      ]
+    },
+    {
+      "window_end_time": 44160.0,
+      "label": "IMMINENT",
+      "cycle_time_dev_relative": 0.6873251962659963,
+      "inbound_occupancy_ratio": 1.0,
+      "bottleneck_risk": 1.0,
+      "evidence": [
+        {
+          "feature": "inbound_occupancy_ratio",
+          "value": 1.0,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "sensor_mean_dev_5m",
+          "value": -0.017517978438928217,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "inbound_growth_5m",
+          "value": 13.0,
+          "effect": "increases_risk"
+        },
+        {
+          "feature": "prop_processing_5m",
+          "value": 1.0,
+          "effect": "decreases_risk"
+        },
+        {
+          "feature": "inbound_occupancy_mean_5m",
+          "value": 0.75,
+          "effect": "increases_risk"
+        }
+      ]
+    }
+  ],
+  "narrative": "NORMAL -> cycle-time/service deterioration -> buffer growing -> Flow risk rising -> HIGH alert -> predicted impact 5-10 min -> actual BLOCKED event"
+}

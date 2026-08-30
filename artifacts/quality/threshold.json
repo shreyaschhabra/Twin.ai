@@ -1,0 +1,125 @@
+{
+  "frozen_threshold": 0.25,
+  "selection_criterion": "max F2 on VALIDATION",
+  "threshold_grid": [
+    {
+      "threshold": 0.1,
+      "precision": 0.03333333333333333,
+      "recall": 1.0,
+      "f2": 0.14705882352941177,
+      "alert_frequency": 1.0
+    },
+    {
+      "threshold": 0.15,
+      "precision": 0.04633059537230901,
+      "recall": 0.7671111111111111,
+      "f2": 0.18657845807930123,
+      "alert_frequency": 0.5519111111111111
+    },
+    {
+      "threshold": 0.2,
+      "precision": 0.18126064735945485,
+      "recall": 0.4728888888888889,
+      "f2": 0.35776731674512446,
+      "alert_frequency": 0.08696296296296296
+    },
+    {
+      "threshold": 0.25,
+      "precision": 0.3306744017403916,
+      "recall": 0.4053333333333333,
+      "f2": 0.3878210580030617,
+      "alert_frequency": 0.04085925925925926
+    },
+    {
+      "threshold": 0.3,
+      "precision": 0.5714285714285714,
+      "recall": 0.29155555555555557,
+      "f2": 0.3232163973196689,
+      "alert_frequency": 0.01700740740740741
+    },
+    {
+      "threshold": 0.35,
+      "precision": 0.6,
+      "recall": 0.09333333333333334,
+      "f2": 0.11229946524064173,
+      "alert_frequency": 0.005185185185185185
+    },
+    {
+      "threshold": 0.4,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f2": 0.0,
+      "alert_frequency": 0.0
+    },
+    {
+      "threshold": 0.45,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f2": 0.0,
+      "alert_frequency": 0.0
+    },
+    {
+      "threshold": 0.5,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f2": 0.0,
+      "alert_frequency": 0.0
+    },
+    {
+      "threshold": 0.55,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f2": 0.0,
+      "alert_frequency": 0.0
+    },
+    {
+      "threshold": 0.6,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f2": 0.0,
+      "alert_frequency": 0.0
+    },
+    {
+      "threshold": 0.65,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f2": 0.0,
+      "alert_frequency": 0.0
+    },
+    {
+      "threshold": 0.7,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f2": 0.0,
+      "alert_frequency": 0.0
+    },
+    {
+      "threshold": 0.75,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f2": 0.0,
+      "alert_frequency": 0.0
+    },
+    {
+      "threshold": 0.8,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f2": 0.0,
+      "alert_frequency": 0.0
+    },
+    {
+      "threshold": 0.85,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f2": 0.0,
+      "alert_frequency": 0.0
+    },
+    {
+      "threshold": 0.9,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f2": 0.0,
+      "alert_frequency": 0.0
+    }
+  ]
+}

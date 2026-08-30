@@ -1,0 +1,31 @@
+{
+  "scenario": "sensor_loss",
+  "station_id": "S01",
+  "sensor_name": "weld_current",
+  "stages": [
+    {
+      "stage": "LIVE",
+      "time_s": 1328.967559552022,
+      "data_state": "LIVE",
+      "trust_level": "HIGH",
+      "value": 9330.729416667456,
+      "inference_method": null
+    },
+    {
+      "stage": "INFERRED",
+      "time_s": 1528.967559552022,
+      "data_state": "INFERRED",
+      "trust_level": "MEDIUM",
+      "estimated_value": 9153.407508072623,
+      "inference_method": "same_station_recent"
+    },
+    {
+      "stage": "UNKNOWN",
+      "time_s": 2528.967559552022,
+      "data_state": "UNKNOWN",
+      "trust_level": "LOW",
+      "value": null
+    }
+  ],
+  "narrative": "LIVE -> direct sensor disappears -> INFERRED (fallback estimate) -> fallback becomes stale -> UNKNOWN"
+}

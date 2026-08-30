@@ -1,0 +1,39 @@
+{
+  "numeric_features": [
+    "production_stage",
+    "stations_completed",
+    "elapsed_production_time",
+    "mean_cycle_deviation",
+    "max_cycle_deviation",
+    "cycle_deviation_std",
+    "recent_cycle_deviation_3",
+    "count_slow_visits",
+    "waiting_time_total",
+    "waiting_time_mean",
+    "max_standardized_deviation",
+    "count_abnormal_readings",
+    "latest_deviation",
+    "mean_abnormality",
+    "sensor_coverage",
+    "sensor_missingness",
+    "sensor_freshness",
+    "torque_deviation_max",
+    "dimensional_deviation_max",
+    "paint_environment_deviation_max",
+    "sealing_deviation_max",
+    "deviation_trend",
+    "n_batch_contexts_visited",
+    "cohort_defect_rate_mean",
+    "cohort_sample_size_mean"
+  ],
+  "categorical_features": [
+    "vehicle_variant"
+  ],
+  "categorical_levels": {
+    "vehicle_variant": [
+      "EV",
+      "ICE_SEDAN",
+      "ICE_SUV"
+    ]
+  }
+}

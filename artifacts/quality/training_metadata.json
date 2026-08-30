@@ -1,0 +1,123 @@
+{
+  "model_type": "LightGBM (binary classification)",
+  "code_commit": "34550573e225e01a9d46859e60d0aba880497119",
+  "source_dataset": "data/processed/quality_v1 (Dataset A naturalistic corpus)",
+  "split_definition": {
+    "train_shifts": "SHIFT001-070",
+    "validation_shifts": "SHIFT071-085",
+    "test_shifts": "SHIFT086-100"
+  },
+  "hyperparameters": {
+    "num_leaves": 8,
+    "learning_rate": 0.010024441033224626,
+    "min_child_samples": 43,
+    "feature_fraction": 0.6124282192621177,
+    "bagging_fraction": 0.8704462794425956,
+    "reg_alpha": 0.0017424803529601416,
+    "reg_lambda": 0.18017191974495944
+  },
+  "scale_pos_weight": 21.105263157894736,
+  "frozen_threshold": 0.25,
+  "baseline_metrics": {
+    "validation": {
+      "precision": 0.14647641234711706,
+      "recall": 0.4471111111111111,
+      "f1": 0.2206624259706076,
+      "pr_auc": 0.23266840985393714,
+      "roc_auc": 0.7236266121753938,
+      "confusion_matrix": [
+        [
+          29694,
+          2931
+        ],
+        [
+          622,
+          503
+        ]
+      ],
+      "threshold": 0.5
+    },
+    "test": {
+      "precision": 0.18604651162790697,
+      "recall": 0.5364161849710982,
+      "f1": 0.27627270020839534,
+      "pr_auc": 0.277121873558733,
+      "roc_auc": 0.7481098157582148,
+      "confusion_matrix": [
+        [
+          27960,
+          4060
+        ],
+        [
+          802,
+          928
+        ]
+      ],
+      "threshold": 0.5
+    }
+  },
+  "validation_metrics": {
+    "precision": 0.3306744017403916,
+    "recall": 0.4053333333333333,
+    "f1": 0.36421725239616615,
+    "pr_auc": 0.2891425974674334,
+    "roc_auc": 0.7284677394636014,
+    "confusion_matrix": [
+      [
+        31702,
+        923
+      ],
+      [
+        669,
+        456
+      ]
+    ],
+    "threshold": 0.25
+  },
+  "test_metrics": {
+    "precision": 0.3464270789803594,
+    "recall": 0.4791907514450867,
+    "f1": 0.4021343681785108,
+    "pr_auc": 0.2686788227471741,
+    "roc_auc": 0.7520097536582988,
+    "confusion_matrix": [
+      [
+        30456,
+        1564
+      ],
+      [
+        901,
+        829
+      ]
+    ],
+    "threshold": 0.25
+  },
+  "early_detection": {
+    "pct_defective_detected_before_qc": 55.202312138728324,
+    "median_stations_early": 32.0,
+    "median_time_early_seconds_approx": 1475.8308788393842,
+    "distribution_by_checkpoint_stage": {
+      "1": 102,
+      "2": 83,
+      "3": 1,
+      "4": 5
+    }
+  },
+  "top_global_features": {
+    "paint_environment_deviation_max": 0.09249032170090765,
+    "max_standardized_deviation": 0.06118946315281339,
+    "max_cycle_deviation": 0.04462067007495566,
+    "cohort_defect_rate_mean": 0.03428621100392076,
+    "cycle_deviation_std": 0.020425607823509228,
+    "elapsed_production_time": 0.02040135809290379,
+    "waiting_time_total": 0.012538904686960962,
+    "sealing_deviation_max": 0.010216849825878772,
+    "stations_completed": 0.008251421537747826,
+    "vehicle_variant": 0.007187146916320253
+  },
+  "training_timestamp": "2026-08-30T09:03:36.388782+00:00",
+  "known_limitations": [
+    "This is synthetic validation against a simulated final QC outcome, not customer production validation.",
+    "Early-detection 'time remaining' is approximated as time to the vehicle's own S44 (pre-EOL) snapshot, not the exact S45 timestamp."
+  ]
+}

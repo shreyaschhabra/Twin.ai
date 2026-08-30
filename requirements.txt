@@ -5,3 +5,5 @@ simpy>=4.1
 pandas>=2.2
 pyarrow>=15.0
 scikit-learn>=1.4
+lightgbm>=4.5
+optuna>=4.0

@@ -1,0 +1,101 @@
+{
+  "scenario": "quality",
+  "vehicle_id": "SHIFT086::V00273",
+  "variant": "EV",
+  "checkpoints": [
+    {
+      "production_stage": 1,
+      "checkpoint_station_id": "S12",
+      "quality_risk": 0.1955,
+      "risk_level": "LOW",
+      "evidence": [
+        {
+          "station_id": "S12",
+          "description": "Paint/environmental process deviation"
+        },
+        {
+          "station_id": "S12",
+          "description": "Associated material cohort requires monitoring"
+        }
+      ]
+    },
+    {
+      "production_stage": 2,
+      "checkpoint_station_id": "S20",
+      "quality_risk": 0.1861,
+      "risk_level": "LOW",
+      "evidence": [
+        {
+          "station_id": "S20",
+          "description": "Paint/environmental process deviation"
+        },
+        {
+          "station_id": "S20",
+          "description": "Associated material cohort requires monitoring"
+        }
+      ]
+    },
+    {
+      "production_stage": 3,
+      "checkpoint_station_id": "S27",
+      "quality_risk": 0.2481,
+      "risk_level": "LOW",
+      "evidence": [
+        {
+          "station_id": "S27",
+          "description": "A completed station ran well outside its expected cycle time"
+        },
+        {
+          "station_id": "S27",
+          "description": "Paint/environmental process deviation"
+        },
+        {
+          "station_id": "S27",
+          "description": "Associated material cohort requires monitoring"
+        }
+      ]
+    },
+    {
+      "production_stage": 4,
+      "checkpoint_station_id": "S38",
+      "quality_risk": 0.2536,
+      "risk_level": "LOW",
+      "evidence": [
+        {
+          "station_id": "S38",
+          "description": "A completed station ran well outside its expected cycle time"
+        },
+        {
+          "station_id": "S38",
+          "description": "Paint/environmental process deviation"
+        },
+        {
+          "station_id": "S38",
+          "description": "Associated material cohort requires monitoring"
+        }
+      ]
+    },
+    {
+      "production_stage": 5,
+      "checkpoint_station_id": "S44",
+      "quality_risk": 0.2481,
+      "risk_level": "LOW",
+      "evidence": [
+        {
+          "station_id": "S44",
+          "description": "A completed station ran well outside its expected cycle time"
+        },
+        {
+          "station_id": "S44",
+          "description": "Paint/environmental process deviation"
+        },
+        {
+          "station_id": "S44",
+          "description": "Associated material cohort requires monitoring"
+        }
+      ]
+    }
+  ],
+  "final_qc": "DEFECT",
+  "narrative": "risk low -> evidence accumulates -> risk rises before S45 -> HIGH quality risk -> eventual final QC = DEFECT"
+}

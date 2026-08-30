@@ -1,0 +1,50 @@
+{
+  "method": "IsolationForest (200 estimators) + rolling z-score/EWMA statistical layer",
+  "fit_population": "Dataset C flow_v1 TRAIN, target==0 rows only (nominal/low-risk)",
+  "n_fit_rows": 2819614,
+  "features": [
+    "cycle_time_dev_relative",
+    "cycle_time_std_5m",
+    "inbound_occupancy_ratio",
+    "inbound_growth_5m",
+    "prop_blocked_5m",
+    "prop_down_5m",
+    "microstop_duration_5m",
+    "sensor_mean_dev_5m",
+    "sensor_std_5m",
+    "arrival_minus_departure_5m"
+  ],
+  "feature_baselines": {
+    "cycle_time_dev_relative": {
+      "mean": 0.0037758060974747705,
+      "std": 0.11776186811380013
+    },
+    "sensor_mean_dev_5m": {
+      "mean": 7.0809060817745885e-06,
+      "std": 34.41482325022586
+    },
+    "inbound_occupancy_ratio": {
+      "mean": 0.0016552866426515576,
+      "std": 0.023565863869410113
+    },
+    "prop_blocked_5m": {
+      "mean": 0.00019379375442939422,
+      "std": 0.01020594693658199
+    },
+    "microstop_duration_5m": {
+      "mean": 0.07199858164452395,
+      "std": 2.0828935414892884
+    }
+  },
+  "nominal_mean_score": 0.4215173595662166,
+  "abnormal_mean_score": 0.6094422166116304,
+  "degradation_holdout_diagnostic": {
+    "n_before_rows": 343,
+    "n_during_rows": 7345,
+    "mean_score_before": 0.4972265668267058,
+    "mean_score_during": 0.5777971637304781,
+    "detection_rate_at_0.5": 0.834717494894486,
+    "mean_detection_lead_seconds": 630.1483339698614
+  },
+  "training_timestamp": "2026-08-30T08:58:04.814119+00:00"
+}

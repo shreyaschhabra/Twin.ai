@@ -1,0 +1,215 @@
+{
+  "frozen_threshold": 0.95,
+  "selection_criterion": "max F2 on VALIDATION",
+  "threshold_grid": [
+    {
+      "threshold": 0.05,
+      "precision": 0.13990825688073394,
+      "recall": 0.9682539682539683,
+      "f1": 0.24448897795591182,
+      "f2": 0.44331395348837205,
+      "false_warnings_per_shift": 20.066666666666666,
+      "event_recall": 1.0,
+      "eligible_events": 17,
+      "detected_eligible_events": 17
+    },
+    {
+      "threshold": 0.1,
+      "precision": 0.14087759815242495,
+      "recall": 0.9682539682539683,
+      "f1": 0.24596774193548387,
+      "f2": 0.4452554744525547,
+      "false_warnings_per_shift": 19.866666666666667,
+      "event_recall": 1.0,
+      "eligible_events": 17,
+      "detected_eligible_events": 17
+    },
+    {
+      "threshold": 0.15,
+      "precision": 0.1425233644859813,
+      "recall": 0.9682539682539683,
+      "f1": 0.2484725050916497,
+      "f2": 0.4485294117647059,
+      "false_warnings_per_shift": 19.533333333333335,
+      "event_recall": 1.0,
+      "eligible_events": 17,
+      "detected_eligible_events": 17
+    },
+    {
+      "threshold": 0.2,
+      "precision": 0.14352941176470588,
+      "recall": 0.9682539682539683,
+      "f1": 0.25,
+      "f2": 0.4505169867060561,
+      "false_warnings_per_shift": 19.333333333333332,
+      "event_recall": 1.0,
+      "eligible_events": 17,
+      "detected_eligible_events": 17
+    },
+    {
+      "threshold": 0.25,
+      "precision": 0.14352941176470588,
+      "recall": 0.9682539682539683,
+      "f1": 0.25,
+      "f2": 0.4505169867060561,
+      "false_warnings_per_shift": 19.333333333333332,
+      "event_recall": 1.0,
+      "eligible_events": 17,
+      "detected_eligible_events": 17
+    },
+    {
+      "threshold": 0.3,
+      "precision": 0.14454976303317535,
+      "recall": 0.9682539682539683,
+      "f1": 0.2515463917525773,
+      "f2": 0.45252225519287825,
+      "false_warnings_per_shift": 19.133333333333333,
+      "event_recall": 1.0,
+      "eligible_events": 17,
+      "detected_eligible_events": 17
+    },
+    {
+      "threshold": 0.35,
+      "precision": 0.14489311163895488,
+      "recall": 0.9682539682539683,
+      "f1": 0.25206611570247933,
+      "f2": 0.4531946508172363,
+      "false_warnings_per_shift": 19.066666666666666,
+      "event_recall": 1.0,
+      "eligible_events": 17,
+      "detected_eligible_events": 17
+    },
+    {
+      "threshold": 0.4,
+      "precision": 0.14628297362110312,
+      "recall": 0.9682539682539683,
+      "f1": 0.25416666666666665,
+      "f2": 0.45590433482810166,
+      "false_warnings_per_shift": 18.8,
+      "event_recall": 1.0,
+      "eligible_events": 17,
+      "detected_eligible_events": 17
+    },
+    {
+      "threshold": 0.45,
+      "precision": 0.14769975786924938,
+      "recall": 0.9682539682539683,
+      "f1": 0.25630252100840334,
+      "f2": 0.4586466165413533,
+      "false_warnings_per_shift": 18.533333333333335,
+      "event_recall": 1.0,
+      "eligible_events": 17,
+      "detected_eligible_events": 17
+    },
+    {
+      "threshold": 0.5,
+      "precision": 0.14805825242718446,
+      "recall": 0.9682539682539683,
+      "f1": 0.25684210526315787,
+      "f2": 0.45933734939759036,
+      "false_warnings_per_shift": 18.466666666666665,
+      "event_recall": 1.0,
+      "eligible_events": 17,
+      "detected_eligible_events": 17
+    },
+    {
+      "threshold": 0.55,
+      "precision": 0.14805825242718446,
+      "recall": 0.9682539682539683,
+      "f1": 0.25684210526315787,
+      "f2": 0.45933734939759036,
+      "false_warnings_per_shift": 18.466666666666665,
+      "event_recall": 1.0,
+      "eligible_events": 17,
+      "detected_eligible_events": 17
+    },
+    {
+      "threshold": 0.6,
+      "precision": 0.14805825242718446,
+      "recall": 0.9682539682539683,
+      "f1": 0.25684210526315787,
+      "f2": 0.45933734939759036,
+      "false_warnings_per_shift": 18.466666666666665,
+      "event_recall": 1.0,
+      "eligible_events": 17,
+      "detected_eligible_events": 17
+    },
+    {
+      "threshold": 0.65,
+      "precision": 0.14805825242718446,
+      "recall": 0.9682539682539683,
+      "f1": 0.25684210526315787,
+      "f2": 0.45933734939759036,
+      "false_warnings_per_shift": 18.466666666666665,
+      "event_recall": 1.0,
+      "eligible_events": 17,
+      "detected_eligible_events": 17
+    },
+    {
+      "threshold": 0.7,
+      "precision": 0.14841849148418493,
+      "recall": 0.9682539682539683,
+      "f1": 0.25738396624472576,
+      "f2": 0.4600301659125189,
+      "false_warnings_per_shift": 18.4,
+      "event_recall": 1.0,
+      "eligible_events": 17,
+      "detected_eligible_events": 17
+    },
+    {
+      "threshold": 0.75,
+      "precision": 0.14841849148418493,
+      "recall": 0.9682539682539683,
+      "f1": 0.25738396624472576,
+      "f2": 0.4600301659125189,
+      "false_warnings_per_shift": 18.4,
+      "event_recall": 1.0,
+      "eligible_events": 17,
+      "detected_eligible_events": 17
+    },
+    {
+      "threshold": 0.8,
+      "precision": 0.14841849148418493,
+      "recall": 0.9682539682539683,
+      "f1": 0.25738396624472576,
+      "f2": 0.4600301659125189,
+      "false_warnings_per_shift": 18.4,
+      "event_recall": 1.0,
+      "eligible_events": 17,
+      "detected_eligible_events": 17
+    },
+    {
+      "threshold": 0.85,
+      "precision": 0.14841849148418493,
+      "recall": 0.9682539682539683,
+      "f1": 0.25738396624472576,
+      "f2": 0.4600301659125189,
+      "false_warnings_per_shift": 18.4,
+      "event_recall": 1.0,
+      "eligible_events": 17,
+      "detected_eligible_events": 17
+    },
+    {
+      "threshold": 0.9,
+      "precision": 0.1491442542787286,
+      "recall": 0.9682539682539683,
+      "f1": 0.2584745762711864,
+      "f2": 0.4614220877458396,
+      "false_warnings_per_shift": 18.266666666666666,
+      "event_recall": 1.0,
+      "eligible_events": 17,
+      "detected_eligible_events": 17
+    },
+    {
+      "threshold": 0.95,
+      "precision": 0.14987714987714987,
+      "recall": 0.9682539682539683,
+      "f1": 0.25957446808510637,
+      "f2": 0.46282245827010615,
+      "false_warnings_per_shift": 18.2,
+      "event_recall": 1.0,
+      "eligible_events": 17,
+      "detected_eligible_events": 17
+    }
+  ]
+}
