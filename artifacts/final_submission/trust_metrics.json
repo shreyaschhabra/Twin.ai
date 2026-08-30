@@ -1,0 +1,114 @@
+{
+  "isolated_missing_point": {
+    "n_masked": 2452,
+    "n_scored": 2432,
+    "mae": 15.677448419178837,
+    "rmse": 47.333060871932204,
+    "error_by_maturity": {
+      "rich": 19.677607747715488,
+      "partial": 1.4603780115549796,
+      "poor": 0.009082419522802363
+    }
+  },
+  "contiguous_outage": {
+    "n_scored": 656,
+    "overall_unknown_rate": 0.0,
+    "overall_inferred_rate": 1.0,
+    "overall_inferred_mae": 14.074224907342217,
+    "by_position_in_outage": [
+      {
+        "position_in_outage": 0,
+        "unknown_rate": 0.0,
+        "inferred_rate": 1.0,
+        "mean_error": 17.701481037148213
+      },
+      {
+        "position_in_outage": 1,
+        "unknown_rate": 0.0,
+        "inferred_rate": 1.0,
+        "mean_error": 12.415754251347245
+      },
+      {
+        "position_in_outage": 2,
+        "unknown_rate": 0.0,
+        "inferred_rate": 1.0,
+        "mean_error": 16.450816204557928
+      },
+      {
+        "position_in_outage": 3,
+        "unknown_rate": 0.0,
+        "inferred_rate": 1.0,
+        "mean_error": 12.294126403379284
+      },
+      {
+        "position_in_outage": 4,
+        "unknown_rate": 0.0,
+        "inferred_rate": 1.0,
+        "mean_error": 13.016980857310648
+      },
+      {
+        "position_in_outage": 5,
+        "unknown_rate": 0.0,
+        "inferred_rate": 1.0,
+        "mean_error": 14.159064799543781
+      },
+      {
+        "position_in_outage": 6,
+        "unknown_rate": 0.0,
+        "inferred_rate": 1.0,
+        "mean_error": 10.867007317118839
+      },
+      {
+        "position_in_outage": 7,
+        "unknown_rate": 0.0,
+        "inferred_rate": 1.0,
+        "mean_error": 15.68856838833179
+      }
+    ]
+  },
+  "contiguous_outage_during_degradation": {
+    "n_scored": 12,
+    "overall_unknown_rate": 0.0,
+    "overall_inferred_rate": 1.0,
+    "overall_inferred_mae": 1.5744180113749735,
+    "by_position_in_outage": [
+      {
+        "position_in_outage": 0,
+        "unknown_rate": 0.0,
+        "inferred_rate": 1.0,
+        "mean_error": 1.1376956348912586
+      },
+      {
+        "position_in_outage": 1,
+        "unknown_rate": 0.0,
+        "inferred_rate": 1.0,
+        "mean_error": 4.133263567830923
+      },
+      {
+        "position_in_outage": 2,
+        "unknown_rate": 0.0,
+        "inferred_rate": 1.0,
+        "mean_error": 1.7235064363218235
+      },
+      {
+        "position_in_outage": 3,
+        "unknown_rate": 0.0,
+        "inferred_rate": 1.0,
+        "mean_error": 0.4421472281867729
+      },
+      {
+        "position_in_outage": 4,
+        "unknown_rate": 0.0,
+        "inferred_rate": 1.0,
+        "mean_error": 1.1355280723406729
+      },
+      {
+        "position_in_outage": 5,
+        "unknown_rate": 0.0,
+        "inferred_rate": 1.0,
+        "mean_error": 0.8743671286783901
+      }
+    ]
+  },
+  "note": "error_by_maturity/mean_error are raw absolute units, not normalized across sensors of different physical scale (e.g. weld_current ~9000A vs a 0-1 checklist fraction) -- a low absolute error for 'poor' maturity reflects small-scale signals, not a stronger estimator, and should not be read as poor-maturity sensors being more predictable. This run's factory topology has well-populated same-station-type pools for every sensor tested, so the outage never actually falls through to UNKNOWN here -- that is a genuine property of this instrumentation layout (shared sensor families across multiple same-type stations), not evidence the UNKNOWN path is unreachable; backend/trust tests already cover the case where no reliable fallback exists."
+}

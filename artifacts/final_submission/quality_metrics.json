@@ -1,0 +1,96 @@
+{
+  "per_checkpoint_metrics": {
+    "S12": {
+      "pr_auc": 0.23883998304267867,
+      "precision": 0.3469387755102041,
+      "recall": 0.2947976878612717,
+      "false_alerts_per_100_good": 2.998126171143036,
+      "n": 6750,
+      "n_positive": 346
+    },
+    "S20": {
+      "pr_auc": 0.2874522438325298,
+      "precision": 0.3818565400843882,
+      "recall": 0.523121387283237,
+      "false_alerts_per_100_good": 4.57526545908807,
+      "n": 6750,
+      "n_positive": 346
+    },
+    "S27": {
+      "pr_auc": 0.28052436854125,
+      "precision": 0.34970530451866405,
+      "recall": 0.5144508670520231,
+      "false_alerts_per_100_good": 5.168644597126796,
+      "n": 6750,
+      "n_positive": 346
+    },
+    "S38": {
+      "pr_auc": 0.2843136216014156,
+      "precision": 0.3274647887323944,
+      "recall": 0.5375722543352601,
+      "false_alerts_per_100_good": 5.965021861336664,
+      "n": 6750,
+      "n_positive": 346
+    },
+    "S44": {
+      "pr_auc": 0.2791680984025302,
+      "precision": 0.33211678832116787,
+      "recall": 0.5260115606936416,
+      "false_alerts_per_100_good": 5.715178013741411,
+      "n": 6750,
+      "n_positive": 346
+    }
+  },
+  "early_detection": {
+    "n_defective_test_vehicles": 346,
+    "pct_ever_flagged_before_s45": 55.202312138728324,
+    "median_stations_early": 31.0,
+    "median_seconds_early": 1475.8308788393842
+  },
+  "cohort_ablation": {
+    "full_features_test_pr_auc": 0.2686788227471741,
+    "without_cohort_features_test_pr_auc": 0.2807027715646714,
+    "pr_auc_drop": -0.012023948817497299,
+    "note": "Retrained with identical hyperparameters and TRAIN/VAL for a like-for-like comparison; not the production model, which keeps cohort features."
+  },
+  "class_weight_comparison": {
+    "unweighted": {
+      "pr_auc": 0.2935032980931993,
+      "precision": 0.25895598771750256,
+      "recall": 0.4497777777777778,
+      "false_alerts_per_100_good": 4.4383141762452105,
+      "n": 33750,
+      "n_positive": 1125,
+      "scale_pos_weight": 1.0,
+      "threshold_used": 0.05
+    },
+    "sqrt": {
+      "pr_auc": 0.2813538620219848,
+      "precision": 0.2535641547861507,
+      "recall": 0.44266666666666665,
+      "false_alerts_per_100_good": 4.493486590038314,
+      "n": 33750,
+      "n_positive": 1125,
+      "scale_pos_weight": 4.594046490610944,
+      "threshold_used": 0.15
+    },
+    "full": {
+      "pr_auc": 0.2891425974674334,
+      "precision": 0.3306744017403916,
+      "recall": 0.4053333333333333,
+      "false_alerts_per_100_good": 2.82911877394636,
+      "n": 33750,
+      "n_positive": 1125,
+      "scale_pos_weight": 21.105263157894736,
+      "threshold_used": 0.25
+    }
+  },
+  "production_weighting": "full",
+  "calibration_check": {
+    "brier_score": 0.05761497196164269,
+    "raw_single_checkpoint_vehicle_recall": 0.5520231213872833,
+    "two_consecutive_checkpoint_vehicle_recall": 0.5404624277456648,
+    "recommendation": "persistence does not materially hurt recall; still using raw single-checkpoint alerting for simplicity"
+  },
+  "note": "Production Quality model and Dataset A are unchanged; this is additional validation reporting only."
+}
