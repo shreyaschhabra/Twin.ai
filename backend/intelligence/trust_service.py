@@ -49,7 +49,9 @@ class TrustService:
         return {
             "data_state": state.data_state,
             "inference_method": state.inference_method,
-            "estimated_value": est_value,
+            # A static operational baseline may remain an internal prior, but
+            # UNKNOWN must not expose it as a current measurement estimate.
+            "estimated_value": est_value if state.data_state != "UNKNOWN" else None,
             "trust_level": trust.trust_level,
             "trust_reasons": trust.reasons,
         }

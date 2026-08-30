@@ -4,8 +4,7 @@ UNKNOWN, no extra states.
 
 LIVE: evidence directly observed and fresh enough to trust as-is.
 INFERRED: no fresh direct observation, but a reasonable fallback estimate
-    exists via the 3-level virtual-sensor hierarchy (same-station recent
-    -> same-station-type -> operational-state), and its estimated error is
+    exists via validated same-station or same-station-type evidence, and its estimated error is
     within a documented tolerance.
 UNKNOWN: neither of the above -- direct data is unavailable, no reliable
     inference exists, or evidence is too stale. UNKNOWN is a valid,

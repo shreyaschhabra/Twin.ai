@@ -6,8 +6,8 @@ deep-learning imputation. Three-level hierarchy, tried in order:
      this exact station+sensor)
   2. same-station-type mean (across all stations sharing this station's
      type, for the same sensor family, recent window)
-  3. operational-state estimate (the sensor's own configured baseline --
-     "assume healthy" as the last-resort, least-confident estimate)
+  3. configured operational baseline retained only as an unreliable prior;
+     it does not qualify as a current-measurement inference
 
 Never claims an inferred value is measured -- callers must carry the
 returned `method` alongside the value and route it through
@@ -48,7 +48,7 @@ def estimate_virtual_sensor_value(
 
     sm = sensor_models.get((station_id, sensor_name))
     if sm is not None:
-        return float(sm.baseline), METHOD_OPERATIONAL_BASELINE, True
+        return float(sm.baseline), METHOD_OPERATIONAL_BASELINE, False
 
     return None, METHOD_OPERATIONAL_BASELINE, False
 
@@ -85,7 +85,7 @@ def evaluate_virtual_sensor(
             {(row.station_type, row.sensor_name): type_history[-50:]},
             sensor_models,
         )
-        if est is None:
+        if est is None or not reliable:
             continue
         err = abs(est - row.value)
         errors.append(err)

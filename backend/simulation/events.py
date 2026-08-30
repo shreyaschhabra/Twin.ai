@@ -1,7 +1,8 @@
 """
-The master event stream: one canonical, chronological event representation
-that Flow and Quality feature tables will both eventually be derived from
-(see PRD Section 14).
+The internal master event stream: one canonical, chronological representation
+of complete simulator mechanics. Deployable consumers must use
+``backend.observability.build_public_event_stream`` rather than consuming this
+internal stream directly.
 
 Design decisions worth documenting:
 
@@ -18,10 +19,10 @@ Design decisions worth documenting:
   entry buffer and every ordinary inter-station buffer. This one consistent
   convention is what genealogy.py relies on to reconstruct per-station
   waiting time.
-- No hidden future-outcome fields (no defect label, no scenario id, no
-  "will be blocked" flag) are ever attached to an event. Every field is
-  something that would be observable in real plant telemetry at the moment
-  the event occurs.
+- Scenario identity and latent quality truth are physically separate from
+  events. Some exact mechanics here are nevertheless INTERNAL_ONLY under the
+  observability policy (for example the sampled work duration attached to a
+  processing-start event, or exact state transitions at a poor station).
 """
 
 from __future__ import annotations
