@@ -1,0 +1,74 @@
+{
+  "numeric_features": [
+    "last_cycle_time",
+    "cycle_time_mean_1m",
+    "cycle_time_mean_3m",
+    "cycle_time_mean_5m",
+    "cycle_time_std_5m",
+    "cycle_time_dev_from_baseline",
+    "cycle_time_dev_relative",
+    "cycle_time_slope_5m",
+    "completions_1m",
+    "completions_3m",
+    "completions_5m",
+    "microstop_count_5m",
+    "microstop_duration_5m",
+    "time_since_last_microstop",
+    "inbound_occupancy_ratio",
+    "inbound_occupancy_max_5m",
+    "inbound_occupancy_mean_5m",
+    "inbound_growth_1m",
+    "inbound_growth_3m",
+    "inbound_growth_5m",
+    "inbound_recent_full",
+    "outbound_occupancy_ratio",
+    "outbound_growth_3m",
+    "arrivals_3m",
+    "arrivals_5m",
+    "arrival_minus_departure_5m",
+    "arrival_rate_trend",
+    "mix_ice_sedan_5m",
+    "mix_ice_suv_5m",
+    "mix_ev_5m",
+    "sensor_latest_value_dev",
+    "sensor_mean_dev_5m",
+    "sensor_std_5m",
+    "sensor_missing_ratio_5m",
+    "sensor_time_since_available",
+    "prop_processing_5m",
+    "prop_starved_5m",
+    "prop_blocked_5m",
+    "prop_down_5m",
+    "blocked_seconds_5m"
+  ],
+  "categorical_features": [
+    "station_type",
+    "sensor_maturity",
+    "zone"
+  ],
+  "categorical_levels": {
+    "station_type": [
+      "ADHESIVE_SEALING",
+      "CURING_ENVIRONMENTAL",
+      "DIMENSIONAL_INSPECTION",
+      "FLUID_FILL_FUNCTIONAL",
+      "INSPECTION_EOL_TESTING",
+      "MANUAL_ASSEMBLY",
+      "PAINT_COATING",
+      "ROBOTIC_HANDLING_ASSEMBLY",
+      "TORQUE_FASTENING",
+      "WELDING_BODY_JOINING"
+    ],
+    "sensor_maturity": [
+      "partial",
+      "poor",
+      "rich"
+    ],
+    "zone": [
+      "body_joining",
+      "final_assembly",
+      "inspection_eol",
+      "paint_surface"
+    ]
+  }
+}
