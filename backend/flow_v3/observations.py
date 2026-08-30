@@ -63,10 +63,10 @@ def _service_feature_block(
     prior = [e for e in completions if t - RECENT_WINDOW_SECONDS - PRIOR_WINDOW_SECONDS < e.simulation_time <= t - RECENT_WINDOW_SECONDS]
     entry_time_by_vehicle = {e.vehicle_id: e.simulation_time for e in entries if e.vehicle_id is not None}
 
-    def _effective_cycle_time(window: list[PublicEvent]) -> tuple[Optional[float], bool]:
+    def _effective_cycle_time(window: list[PublicEvent]) -> tuple[Optional[float], bool, list[float]]:
         durations = [e.value for e in window if e.value is not None]
         if durations:
-            return statistics.fmean(durations), True
+            return statistics.fmean(durations), True, durations
         # Duration hidden at this maturity (PARTIAL/POOR): cross-vehicle
         # inter-completion cadence is NOT used here -- it is confounded by
         # upstream arrival rate (a station starved of arrivals looks
@@ -83,12 +83,17 @@ def _service_feature_block(
         ]
         spans = [s for s in spans if s > 0]
         if spans:
-            return statistics.fmean(spans), False
-        return None, False
+            return statistics.fmean(spans), False, spans
+        return None, False, []
 
-    recent_cycle, recent_is_direct = _effective_cycle_time(recent)
-    prior_cycle, _ = _effective_cycle_time(prior)
-    durations = [e.value for e in recent if e.value is not None]
+    recent_cycle, recent_is_direct, recent_samples = _effective_cycle_time(recent)
+    prior_cycle, _, _ = _effective_cycle_time(prior)
+    # Variability must come from whichever sample source actually produced
+    # the mean above -- computing it only from the (often entirely absent,
+    # at PARTIAL/POOR maturity) direct-duration list would silently force
+    # this feature to a constant 0 for exactly the stations that rely on
+    # the span-based fallback, which is most of the positive-capable set.
+    durations = recent_samples
 
     return {
         "svc_recent_cycle_time_seconds": recent_cycle,

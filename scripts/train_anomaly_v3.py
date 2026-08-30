@@ -26,7 +26,9 @@ import pandas as pd
 
 from backend.anomaly.isolation_forest_model import isolation_forest_anomaly_score, train_isolation_forest
 from backend.anomaly.statistical import Z_THRESHOLD, rolling_zscore
-from backend.flow_v3.scenario_physics import DEGRADATION_DURATION_MINUTES
+from backend.flow_v3.scenario_physics import (
+    DEGRADATION_DURATION_MINUTES, MANUAL_DURATION_MINUTES, MICRO_STOP_DURATION_MINUTES,
+)
 
 DATA_DIR = ROOT / "data" / "processed" / "flow_v3"
 ARTIFACT_DIR = ROOT / "artifacts" / "anomaly_v3"
@@ -59,9 +61,27 @@ def main():
     pipe, features = train_isolation_forest(nominal, features)
     print(f"fit on {len(features)} features: {features}")
 
-    section("1. SEPARATION SANITY CHECK: healthy vs SEVERE-mechanism rows")
+    section("1. SEPARATION SANITY CHECK: healthy vs SEVERE-mechanism rows, active window + target station only")
     nominal_scores = isolation_forest_anomaly_score(pipe, features, nominal)
-    severe = train[train.severity == "SEVERE"]
+    # Restricting to (a) the scenario's OWN target station and (b) its
+    # actual active-scenario time window matters: a run is labeled SEVERE
+    # for its whole ~8.5-hour duration even though the disturbance itself
+    # only lasts 25-60 minutes, and 8 of 9 observed stations in any given
+    # run are never the scenario's target at all. Comparing against the
+    # unfiltered "all SEVERE rows" population (as an earlier pass did)
+    # mostly compares healthy-station/healthy-time rows to more
+    # healthy-station/healthy-time rows and washes out any real signal --
+    # not evidence the underlying features lack signal.
+    duration_lookup = {**{("MANUAL_VARIATION", s): MANUAL_DURATION_MINUTES[s] for s in MANUAL_DURATION_MINUTES},
+                        **{("MICRO_STOPS", s): MICRO_STOP_DURATION_MINUTES[s] for s in MICRO_STOP_DURATION_MINUTES}}
+    severe_all = train[(train.severity == "SEVERE") & (train.station_id == train.target_station_id)]
+    severe_all = severe_all.copy()
+    severe_all["scenario_end"] = severe_all.apply(
+        lambda r: SCENARIO_START_SECONDS + duration_lookup.get((r.mechanism, r.severity), 0.0) * 60.0, axis=1,
+    )
+    severe = severe_all[
+        (severe_all.observation_time >= SCENARIO_START_SECONDS) & (severe_all.observation_time <= severe_all.scenario_end)
+    ]
     severe_scores = isolation_forest_anomaly_score(pipe, features, severe) if len(severe) else np.array([])
     print(f"healthy (n={len(nominal)}) mean score: {nominal_scores.mean():.4f}")
     separation_confirmed = None
@@ -78,7 +98,12 @@ def main():
               f"(should track the fitting population's mean, not drift)")
 
     section("3. EQUIPMENT_DEGRADATION UNSEEN HOLDOUT DIAGNOSTIC (never used for fitting/tuning)")
-    degradation = degradation.copy()
+    # Restrict to each run's OWN degraded station -- the corpus also carries
+    # the standard 9-station Flow set for these runs (for other analyses),
+    # and those stations are never touched by the degradation, so including
+    # them here would dilute the before/during comparison the same way the
+    # unrestricted SEVERE comparison above did.
+    degradation = degradation[degradation.station_id == degradation.target_station_id].copy()
     degradation["scenario_end_seconds"] = degradation.severity.map(
         lambda s: SCENARIO_START_SECONDS + DEGRADATION_DURATION_MINUTES[s] * 60.0
     )

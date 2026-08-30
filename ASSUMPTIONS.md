@@ -399,8 +399,42 @@ their output — the only way to actually catch this class of bug.
   and explicit reporting of any process-family-exposed vehicle whose
   evidence failed verification.
 
+## Flow-v3 redesign assumptions (supersedes the Flow-v1/v2 assumptions above where they conflict)
+
+- Nominal mean interarrival: 102.5s (rebalanced from the original 115s
+  specifically to create physically real capacity sensitivity at more
+  than 2-3 stations; see `configs/flow_v3_rebalance.yaml` and
+  `artifacts/flow_v3/rebalanced_headway_decision.md`). Cycle-time
+  increases at S11/S20/S21 and five buffer-capacity reductions (4->3)
+  accompany this; S43 was tried and reverted, S22 is unchanged.
+- Supervised Flow-v3 mechanisms are MANUAL_VARIATION, MICRO_STOPS, and
+  ARRIVAL_BURST; VEHICLE_MIX_OVERLOAD is a deliberate hard negative;
+  EQUIPMENT_DEGRADATION is unseen-only and never used in supervised
+  training or threshold selection. Positive-capable supervised stations
+  are S11, S20, S21, S22, S24, S26, S33, S34, S38 — concentrated in Body/
+  Final-Assembly/Paint; Inspection/EOL is a documented supervised-Flow
+  diversity limitation, not something forced toward capacity for its own
+  sake.
+- Flow-v3's controlled corpus (109 predeclared runs, 335,901 event-
+  aligned observation rows) is a **stress-development** corpus, not a
+  naturalistic one — every run deliberately targets a station/severity/
+  mechanism combination chosen before simulation, unlike Quality's
+  Dataset A. This is intentional: Flow-v3 needs controlled coverage of
+  rare, physically-capable congestion conditions that a purely
+  naturalistic corpus would sample far too rarely to train or evaluate
+  on.
+- Sensor maturity gates observability, not just noise: RICH stations
+  expose exact durations/states/occupancy; PARTIAL stations expose
+  coarsened state and no exact duration/occupancy; POOR stations expose
+  only MES/manual checkpoint and configured sparse evidence, with buffer
+  occupancy, exact state transitions, and micro-stop mechanics entirely
+  absent. Most Flow-v3 positive-capable stations are POOR maturity by
+  the existing config — a real brownfield constraint on how strong the
+  ML precursor signal can get there, not an oversight.
+
 ## What is NOT yet assumed
 
-Defect rates, degradation/anomaly injection parameters, ML model
-hyperparameters, alert thresholds, and ROI figures do not exist yet — they
-will be added (and documented here) in later implementation steps.
+Customer-specific plant calibration, a validated defect-rate baseline
+against real production data, and ROI figures do not exist — TrustTwin
+is a synthetic prototype demonstrating the intelligence architecture,
+not a deployed or customer-validated system.

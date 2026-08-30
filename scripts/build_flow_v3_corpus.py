@@ -29,6 +29,7 @@ from backend.flow_v3.corpus_design import (
     build_run_manifest,
     build_unseen_degradation_manifest,
 )
+from backend.historical.shift_scheduler import FAMILY_STATION_POOLS
 from backend.flow_v3.observations import RECENT_WINDOW_SECONDS, build_observation_features
 from backend.flow_v3.rebalance import apply_rebalance, load_rebalance_plan
 from backend.flow_v3.scenario_capability_v2 import MIX_SHIFT_INTENSITY
@@ -48,7 +49,18 @@ from backend.simulation.sensors import load_sensor_models
 CONFIG_DIR = ROOT / "configs"
 OUT_DIR = ROOT / "data" / "processed" / "flow_v3"
 FUTURE_WINDOW_SECONDS = RECENT_WINDOW_SECONDS  # symmetric 5-minute look-back / look-forward
-OBSERVATION_STATIONS = ("S11", "S20", "S21", "S22", "S24", "S26", "S33", "S34", "S38")
+FLOW_CANDIDATE_STATIONS = ("S11", "S20", "S21", "S22", "S24", "S26", "S33", "S34", "S38")
+DEGRADATION_TARGET_STATIONS = tuple(FAMILY_STATION_POOLS[ScenarioFamily.EQUIPMENT_DEGRADATION][:3])
+# Every run -- including HEALTHY_CONTROL -- observes both pools, so the
+# anomaly layer's nominal fitting population actually includes genuinely
+# healthy behavior for the EQUIPMENT_DEGRADATION target stations too.
+# Without this, HEALTHY_CONTROL runs (mechanism="HEALTHY_CONTROL",
+# station_id=None) never touch S01/S02/S03 at all, and the anomaly model
+# ends up scoring an entire unseen station TYPE it never saw as healthy --
+# which looks like a near-100% "detection rate" but is actually a
+# station-type generalization failure: the SAME rows score elevated
+# before the degradation even starts, not just during it.
+OBSERVATION_STATIONS = tuple(dict.fromkeys(FLOW_CANDIDATE_STATIONS + DEGRADATION_TARGET_STATIONS))
 WARMUP_SECONDS = 1800.0  # skip line-fill transient before the first observation
 
 
@@ -146,13 +158,23 @@ def run_one(config, sensor_models, spec: RunSpec, highest_variant: str) -> dict:
         for column in ("mechanism", "severity", "profile", "partition"):
             regimes[column] = getattr(spec, column if column != "partition" else "partition")
 
+    # Always include this run's OWN scenario target station, even when it
+    # falls outside the standard 9-station Flow set -- EQUIPMENT_DEGRADATION
+    # targets Body-zone stations (S01/S02/S03) that aren't Flow candidates
+    # at all, and without this the unseen-degradation holdout would only
+    # ever observe stations the degradation never touches, making its
+    # before/during diagnostic compare unrelated stations to each other.
+    run_observation_stations = set(OBSERVATION_STATIONS)
+    if spec.station_id:
+        run_observation_stations.add(spec.station_id)
+
     internal_completions_by_station: dict[str, list] = {}
     for e in result.events:
-        if e.event_type == EventType.STATION_PROCESSING_COMPLETED.value and e.station_id in OBSERVATION_STATIONS:
+        if e.event_type == EventType.STATION_PROCESSING_COMPLETED.value and e.station_id in run_observation_stations:
             internal_completions_by_station.setdefault(e.station_id, []).append(e)
 
     rows = []
-    for station_id in OBSERVATION_STATIONS:
+    for station_id in run_observation_stations:
         anchors = [
             e for e in public_events
             if e.station_id == station_id and e.event_type == "STATION_PROCESSING_COMPLETED"

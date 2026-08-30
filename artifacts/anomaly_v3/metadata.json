@@ -1,0 +1,33 @@
+{
+  "method": "IsolationForest (200 estimators) + rolling z-score, fit on GENUINELY HEALTHY rows only",
+  "fit_population": "flow_v3 TRAIN rows with mechanism == HEALTHY_CONTROL (no scenario active at all)",
+  "n_fit_rows": 15870,
+  "n_excluded_non_healthy_rows": 92581,
+  "features": [
+    "svc_cycle_time_ratio_to_baseline",
+    "svc_cycle_time_trend_seconds",
+    "svc_cycle_time_std_seconds",
+    "svc_departure_rate_trend",
+    "ms_rate_per_minute",
+    "ms_rate_trend",
+    "ms_mean_duration_seconds",
+    "sensor_drift_from_baseline",
+    "sensor_trend"
+  ],
+  "nominal_mean_score": 0.4476335310079054,
+  "severe_mean_score": 0.5313320783628795,
+  "separation_confirmed": true,
+  "held_out_healthy_validation_mean_score": 0.44813821034932233,
+  "degradation_holdout_diagnostic": {
+    "n_before": 952,
+    "n_during": 623,
+    "mean_score_before": 0.5630025307449406,
+    "mean_score_during": 0.5930371052790935,
+    "detection_rate_at_0.5": 1.0
+  },
+  "statistical_layer_zscore_flag_rate": {
+    "healthy": 0.007812853978759937,
+    "severe": 0.006634977223212517
+  },
+  "trained_at": "2026-08-30T14:50:35.045441+00:00"
+}

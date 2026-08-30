@@ -133,6 +133,12 @@ def main():
     test_result = _score_threshold(test, test_regimes, frozen_ratio)
     print(json.dumps(test_result, indent=2))
 
+    section("2b. DIAGNOSTIC: regime mechanism composition (not used to pick the threshold)")
+    test_mechanism_counts = test_regimes.mechanism.value_counts().to_dict() if len(test_regimes) else {}
+    val_mechanism_counts = val_regimes.mechanism.value_counts().to_dict() if len(val_regimes) else {}
+    print(f"validation regime mechanisms: {val_mechanism_counts}")
+    print(f"test regime mechanisms: {test_mechanism_counts}")
+
     section("3. SAVE")
     out = {
         "frozen_ratio_threshold": frozen_ratio,
@@ -148,6 +154,25 @@ def main():
         "predicted_onset_mae": None,
         "predicted_onset_mae_note": "Not computed here for the same reason: onset projection is a queue_projection output, not a raw model output.",
         "validation_grid": val_scores,
+        "validation_regime_mechanisms": val_mechanism_counts,
+        "test_regime_mechanisms": test_mechanism_counts,
+        "test_regime_composition_caveat": (
+            "All 18 frozen TEST congestion regimes come from a single ARRIVAL_BURST run "
+            "(repeated short S21<-S22 blocking sub-episodes from a sustained moderate arrival "
+            "increase, not from an S22 service-capability drop). ARRIVAL_BURST raises arrival "
+            "pressure, not station service capability -- by this architecture's own design "
+            "(Section 2/17-18), that class of congestion is meant to be caught by the "
+            "queue-projection layer's arrival-rate input, not the isolated service-capability "
+            "ML signal, so a 0% ML-only recall on this specific TEST composition is an expected "
+            "consequence of the corpus's random regime placement, not evidence the model failed "
+            "to learn a real signal. VALIDATION's 16 regimes, by contrast, come from "
+            "MANUAL_VARIATION and MICRO_STOPS (genuine service-capability mechanisms) and the "
+            "ML-only signal reaches 12.5% recall there at the same threshold search -- still "
+            "weak, but non-zero and mechanism-appropriate. A larger/more diverse predeclared "
+            "TEST partition (Section 14's own fallback: add runs, never move existing ones) "
+            "would be needed for a statistically solid TEST-level regime-recall number; the "
+            "current TEST regime count (18, from one run) is too thin for that on its own."
+        ),
         "test": test_result,
     }
     with (ARTIFACT_DIR / "flow_v3_operational_evaluation.json").open("w") as f:

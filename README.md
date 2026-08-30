@@ -9,36 +9,50 @@ LIVE / INFERRED / UNKNOWN — instead of silently guessing.
 
 ## Status
 
-**Step 4 of implementation: full 45-station factory + historical dataset + QC generation.**
-The factory now exists at two scales: `configs/development_line.yaml`
-(12 stations, fast iteration/unit tests) and `configs/full_line.yaml`
-(the locked 45-station, 4-zone factory — the one real dataset/ML work now
-targets). Both run through the exact same simulator, scenario engine,
-sensor engine, batch engine, and RNG architecture with zero code
-branching. The full line generates a 24-shift, 10,800-vehicle
-DEVELOPMENT historical dataset with probabilistic final-QC outcomes
-(~3.9% defect rate) derived from accumulated latent quality exposure —
-never a deterministic threshold. No ML, anomaly *detection*, FastAPI, or
-frontend code exists yet — those are later steps, and this is still only
-the development-scale dataset (20-30 shifts), not the final 100.
+TrustTwin has four intelligence layers running on top of the locked
+45-station, 4-zone `configs/full_line.yaml` factory:
 
-Generate the development dataset:
+- **Flow-v3**: predicts a station's future service capability (not
+  current occupancy) from public process evidence, then a separate
+  digital-twin queue-projection layer combines that with real-time
+  buffer/arrival state to project time-to-blocking. See
+  [ML_INTELLIGENCE.md](ML_INTELLIGENCE.md) for the corpus, features,
+  model, and an honest read of what the operational evaluation does and
+  doesn't show yet. Flow-v1/v2 (occupancy-driven classifiers) are
+  retained only as a documented historical comparison.
+- **Quality**: predicts vehicle-level defect risk before final QC, from
+  Dataset A's naturalistic 100-shift corpus.
+- **Anomaly**: statistical (z-score/EWMA) + Isolation Forest, fit only on
+  genuinely undisturbed (`HEALTHY_CONTROL`) operation.
+- **Trust**: every value carries a data state — LIVE / INFERRED /
+  UNKNOWN — and a trust level — HIGH / MEDIUM / LOW — never conflated,
+  never a calibrated probability.
+
+An **observability boundary** (`backend/observability/policy.py`,
+[docs/OBSERVABILITY_POLICY.md](docs/OBSERVABILITY_POLICY.md)) sits
+between the simulator's internal truth and every one of these layers:
+scenario identity, latent quality exposure, future outcomes, and
+not-yet-elapsed process durations are structurally excluded from the
+public event stream every layer above actually consumes.
+
+No FastAPI or frontend backend-integration code exists yet — the layers
+above expose plain Python objects and JSON artifacts
+(`artifacts/final_submission/`), not an HTTP API.
+
+Rebuild everything from scratch:
 
 ```bash
-python scripts/generate_development_dataset.py
+python scripts/generate_historical_100.py            # Dataset A (Quality's source)
+python scripts/build_quality_dataset.py && python scripts/train_quality_models.py
+python scripts/build_flow_v3_corpus.py                # ~20 min: 127 controlled simulation runs
+python scripts/train_flow_v3_model.py
+python scripts/evaluate_flow_v3_operational.py
+python scripts/train_anomaly_v3.py
+python scripts/validate_trust_v3.py
+python scripts/run_final_demo.py
+python scripts/build_model_contracts.py && python scripts/build_system_health.py
+python -m pytest tests/ -q
 ```
-
-Run the EDA / synthetic-data validity / leakage / shortcut audit:
-
-```bash
-python scripts/audit_development_dataset.py
-```
-
-Observable data → `data/generated/development_45/observable/`; latent
-ground truth (scenario truth, quality exposure, the exposure→probability
-link — never an ML feature source) → `data/generated/development_45/latent/`.
-A reproducibility manifest is written alongside at
-`data/generated/development_45/manifest.json`.
 
 Earlier per-step demos still work: `scripts/run_nominal_simulation.py`
 (12-station healthy shift) and `scripts/run_scenario_demos.py` (one run
@@ -70,22 +84,24 @@ python -m pytest tests/ -v
 
 ```
 backend/
-  config/       station/buffer/vehicle-variant schemas + YAML loader (Step 1)
-  simulation/   SimPy discrete-event line simulator + event stream (Step 2)
-  twin/         live twin state manager (later step)
-  features/     Flow/Quality feature engineering (later step)
-  models/       trained ML models (later step)
-  anomaly/      statistical + Isolation Forest anomaly detection (later step)
-  confidence/   trust-tier / confidence scoring (later step)
-  api/          FastAPI backend (later step)
-  services/     supporting services (later step)
-frontend/       React + Vite UI (later step)
-configs/        YAML factory configuration (station types, lines)
-data/           generated / processed / external datasets
-notebooks/      EDA and modeling notebooks (later step)
-artifacts/      trained models, metrics, plots (later step)
-tests/          automated tests
-scripts/        one-off developer/debugging scripts
+  config/        station/buffer/vehicle-variant schemas + YAML loader
+  simulation/    SimPy discrete-event line simulator + internal event stream
+  observability/ internal-truth -> public-event projection boundary
+  historical/    naturalistic dataset generation (Dataset A) + scenario scheduling
+  flow/          shared Flow building blocks (bottleneck detection, features, holdout)
+  flow_v2/       retired occupancy-driven Flow classifier (historical comparison only)
+  flow_v3/       corpus design, event-aligned observations, congestion regimes,
+                 feature selection, queue projection
+  quality/       vehicle defect-risk snapshots/features/labels
+  anomaly/       statistical + Isolation Forest anomaly detection
+  trust/         data-state classification + virtual-sensor fallback + trust level
+  intelligence/  service wrappers turning artifacts into station/vehicle objects
+configs/         YAML factory configuration (station types, lines, Flow-v3 rebalance)
+data/            generated (simulator output) / processed (ML-ready) datasets
+artifacts/       trained models, metrics, demos, final_submission/ bundle
+tests/           automated tests
+scripts/         dataset/training/evaluation/audit entry points
+frontend/        not yet integrated with this backend
 ```
 
 ## Illustrative assumptions

@@ -1,0 +1,53 @@
+{
+  "raw_feature_count": 34,
+  "after_basic_filter": 12,
+  "after_correlation_filter": 11,
+  "final_count": 11,
+  "dropped_constant": [
+    "sensor_missing_recent",
+    "sensor_freshness_seconds",
+    "op_frac_idle",
+    "op_frac_flow_stop",
+    "op_frac_equipment_stop"
+  ],
+  "dropped_near_constant": [
+    "baseline_cycle_time_seconds",
+    "svc_cycle_time_is_measured_duration",
+    "svc_completion_count_recent",
+    "svc_rate_recent_per_hour",
+    "svc_rate_prior_per_hour",
+    "svc_departure_rate_trend",
+    "ms_count_recent",
+    "ms_seconds_recent",
+    "ms_mean_duration_seconds",
+    "ms_rate_per_minute",
+    "ms_rate_trend",
+    "mix_prop_ice_sedan",
+    "mix_prop_ice_suv",
+    "mix_prop_ev",
+    "mix_workload_weighted_expected_service_seconds",
+    "mix_entries_recent",
+    "op_state_observed"
+  ],
+  "dropped_duplicate": [],
+  "dropped_correlated": [
+    {
+      "dropped": "sensor_drift_from_baseline",
+      "kept_instead": "sensor_recent_mean",
+      "abs_correlation": 0.9971
+    }
+  ],
+  "kept_features": [
+    "op_frac_running",
+    "op_frac_waiting",
+    "sensor_recent_mean",
+    "sensor_trend",
+    "svc_cycle_time_ratio_to_baseline",
+    "svc_cycle_time_std_seconds",
+    "svc_cycle_time_trend_seconds",
+    "svc_recent_cycle_time_seconds",
+    "sensor_maturity",
+    "station_type",
+    "zone"
+  ]
+}
