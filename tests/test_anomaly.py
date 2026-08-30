@@ -88,7 +88,7 @@ def test_degradation_holdout_unseen_during_fitting():
         pytest.skip("anomaly artifact not built yet")
     with metadata_path.open() as f:
         meta = json.load(f)
-    flow_dir = Path(__file__).resolve().parent.parent / "data" / "processed" / "flow_v1"
+    flow_dir = Path(__file__).resolve().parent.parent / "data" / "processed" / "flow_v2"
     train = pd.read_parquet(flow_dir / "train.parquet")
     n_negative_train = int((train.target == 0).sum())
     assert meta["n_fit_rows"] == n_negative_train, (

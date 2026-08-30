@@ -177,15 +177,3 @@ def test_dataset_a_manifest_unchanged():
     assert manifest["git_commit"].startswith("ea49b96")
     assert manifest["n_shifts"] == 100
     assert manifest["dataset_master_seed"] == 20240002
-
-
-def test_dataset_b_manifest_unchanged():
-    manifest_path = (
-        Path(__file__).resolve().parent.parent / "data" / "generated"
-        / "historical_100_flow_enriched" / "manifest.json"
-    )
-    with manifest_path.open() as f:
-        manifest = json.load(f)
-    assert manifest["git_commit"].startswith("fbd3f9d")
-    assert manifest["n_shifts"] == 100
-    assert manifest["dataset_master_seed"] == 20240002

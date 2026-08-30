@@ -16,13 +16,13 @@ import pandas as pd
 
 from backend.intelligence.onset import estimate_onset_window
 
-ARTIFACT_DIR = Path(__file__).resolve().parent.parent.parent / "artifacts" / "flow"
+ARTIFACT_DIR = Path(__file__).resolve().parent.parent.parent / "artifacts" / "flow_v2"
 
 
 class FlowService:
     def __init__(self, artifact_dir: Path = ARTIFACT_DIR):
         self.artifact_dir = Path(artifact_dir)
-        self.model = lgb.Booster(model_file=str(self.artifact_dir / "flow_lightgbm_model.txt"))
+        self.model = lgb.Booster(model_file=str(self.artifact_dir / "flow_v2_lightgbm_model.txt"))
         with (self.artifact_dir / "feature_list.json").open() as f:
             fl = json.load(f)
         self.numeric_features = fl["numeric_features"]

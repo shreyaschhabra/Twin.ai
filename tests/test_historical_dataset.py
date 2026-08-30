@@ -1,8 +1,8 @@
 """
 Step 4, Section AJ items 28-32: historical generation tests. Uses a small
 scale (3 shifts x 20 vehicles) purely for test speed — the actual
-persisted development dataset (24 shifts x 450 vehicles) is produced by
-scripts/generate_development_dataset.py, not by this test suite.
+persisted historical dataset (Dataset A, 100 shifts) is produced by
+scripts/generate_historical_100.py, not by this test suite.
 """
 
 import json
@@ -160,7 +160,7 @@ def test_dataset_generation_refuses_dirty_tree_by_default(tmp_path):
 
     sys.path.insert(0, str(repo_root / "scripts"))
     import importlib
-    gen_script = importlib.import_module("generate_development_dataset")
+    gen_script = importlib.import_module("generate_historical_100")
     commit, is_dirty, dirty_files = gen_script._git_state(repo_root)
 
     assert is_dirty == is_actually_dirty

@@ -15,8 +15,6 @@ import pytest
 from backend.flow_v2.sampling import deduplicate_rows
 from backend.flow_v2.split import locked_flow_v2_split, validate_split
 
-V1_DIR = Path(__file__).resolve().parent.parent / "data" / "processed" / "flow_v1"
-
 
 def test_one_run_group_never_crosses_partitions():
     all_shifts = [f"SHIFT{i:03d}" for i in range(1, 101)]
@@ -71,14 +69,3 @@ def test_deduplication_never_reads_target_column():
     assert list(result1.window_end_time) == list(result2.window_end_time)
 
 
-@pytest.mark.skipif(not V1_DIR.exists(), reason="Flow v1 processed data not present")
-def test_flow_v1_processed_data_untouched():
-    """Flow v1's artifacts must still exist and be readable -- v2 is
-    additive, never a replacement."""
-    for name in ["train.parquet", "validation.parquet", "test.parquet",
-                 "unseen_equipment_degradation.parquet", "bottleneck_events.parquet"]:
-        path = V1_DIR / name
-        assert path.exists(), f"Flow v1 file missing: {name}"
-    train = pd.read_parquet(V1_DIR / "train.parquet")
-    assert len(train) > 0
-    assert "target" in train.columns

@@ -4,7 +4,7 @@ Flow rows only, plus statistical baselines for the z-score/EWMA signal
 features. The EQUIPMENT_DEGRADATION holdout is NEVER used for fitting --
 it is reserved entirely for the post-hoc diagnostic in Section 27.
 
-Uses the already-saved data/processed/flow_v1/ (Dataset C) train split's
+Uses the already-saved data/processed/flow_v2/ (Dataset C) train split's
 NEGATIVE rows as the nominal population, and the already-saved
 unseen_equipment_degradation.parquet + latent/scenario_truth.parquet for
 the before/during degradation diagnostic.
@@ -28,7 +28,7 @@ from backend.anomaly.combined import build_anomaly_output
 from backend.anomaly.isolation_forest_model import DEFAULT_ANOMALY_FEATURES, isolation_forest_anomaly_score, train_isolation_forest
 from backend.anomaly.statistical import SIGNAL_FEATURES, Z_THRESHOLD, compute_statistical_anomaly_score
 
-FLOW_DIR = Path(__file__).resolve().parent.parent / "data" / "processed" / "flow_v1"
+FLOW_DIR = Path(__file__).resolve().parent.parent / "data" / "processed" / "flow_v2"
 DATASET_C_LATENT = Path(__file__).resolve().parent.parent / "data" / "generated" / "historical_100_flow_calibrated" / "latent" / "scenario_truth.parquet"
 ARTIFACT_DIR = Path(__file__).resolve().parent.parent / "artifacts" / "anomaly"
 
@@ -109,7 +109,7 @@ def main():
 
     metadata = {
         "method": "IsolationForest (200 estimators) + rolling z-score/EWMA statistical layer",
-        "fit_population": "Dataset C flow_v1 TRAIN, target==0 rows only (nominal/low-risk)",
+        "fit_population": "Dataset C flow_v2 TRAIN, target==0 rows only (nominal/low-risk)",
         "n_fit_rows": len(nominal),
         "features": features,
         "feature_baselines": feature_baselines,

@@ -25,11 +25,10 @@ import pandas as pd
 
 from backend.config.loader import load_factory_config
 from backend.flow.bottleneck_events import detect_bottleneck_events
-from backend.flow.event_evaluation import evaluate_events
 from backend.flow.features import build_features
-from backend.flow.labels import label_rows
 from backend.flow.pipeline import build_station_minute_grid
-from backend.flow.split import locked_100_shift_split
+from backend.flow_v2.labels import label_rows_v2
+from backend.flow_v2.split import locked_flow_v2_split
 from backend.intelligence.flow_service import FlowService
 from backend.intelligence.onset import estimate_onset_window
 from backend.intelligence.quality_service import QualityService
@@ -41,7 +40,7 @@ from backend.trust.virtual_sensor import estimate_virtual_sensor_value
 CONFIG_DIR = Path(__file__).resolve().parent.parent / "configs"
 DATASET_A = Path(__file__).resolve().parent.parent / "data" / "generated" / "historical_100"
 DATASET_C = Path(__file__).resolve().parent.parent / "data" / "generated" / "historical_100_flow_calibrated"
-FLOW_PROCESSED = Path(__file__).resolve().parent.parent / "data" / "processed" / "flow_v1"
+FLOW_PROCESSED = Path(__file__).resolve().parent.parent / "data" / "processed" / "flow_v2"
 QUALITY_PROCESSED = Path(__file__).resolve().parent.parent / "data" / "processed" / "quality_v1"
 DEMO_DIR = Path(__file__).resolve().parent.parent / "artifacts" / "demo"
 
@@ -57,7 +56,7 @@ def _station_full_timeline(events, config, sensor_models, shift_id, station_id):
     shift_events = events[events.shift_id == shift_id]
     impacts = detect_bottleneck_events(shift_events, config)
     grid = build_station_minute_grid(shift_events, [station_id])
-    labeled = label_rows(grid, impacts)
+    labeled = label_rows_v2(grid, impacts, shift_events)
     featured = build_features(labeled[["shift_id", "station_id", "window_end_time"]], shift_events, config, sensor_models)
     return labeled.merge(featured, on=["shift_id", "station_id", "window_end_time"]), impacts
 
@@ -67,7 +66,7 @@ def demo_1_bottleneck(config, sensor_models, flow_service: FlowService):
     events = pd.read_parquet(DATASET_C / "observable" / "events.parquet")
     test = pd.read_parquet(FLOW_PROCESSED / "test.parquet")
     impacts = pd.read_parquet(FLOW_PROCESSED / "bottleneck_events.parquet")
-    split = locked_100_shift_split()
+    split = locked_flow_v2_split(sorted(events.shift_id.unique(), key=lambda x: int(x[5:])))
     test_impacts = impacts[impacts.shift_id.isin(split.test_shifts)]
 
     s22_events = test_impacts[test_impacts.impact_station_id == "S22"]

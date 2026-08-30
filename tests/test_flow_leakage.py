@@ -1,9 +1,9 @@
 """
 Step 5, Section P: mandatory future-mutation leakage test, plus the
 strict point-in-time checks from Section AB. Uses a small real slice of
-the frozen development dataset (SHIFT004, which has genuine activity at
-several stations) rather than only synthetic data, so the test exercises
-the real feature-computation code paths.
+Dataset A (SHIFT004, which has genuine activity at several stations)
+rather than only synthetic data, so the test exercises the real
+feature-computation code paths.
 """
 
 from pathlib import Path
@@ -17,7 +17,7 @@ from backend.flow.features import build_features
 from backend.simulation.sensors import load_sensor_models
 
 CONFIG_DIR = Path(__file__).resolve().parent.parent / "configs"
-DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "generated" / "development_45" / "observable"
+DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "generated" / "historical_100" / "observable"
 
 
 @pytest.fixture(scope="module")

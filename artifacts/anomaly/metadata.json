@@ -1,7 +1,7 @@
 {
   "method": "IsolationForest (200 estimators) + rolling z-score/EWMA statistical layer",
-  "fit_population": "Dataset C flow_v1 TRAIN, target==0 rows only (nominal/low-risk)",
-  "n_fit_rows": 2819614,
+  "fit_population": "Dataset C flow_v2 TRAIN, target==0 rows only (nominal/low-risk)",
+  "n_fit_rows": 2072613,
   "features": [
     "cycle_time_dev_relative",
     "cycle_time_std_5m",
@@ -16,35 +16,35 @@
   ],
   "feature_baselines": {
     "cycle_time_dev_relative": {
-      "mean": 0.0037758060974747705,
-      "std": 0.11776186811380013
+      "mean": 0.004676116873157329,
+      "std": 0.12112298810373924
     },
     "sensor_mean_dev_5m": {
-      "mean": 7.0809060817745885e-06,
-      "std": 34.41482325022586
+      "mean": 0.014474078569361577,
+      "std": 34.62701473028209
     },
     "inbound_occupancy_ratio": {
-      "mean": 0.0016552866426515576,
-      "std": 0.023565863869410113
+      "mean": 0.0018992260117590225,
+      "std": 0.024011613293909943
     },
     "prop_blocked_5m": {
-      "mean": 0.00019379375442939422,
-      "std": 0.01020594693658199
+      "mean": 0.00010797671564600761,
+      "std": 0.007290872805794611
     },
     "microstop_duration_5m": {
-      "mean": 0.07199858164452395,
-      "std": 2.0828935414892884
+      "mean": 0.09013921321400578,
+      "std": 2.3498173629724954
     }
   },
-  "nominal_mean_score": 0.4215173595662166,
-  "abnormal_mean_score": 0.6094422166116304,
+  "nominal_mean_score": 0.42260383313253425,
+  "abnormal_mean_score": 0.6268671807822727,
   "degradation_holdout_diagnostic": {
-    "n_before_rows": 343,
-    "n_during_rows": 7345,
-    "mean_score_before": 0.4972265668267058,
-    "mean_score_during": 0.5777971637304781,
-    "detection_rate_at_0.5": 0.834717494894486,
-    "mean_detection_lead_seconds": 630.1483339698614
+    "n_before_rows": 265,
+    "n_during_rows": 5882,
+    "mean_score_before": 0.49867890357303246,
+    "mean_score_during": 0.5780780426337166,
+    "detection_rate_at_0.5": 0.8366201972118327,
+    "mean_detection_lead_seconds": 707.2911911127185
   },
-  "training_timestamp": "2026-08-30T08:58:04.814119+00:00"
+  "training_timestamp": "2026-08-30T10:12:18.242980+00:00"
 }

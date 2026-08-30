@@ -1,18 +1,18 @@
 {
   "scenario": "benign_variation",
-  "shift_id": "SHIFT007",
+  "shift_id": "SHIFT001",
   "family": "VEHICLE_MIX_OVERLOAD",
   "window": {
-    "start_s": 15946.003235457421,
-    "end_s": 25251.9986701769
+    "start_s": 7129.669831224201,
+    "end_s": 23555.48891000264
   },
-  "max_flow_risk_during_window": 0.0001,
+  "max_flow_risk_during_window": 0.0002,
   "high_alert_fired": false,
   "impact_events_during_window": 0,
   "aggregate_across_all_instances": {
     "n_instances": 29,
-    "n_clean_no_alert": 23,
-    "n_false_alarm": 6,
+    "n_clean_no_alert": 29,
+    "n_false_alarm": 0,
     "note": "This demo picks a representative CLEAN instance; the false-alarm minority is reported here for honesty, not hidden -- it matches the Flow model's disclosed false_warnings/shift rate, not a defect specific to this scenario family."
   },
   "narrative": "context changes (unusual vehicle mix) -> factory remains operational -> no major blocking alert -> TrustTwin does not alert on every abnormal condition"

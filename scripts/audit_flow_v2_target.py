@@ -113,39 +113,10 @@ def main():
             fam_counter[f] += 1
     print(f"Positive rows by co-occurring known mechanism (a row's shift may have >1 mechanism): {dict(fam_counter)}")
 
-    section("6. COMPARISON WITH FLOW v1")
-    v1_dir = Path(__file__).resolve().parent.parent / "data" / "processed" / "flow_v1"
-    v1_train = pd.read_parquet(v1_dir / "train.parquet")
-    v1_val = pd.read_parquet(v1_dir / "validation.parquet")
-    v1_test = pd.read_parquet(v1_dir / "test.parquet")
-    v1_total = len(v1_train) + len(v1_val) + len(v1_test)
-    v1_pos = (v1_train.target == 1).sum() + (v1_val.target == 1).sum() + (v1_test.target == 1).sum()
-    v1_pos_shifts = pd.concat([v1_train[v1_train.target == 1], v1_val[v1_val.target == 1], v1_test[v1_test.target == 1]]).shift_id.nunique()
-    v1_pos_stations = pd.concat([v1_train[v1_train.target == 1], v1_val[v1_val.target == 1], v1_test[v1_test.target == 1]]).station_id.nunique()
-
-    comparison = pd.DataFrame({
-        "Flow v1 (narrow 5-10min)": {
-            "eligible rows": v1_total, "positive rows": int(v1_pos),
-            "prevalence": f"{v1_pos/v1_total*100:.4f}%", "positive shifts": v1_pos_shifts,
-            "positive stations": v1_pos_stations,
-        },
-        "Flow v2 (full 10min consequence)": {
-            "eligible rows": int(total_eligible), "positive rows": int(total_positive),
-            "prevalence": f"{prevalence*100:.4f}%", "positive shifts": n_positive_shifts,
-            "positive stations": n_positive_stations,
-        },
-    })
-    print(comparison)
-    print(f"\nNOTE on episode counting: v1 never stored impact_event_id on labeled rows (a genuine gap this "
-          f"v2 formulation fixes per Section 6), so a like-for-like 'episodes with >=1 eligible row' count "
-          f"isn't directly recoverable from v1's saved data -- v1's own audit reported ~72 CONTIGUOUS "
-          f"positive-row runs (a coarser proxy, not distinct impact_event_id). Using v2's precise "
-          f"impact_event_id bookkeeping: of the {len(impacts)} raw detected impact events, {n_episodes} "
-          f"({n_episodes/len(impacts)*100:.0f}%) now have at least one valid precursor row somewhere in "
-          f"their full 10-minute window -- the real mechanism behind the positive-count improvement is that "
-          f"v1's narrow 5-10-minute-only requirement discarded the large majority of real events (most of "
-          f"their 5-10min sub-windows fell too close to shift start or overlapped a prior sub-episode's "
-          f"ACTIVE period), not that v2 invented new episodes.")
+    section("6. COMPARISON WITH FLOW v1 (historical reference; v1 data has since been retired)")
+    print("Skipped: data/processed/flow_v1/ was migration-deleted once all v1 dependents moved to v2 "
+          "(see git history for the last run's numbers -- v1 had far fewer eligible positive rows due to "
+          "its narrow 5-10-minute-only labeling window).")
 
     section("7. STOP GATE (Section 15/34)")
     # "a handful" is treated here as <10 independent episodes OR <5 positive

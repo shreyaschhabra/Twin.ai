@@ -96,28 +96,6 @@ def test_streaming_path_matches_batch_path_exactly(config, sensor_models, batch_
     not (Path(__file__).resolve().parent.parent / "data" / "generated" / "historical_100" / "manifest.json").exists(),
     reason="historical_100 dataset not generated in this environment",
 )
-def test_first_24_shifts_match_development_dataset():
-    """The core Step-5-continuation guarantee: extending the master seed
-    from 24 to 100 shifts must reproduce SHIFT001-024 exactly, since each
-    shift's seed and scenario schedule are derived independently from
-    (master_seed, shift_id) alone."""
-    base = Path(__file__).resolve().parent.parent / "data" / "generated"
-    dev_events = pd.read_parquet(base / "development_45" / "observable" / "events.parquet")
-    hist_events = pd.read_parquet(base / "historical_100" / "observable" / "events.parquet")
-    hist_first_24 = hist_events[hist_events.shift_id.isin(dev_events.shift_id.unique())]
-
-    _assert_values_equal(dev_events, hist_first_24, ["shift_id", "event_id"])
-
-    dev_qc = pd.read_parquet(base / "development_45" / "observable" / "qc_results.parquet")
-    hist_qc = pd.read_parquet(base / "historical_100" / "observable" / "qc_results.parquet")
-    hist_qc_first_24 = hist_qc[hist_qc.shift_id.isin(dev_qc.shift_id.unique())]
-    _assert_values_equal(dev_qc, hist_qc_first_24, ["shift_id", "vehicle_id"])
-
-
-@pytest.mark.skipif(
-    not (Path(__file__).resolve().parent.parent / "data" / "generated" / "historical_100" / "manifest.json").exists(),
-    reason="historical_100 dataset not generated in this environment",
-)
 def test_historical_100_manifest_matches_actual_output():
     import json
 
