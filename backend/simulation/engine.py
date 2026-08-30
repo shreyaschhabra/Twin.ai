@@ -162,9 +162,12 @@ class FactoryEngine:
         variant_mix: Dict[str, float],
     ):
         for i in range(1, n_vehicles + 1):
+            arrival_multiplier = self.scenario_manager.get_arrival_headway_multiplier(self.env.now)
+            effective_mean = mean_interarrival * arrival_multiplier
+            effective_std = std_interarrival * arrival_multiplier
             interarrival = max(
-                self.arrival_rng.gauss(mean_interarrival, std_interarrival),
-                mean_interarrival * 0.3,
+                self.arrival_rng.gauss(effective_mean, effective_std),
+                effective_mean * 0.3,
             )
             yield self.env.timeout(interarrival)
 

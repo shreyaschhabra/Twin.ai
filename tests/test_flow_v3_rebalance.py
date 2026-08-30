@@ -27,7 +27,9 @@ def test_rebalance_is_versioned_and_does_not_mutate_flow_v2_config():
 def test_s22_is_explicitly_unchanged_and_adjustments_are_modest():
     base, rebalanced, plan = _configs()
     assert "S22" not in plan["cycle_time_overrides"]
+    assert "S43" not in plan["cycle_time_overrides"]
     assert rebalanced.stations["S22"].baseline_cycle_time_seconds == base.stations["S22"].baseline_cycle_time_seconds
+    assert rebalanced.stations["S43"].baseline_cycle_time_seconds == 55.0
     for station_id, change in plan["cycle_time_overrides"].items():
         pct = float(change["new_seconds"]) / float(change["old_seconds"]) - 1.0
         assert 0 < pct <= 0.20, station_id

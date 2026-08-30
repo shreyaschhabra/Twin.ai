@@ -228,9 +228,9 @@ class StationRuntime:
                 value=proc_time,
             )
 
-            micro_stop_duration = yield from self._maybe_run_micro_stop(station_id, vehicle)
-
-            yield self.env.timeout(proc_time)
+            micro_stop_duration = yield from self._run_processing_with_interruptions(
+                station_id, vehicle, proc_time
+            )
             self.processed_count += 1
             total_time = proc_time + micro_stop_duration
             self.event_log.record(
@@ -351,6 +351,51 @@ class StationRuntime:
         yield self.env.timeout(duration)
         self._set_state(StationState.PROCESSING)
         return duration
+
+    def _run_processing_with_interruptions(
+        self, station_id: str, vehicle: Vehicle, processing_work_seconds: float
+    ):
+        """Run fixed processing work with zero/one/multiple stochastic stops.
+
+        Rate-process scenarios draw exponential work intervals, so stops occur
+        at plausible internal processing points and work resumes afterward.
+        Legacy probability scenarios retain their historical single-stop path
+        solely for Flow-v2 reproducibility.
+        """
+        params = self.scenario_manager.get_micro_stop_params(self.env.now, station_id)
+        if params is None or params.get("mode") != "rate_process":
+            duration = yield from self._maybe_run_micro_stop(station_id, vehicle)
+            yield self.env.timeout(processing_work_seconds)
+            return duration
+
+        rate_per_second = params["rate_per_processing_minute"] / 60.0
+        if rate_per_second <= 0:
+            yield self.env.timeout(processing_work_seconds)
+            return 0.0
+
+        remaining_work = processing_work_seconds
+        total_stop_seconds = 0.0
+        while remaining_work > 0:
+            work_until_stop = self.micro_stop_rng.expovariate(rate_per_second)
+            if work_until_stop >= remaining_work:
+                yield self.env.timeout(remaining_work)
+                break
+            yield self.env.timeout(work_until_stop)
+            remaining_work -= work_until_stop
+            duration = self.micro_stop_rng.uniform(params["min_duration"], params["max_duration"])
+            self._set_state(StationState.DOWN)
+            self.event_log.record(
+                EventType.MICRO_STOP_OCCURRED,
+                simulation_time=self.env.now,
+                station_id=station_id,
+                vehicle_id=vehicle.vehicle_id,
+                vehicle_variant=vehicle.variant_id,
+                value=duration,
+            )
+            yield self.env.timeout(duration)
+            total_stop_seconds += duration
+            self._set_state(StationState.PROCESSING)
+        return total_stop_seconds
 
     def _acquire_vehicle(self):
         station_id = self.station_cfg.station_id

@@ -136,7 +136,7 @@ def main():
                 fields.append(key)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     with (OUT_DIR / "final_headway_comparison.csv").open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer = csv.DictWriter(handle, fieldnames=fields, lineterminator="\n")
         writer.writeheader()
         writer.writerows(all_rows)
     (OUT_DIR / "rebalanced_headway_decision.md").write_text(

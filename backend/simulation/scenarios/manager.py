@@ -98,7 +98,11 @@ class ScenarioManager:
 
         for s in self._active(sim_time, {ScenarioFamily.EQUIPMENT_DEGRADATION}, station_id):
             ramp = s.params.get("ramp_duration_seconds", 3600.0)
-            frac = s.elapsed_fraction(sim_time, ramp)
+            frac = (
+                s.elapsed_fraction(sim_time, ramp)
+                if s.temporal_profile is None
+                else s.profile_fraction(sim_time, default_profile="GRADUAL")
+            )
             max_cycle_mult = s.params.get("max_cycle_time_multiplier", 1.0)
             max_noise_mult = s.params.get("max_noise_multiplier", 1.0)
             max_sensor_shift = s.params.get("max_sensor_mean_shift", 0.0)
@@ -117,8 +121,11 @@ class ScenarioManager:
                 self._record_exposure(vehicle_id, sim_time, s, station_id, frac * quality_weight, "equipment_degradation")
 
         for s in self._active(sim_time, {ScenarioFamily.MANUAL_VARIATION}, station_id):
-            bundle.cycle_time_multiplier *= s.params.get("cycle_time_multiplier", 1.0)
-            bundle.variability_multiplier *= s.params.get("variability_multiplier", 1.0)
+            frac = s.profile_fraction(sim_time, default_profile="STEP")
+            max_cycle = s.params.get("cycle_time_multiplier", 1.0)
+            max_variability = s.params.get("variability_multiplier", 1.0)
+            bundle.cycle_time_multiplier *= 1.0 + frac * (max_cycle - 1.0)
+            bundle.variability_multiplier *= 1.0 + frac * (max_variability - 1.0)
             bundle.active_scenario_ids.append(s.scenario_id)
 
             quality_weight = s.params.get("quality_weight_per_visit", 0.0)
@@ -175,13 +182,33 @@ class ScenarioManager:
 
     def get_micro_stop_params(self, sim_time: float, station_id: str) -> Optional[dict]:
         for s in self._active(sim_time, {ScenarioFamily.MICRO_STOPS}, station_id):
+            if "rate_per_processing_minute" in s.params:
+                return {
+                    "scenario_id": s.scenario_id,
+                    "mode": "rate_process",
+                    "rate_per_processing_minute": (
+                        s.params["rate_per_processing_minute"]
+                        * s.profile_fraction(sim_time, default_profile="STEP")
+                    ),
+                    "min_duration": s.params.get("min_duration_seconds", 3.0),
+                    "max_duration": s.params.get("max_duration_seconds", 15.0),
+                }
             return {
                 "scenario_id": s.scenario_id,
+                "mode": "legacy_per_visit",
                 "probability": s.params.get("stop_probability", 0.0),
                 "min_duration": s.params.get("min_duration_seconds", 5.0),
                 "max_duration": s.params.get("max_duration_seconds", 30.0),
             }
         return None
+
+    def get_arrival_headway_multiplier(self, sim_time: float) -> float:
+        multiplier = 1.0
+        for s in self._active(sim_time, {ScenarioFamily.ARRIVAL_BURST}):
+            target = s.params.get("headway_multiplier", 1.0)
+            fraction = s.profile_fraction(sim_time, default_profile="STEP_BURST")
+            multiplier *= 1.0 - fraction * (1.0 - target)
+        return max(0.40, min(1.0, multiplier))
 
     # ---- randomized, caller-supplies-the-stream ----
 

@@ -20,11 +20,6 @@ cycle_time_overrides:
     old_seconds: 70.0
     new_seconds: 75.0
     rationale: "Trim preparation includes manual staging and verification before the constrained wiring operation; +7.1% is a modest manual-work-content correction without changing S22."
-  S43:
-    old_seconds: 55.0
-    new_seconds: 64.0
-    rationale: "The dynamic/roll test cycle includes stabilization, the test sequence, and release confirmation; +16.4% is plausible for a fuller test protocol and remains below line headway."
-
 buffer_capacity_overrides:
   B10:
     old_capacity: 4
@@ -49,6 +44,7 @@ buffer_capacity_overrides:
 
 unchanged_design_notes:
   - "S22 cycle time is intentionally unchanged."
+  - "S43 remains at its original 55s after review: the 64s proposal did not create an independent supervised EOL mechanism, because realistic line-entry bursts are constrained upstream first."
   - "B20 remains capacity 5 as a zone-boundary accumulator before trim preparation."
   - "B21 remains capacity 4 so the already-constrained S22 is not made artificially dominant by buffer shrinkage."
   - "Existing capacity-5 branch, cure, and zone-boundary accumulators remain unchanged."

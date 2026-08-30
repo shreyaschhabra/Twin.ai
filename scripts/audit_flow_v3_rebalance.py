@@ -21,7 +21,7 @@ OUT_DIR = ROOT / "artifacts/flow_v3"
 
 def _write_csv(path: Path, rows: list[dict]) -> None:
     with path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0]), lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
 
@@ -63,15 +63,15 @@ def _render_capacity(base, rebalanced, plan, audit_by_headway) -> str:
         "- Body: S11 is a modestly corrected manual finishing/inspection candidate; faster welding and dimensional stations remain comfortable.",
         "- Paint: S20 is the credible effective-service candidate because it combines cure exit and in-line inspection; the remaining paint stations retain headroom.",
         "- General/final assembly: S21 receives a small work-content correction. S22 is unchanged, while S24/S26/S34 already supply useful near-capacity behavior.",
-        "- Inspection/EOL: S43 receives a fuller roll-test protocol. It remains nominally comfortable and only approaches breakeven at the upper edge of severe disruption, avoiding a forced structural bottleneck.",
+        "- Inspection/EOL: S43 remains at its original 55s. The abandoned 64s proposal did not establish an independent supervised EOL mechanism, so Inspection/EOL is documented as a healthy limitation rather than forced toward capacity.",
         "",
         "## Pre-pilot scenario-capability interpretation at 102.5s",
         "",
         "- Body: S11 manual variation is POSITIVE-CAPABLE. This supplies a supervised mechanism outside Final Assembly without changing fast body automation.",
         "- Paint: S20 micro-stops are BORDERLINE at representative severe settings; degradation is POSITIVE-CAPABLE but remains the unseen holdout. Paint is not overstated as a strong supervised-positive source yet.",
         "- General/final assembly: S21/S22/S24 manual variation are POSITIVE-CAPABLE; S26 micro-stops are BORDERLINE. S22 remains unchanged.",
-        "- Inspection/EOL: S43 reaches approximately breakeven only at the extreme upper edge of the current severe micro-stop range. It is not classified as supervised POSITIVE-CAPABLE. Forcing it higher would require a less defensible cycle increase, so this zone remains a documented limitation; its degradation response is unseen-holdout evidence only.",
-        "- ARRIVAL_BURST values are provisional Phase-D design inputs and are explicitly marked as not yet implemented in the simulator.",
+        "- Inspection/EOL: S43 is not classified as supervised POSITIVE-CAPABLE. Forcing it higher would require a less defensible cycle increase, so this zone remains a documented limitation; its degradation response is unseen-holdout evidence only.",
+        "- The legacy matrix below preserves the pre-redesign equations for traceability. The implemented temporal scenario physics is audited separately in scenario_capability_matrix_v2.csv.",
         "",
         "Classification rule: severe rho <0.90 = INCAPABLE; 0.90–<1.00 = HARD_NEGATIVE; 1.00–<1.05 = BORDERLINE; >=1.05 = POSITIVE-CAPABLE. Non-applicable pairs are INCAPABLE. Buffer capacity is never part of this rule.",
         "",

@@ -26,6 +26,7 @@ class ScenarioFamily(str, Enum):
     SENSOR_DROPOUT = "SENSOR_DROPOUT"
     MANUAL_VARIATION = "MANUAL_VARIATION"
     RANDOM_QUALITY_EVENT = "RANDOM_QUALITY_EVENT"
+    ARRIVAL_BURST = "ARRIVAL_BURST"
 
 
 class ScenarioDefinition(BaseModel):
@@ -40,6 +41,7 @@ class ScenarioDefinition(BaseModel):
     affected_batch_id: Optional[str] = None
     variant_mix_override: Optional[Dict[str, float]] = None
     dropout_type: Optional[str] = None  # "missing" | "stuck" | "noisy"
+    temporal_profile: Optional[str] = None
 
     def is_active_at(self, sim_time: float) -> bool:
         if sim_time < self.start_time:
@@ -56,6 +58,36 @@ class ScenarioDefinition(BaseModel):
             return 1.0 if sim_time >= self.start_time else 0.0
         elapsed = sim_time - self.start_time
         return max(0.0, min(1.0, elapsed / ramp_duration))
+
+    def profile_fraction(self, sim_time: float, default_profile: str = "STEP") -> float:
+        """Return deterministic 0..1 effect strength for a temporal profile."""
+        if not self.is_active_at(sim_time):
+            return 0.0
+        profile = (self.temporal_profile or default_profile).upper()
+        if profile in {"STEP", "STEP_BURST"} or self.duration is None:
+            return 1.0
+        progress = self.elapsed_fraction(sim_time, self.duration)
+        if profile == "GRADUAL":
+            # Develop during the first half, then persist at full strength.
+            # A ramp that only reaches its maximum as the scenario ends has
+            # no sustained disturbed state and is not operationally useful.
+            return min(1.0, progress / 0.5)
+        if profile == "ACCELERATING":
+            return progress * progress
+        if profile == "RECOVERING":
+            if progress < 0.25:
+                return progress / 0.25
+            if progress <= 0.65:
+                return 1.0
+            return max(0.0, (1.0 - progress) / 0.35)
+        if profile == "RAMP_BURST":
+            return min(1.0, progress / 0.25)
+        if profile == "INTERMITTENT":
+            period = max(60.0, self.params.get("intermittent_period_seconds", 600.0))
+            duty = max(0.05, min(0.95, self.params.get("intermittent_duty_cycle", 0.5)))
+            phase = ((sim_time - self.start_time) % period) / period
+            return 1.0 if phase < duty else 0.0
+        raise ValueError(f"unsupported temporal profile {profile!r}")
 
 
 def load_scenarios(path: Union[str, Path]) -> List[ScenarioDefinition]:
