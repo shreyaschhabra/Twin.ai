@@ -1,0 +1,5 @@
+pydantic>=2,<3
+PyYAML>=6
+simpy>=4
+pandas>=2
+pyarrow>=15

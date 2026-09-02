@@ -1,0 +1,1954 @@
+schema_version: 2
+station_types:
+  WELDING_BODY_JOINING:
+    display_name: Welding / Body Joining
+    process_family: body_construction
+    possible_sensor_families:
+    - weld_current
+    - weld_voltage
+    - weld_time
+    - electrode_force
+    - vibration
+    - cycle_time
+    relevant_process_variables:
+    - weld_current_amps
+    - weld_time_ms
+    - electrode_force_n
+    plausible_degradation_modes:
+    - electrode_tip_wear
+    - robot_arm_misalignment_drift
+    - gun_pressure_drift
+    plausible_quality_risk_mechanisms:
+    - weak_weld_nugget
+    - weld_porosity
+    - missed_weld_point
+  ADHESIVE_SEALING:
+    display_name: Adhesive / Sealing
+    process_family: body_construction
+    possible_sensor_families:
+    - adhesive_flow_rate
+    - bead_position
+    - dispense_pressure
+    - cycle_time
+    relevant_process_variables:
+    - adhesive_flow_rate_ml_s
+    - bead_width_mm
+    plausible_degradation_modes:
+    - nozzle_clog_drift
+    - applicator_wear
+    plausible_quality_risk_mechanisms:
+    - bead_discontinuity
+    - under_application
+    - adhesive_contamination
+  DIMENSIONAL_INSPECTION:
+    display_name: Dimensional Inspection
+    process_family: quality_check
+    possible_sensor_families:
+    - laser_scan
+    - vision_camera
+    - fixture_position
+    - cycle_time
+    relevant_process_variables:
+    - dimensional_deviation_mm
+    - fixture_alignment_score
+    plausible_degradation_modes:
+    - fixture_calibration_drift
+    - camera_lens_contamination
+    plausible_quality_risk_mechanisms:
+    - out_of_tolerance_panel_gap
+    - undetected_deformation
+  PAINT_COATING:
+    display_name: Paint / Coating
+    process_family: paint
+    possible_sensor_families:
+    - booth_temperature
+    - booth_humidity
+    - film_thickness
+    - flow_rate
+    - cycle_time
+    relevant_process_variables:
+    - film_thickness_um
+    - booth_temperature_c
+    - booth_humidity_pct
+    plausible_degradation_modes:
+    - nozzle_wear
+    - booth_filter_degradation
+    plausible_quality_risk_mechanisms:
+    - thin_coat
+    - orange_peel_defect
+    - contamination_inclusion
+  CURING_ENVIRONMENTAL:
+    display_name: Curing / Environmental Process
+    process_family: paint
+    possible_sensor_families:
+    - oven_temperature
+    - humidity
+    - belt_speed
+    - cycle_time
+    relevant_process_variables:
+    - oven_temperature_c
+    - cure_time_s
+    plausible_degradation_modes:
+    - heater_element_degradation
+    - belt_speed_drift
+    plausible_quality_risk_mechanisms:
+    - undercure
+    - overcure_discoloration
+  MANUAL_ASSEMBLY:
+    display_name: Manual Assembly
+    process_family: final_assembly
+    possible_sensor_families:
+    - cycle_time
+    - checklist_completion
+    relevant_process_variables:
+    - checklist_items_completed
+    - station_dwell_time_s
+    plausible_degradation_modes:
+    - operator_fatigue_variation
+    - parts_supply_delay
+    plausible_quality_risk_mechanisms:
+    - missed_connector
+    - incomplete_fastening
+    - incorrect_routing
+  TORQUE_FASTENING:
+    display_name: Torque / Fastening
+    process_family: final_assembly
+    possible_sensor_families:
+    - torque_value
+    - torque_angle
+    - cycle_time
+    relevant_process_variables:
+    - torque_nm
+    - rotation_angle_deg
+    plausible_degradation_modes:
+    - tool_calibration_drift
+    - socket_wear
+    plausible_quality_risk_mechanisms:
+    - under_torque
+    - over_torque
+    - cross_thread
+  ROBOTIC_HANDLING_ASSEMBLY:
+    display_name: Robotic Handling / Assembly
+    process_family: final_assembly
+    possible_sensor_families:
+    - force_sensor
+    - position_sensor
+    - vibration
+    - cycle_time
+    relevant_process_variables:
+    - insertion_force_n
+    - alignment_deviation_mm
+    plausible_degradation_modes:
+    - gripper_wear
+    - servo_calibration_drift
+    plausible_quality_risk_mechanisms:
+    - misalignment
+    - incomplete_seating
+    - connector_damage
+  FLUID_FILL_FUNCTIONAL:
+    display_name: Fluid Fill / Functional Process
+    process_family: final_assembly
+    possible_sensor_families:
+    - flow_rate
+    - fill_pressure
+    - leak_sensor
+    - cycle_time
+    relevant_process_variables:
+    - fill_volume_l
+    - leak_test_pressure_kpa
+    plausible_degradation_modes:
+    - valve_wear
+    - seal_degradation
+    plausible_quality_risk_mechanisms:
+    - underfill
+    - leak_undetected
+  INSPECTION_EOL_TESTING:
+    display_name: Inspection / End-of-Line Testing
+    process_family: quality_check
+    possible_sensor_families:
+    - functional_test_suite
+    - vision_camera
+    - roll_test_sensor
+    - cycle_time
+    relevant_process_variables:
+    - functional_test_pass_rate
+    - roll_test_deviation
+    plausible_degradation_modes:
+    - test_rig_calibration_drift
+    plausible_quality_risk_mechanisms:
+    - false_pass_undetected_defect
+factory:
+  line_name: trusttwin_full_line_45
+  factory_config_id: trusttwin_full_45_v2
+  zones:
+    BODY_JOINING:
+      display_name: Body / Joining
+      stations:
+      - S01
+      - S02
+      - S03
+      - S04
+      - S05
+      - S06
+      - S07
+      - S08
+      - S09
+      - S10
+      - S11
+      - S12
+    PAINT_SURFACE:
+      display_name: Paint / Surface
+      stations:
+      - S13
+      - S14
+      - S15
+      - S16
+      - S17
+      - S18
+      - S19
+      - S20
+    FINAL_ASSEMBLY:
+      display_name: General / Final Assembly
+      stations:
+      - S21
+      - S22
+      - S23
+      - S24
+      - S25
+      - S26
+      - S27
+      - S28
+      - S29
+      - S30
+      - S31
+      - S32
+      - S33
+      - S34
+      - S35
+      - S36
+      - S37
+      - S38
+    INSPECTION_EOL:
+      display_name: Inspection / End-of-Line
+      stations:
+      - S39
+      - S40
+      - S41
+      - S42
+      - S43
+      - S44
+      - S45
+  production_plan:
+    nominal_interarrival_seconds: 102.5
+    arrival_process: fixed_headway
+    baseline_variant_mix:
+      ICE_SEDAN: 0.45
+      ICE_SUV: 0.35
+      EV: 0.2
+    notes: Nominal production schedule. Simulation experiments may add predeclared arrival jitter around this target headway;
+      scenario effects must not redefine this baseline.
+  stations:
+    S01:
+      station_name: Underbody Framing
+      station_type: WELDING_BODY_JOINING
+      specific_operation: Robotic spot welding of underbody frame rails
+      baseline_cycle_time_seconds: 46
+      cycle_time_variability: 0.06
+      sensor_maturity: rich
+      available_sensors:
+      - weld_current
+      - weld_time
+      - electrode_force
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters:
+        target_weld_current_amps: 9200
+      notes: First body station; sets underbody frame geometry.
+    S02:
+      station_name: Floor-Pan Welding
+      station_type: WELDING_BODY_JOINING
+      specific_operation: Robotic spot welding of floor pan to frame
+      baseline_cycle_time_seconds: 50
+      cycle_time_variability: 0.06
+      sensor_maturity: rich
+      available_sensors:
+      - weld_current
+      - weld_time
+      - electrode_force
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters:
+        target_weld_current_amps: 9000
+      notes: Same TYPE as S01, distinct operation and target.
+    S03:
+      station_name: Body Side Panel Joining
+      station_type: WELDING_BODY_JOINING
+      specific_operation: Robotic spot welding of left/right body side panels
+      baseline_cycle_time_seconds: 55
+      cycle_time_variability: 0.06
+      sensor_maturity: rich
+      available_sensors:
+      - weld_current
+      - weld_voltage
+      - weld_time
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters:
+        target_weld_current_amps: 8800
+      notes: Larger panel, longer weld schedule than S01/S02.
+    S04:
+      station_name: Roof Joining
+      station_type: WELDING_BODY_JOINING
+      specific_operation: Robotic laser/spot welding of roof panel to body sides
+      baseline_cycle_time_seconds: 42
+      cycle_time_variability: 0.06
+      sensor_maturity: rich
+      available_sensors:
+      - weld_current
+      - weld_time
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters:
+        target_weld_current_amps: 8600
+      notes: Roof seam join, fewer weld points than side panels.
+    S05:
+      station_name: Structural Adhesive / Body Bonding
+      station_type: ADHESIVE_SEALING
+      specific_operation: Structural adhesive application for body panel bonding
+      baseline_cycle_time_seconds: 32
+      cycle_time_variability: 0.12
+      sensor_maturity: partial
+      available_sensors:
+      - adhesive_flow_rate
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters:
+        target_adhesive_flow_rate_ml_s: 4.0
+      notes: Legacy dispense rig, flow meter only (matches dev-line S03 precedent).
+    S06:
+      station_name: Robotic Body Handling / Positioning
+      station_type: ROBOTIC_HANDLING_ASSEMBLY
+      specific_operation: Robotic repositioning of body-in-white between weld cells
+      baseline_cycle_time_seconds: 30
+      cycle_time_variability: 0.06
+      sensor_maturity: rich
+      available_sensors:
+      - force_sensor
+      - position_sensor
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters: {}
+      notes: Material-handling step between weld operations, not a joining operation itself.
+    S07:
+      station_name: Closure Panel Fitting
+      station_type: ROBOTIC_HANDLING_ASSEMBLY
+      specific_operation: Robotic fitting of doors/hood/trunk closures to body
+      baseline_cycle_time_seconds: 48
+      cycle_time_variability: 0.1
+      sensor_maturity: partial
+      available_sensors:
+      - position_sensor
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters: {}
+      notes: Older robotic cell; no force-sensor retrofit yet.
+    S08:
+      station_name: Body Geometry Inspection
+      station_type: DIMENSIONAL_INSPECTION
+      specific_operation: Automated laser/vision scan of body geometry post-closures
+      baseline_cycle_time_seconds: 26
+      cycle_time_variability: 0.05
+      sensor_maturity: rich
+      available_sensors:
+      - laser_scan
+      - vision_camera
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters: {}
+      notes: Confirms door/hood/trunk gaps before further assembly.
+    S09:
+      station_name: Additional Spot Welding / Reinforcement
+      station_type: WELDING_BODY_JOINING
+      specific_operation: Robotic reinforcement welding of high-stress body points
+      baseline_cycle_time_seconds: 38
+      cycle_time_variability: 0.06
+      sensor_maturity: rich
+      available_sensors:
+      - weld_current
+      - weld_time
+      - electrode_force
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters:
+        target_weld_current_amps: 9400
+      notes: Reinforcement pass; fewer, higher-current welds than S01-S04.
+    S10:
+      station_name: Seam / Body Joining
+      station_type: WELDING_BODY_JOINING
+      specific_operation: Robotic seam welding of remaining body joints
+      baseline_cycle_time_seconds: 44
+      cycle_time_variability: 0.06
+      sensor_maturity: rich
+      available_sensors:
+      - weld_current
+      - weld_voltage
+      - weld_time
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters:
+        target_weld_current_amps: 8700
+      notes: Final structural weld pass before body finishing.
+    S11:
+      station_name: Body Finishing / Manual Inspection
+      station_type: MANUAL_ASSEMBLY
+      specific_operation: Manual visual/tactile inspection and finishing of weld seams
+      baseline_cycle_time_seconds: 72
+      cycle_time_variability: 0.22
+      sensor_maturity: poor
+      available_sensors:
+      - cycle_time
+      - checklist_completion
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters: {}
+      notes: Legacy manual station; only timestamp/checklist data exist.
+    S12:
+      station_name: Body-Out Dimensional Check
+      station_type: DIMENSIONAL_INSPECTION
+      specific_operation: Final body-in-white dimensional scan before paint
+      baseline_cycle_time_seconds: 25
+      cycle_time_variability: 0.05
+      sensor_maturity: rich
+      available_sensors:
+      - laser_scan
+      - vision_camera
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters: {}
+      notes: Zone-1 exit gate; last check before the body enters paint.
+    S13:
+      station_name: Pretreatment
+      station_type: PAINT_COATING
+      specific_operation: Chemical pretreatment wash and phosphate coating
+      baseline_cycle_time_seconds: 40
+      cycle_time_variability: 0.06
+      sensor_maturity: rich
+      available_sensors:
+      - booth_temperature
+      - booth_humidity
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters:
+        target_booth_temperature_c: 35
+      notes: Environmental monitoring typical for compliance reasons.
+    S14:
+      station_name: E-Coat Application
+      station_type: PAINT_COATING
+      specific_operation: Electrocoat dip application
+      baseline_cycle_time_seconds: 55
+      cycle_time_variability: 0.07
+      sensor_maturity: rich
+      available_sensors:
+      - booth_temperature
+      - film_thickness
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters:
+        target_film_thickness_um: 20
+      notes: First protective coating layer.
+    S15:
+      station_name: E-Coat Cure
+      station_type: CURING_ENVIRONMENTAL
+      specific_operation: Oven cure of electrocoat layer
+      baseline_cycle_time_seconds: 62
+      cycle_time_variability: 0.05
+      service_time_semantics: effective_exit_headway
+      sensor_maturity: rich
+      available_sensors:
+      - oven_temperature
+      - belt_speed
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters:
+        target_oven_temperature_c: 175
+      notes: 'EFFECTIVE SERVICE/HEADWAY ABSTRACTION (see S06/S20 in dev line and ASSUMPTIONS.md): represents cure-tunnel exit
+        rate, not real multi-vehicle dwell time. Chosen to match neighboring stations'' pace, not a target utilization.'
+    S16:
+      station_name: Sealer Application
+      station_type: ADHESIVE_SEALING
+      specific_operation: Underbody and seam sealant application
+      baseline_cycle_time_seconds: 34
+      cycle_time_variability: 0.11
+      sensor_maturity: partial
+      available_sensors:
+      - adhesive_flow_rate
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters:
+        target_adhesive_flow_rate_ml_s: 5.0
+      notes: Legacy sealant rig, flow meter only.
+    S17:
+      station_name: Primer Application
+      station_type: PAINT_COATING
+      specific_operation: Primer surfacer spray application
+      baseline_cycle_time_seconds: 46
+      cycle_time_variability: 0.06
+      sensor_maturity: rich
+      available_sensors:
+      - booth_temperature
+      - booth_humidity
+      - film_thickness
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters:
+        target_film_thickness_um: 30
+      notes: Prepares surface for color coat.
+    S18:
+      station_name: Base / Colour Coat
+      station_type: PAINT_COATING
+      specific_operation: Base color coat spray application
+      baseline_cycle_time_seconds: 50
+      cycle_time_variability: 0.06
+      sensor_maturity: rich
+      available_sensors:
+      - booth_temperature
+      - booth_humidity
+      - film_thickness
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters:
+        target_film_thickness_um: 18
+      notes: Applies vehicle exterior color.
+    S19:
+      station_name: Clear Coat
+      station_type: PAINT_COATING
+      specific_operation: Clear coat spray application
+      baseline_cycle_time_seconds: 48
+      cycle_time_variability: 0.06
+      sensor_maturity: rich
+      available_sensors:
+      - booth_temperature
+      - film_thickness
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters:
+        target_film_thickness_um: 22
+      notes: Protective clear top coat.
+    S20:
+      station_name: Paint Cure + Paint Inspection
+      station_type: CURING_ENVIRONMENTAL
+      specific_operation: Final paint cure oven and in-line paint inspection
+      baseline_cycle_time_seconds: 73
+      cycle_time_variability: 0.05
+      service_time_semantics: effective_exit_headway
+      sensor_maturity: rich
+      available_sensors:
+      - oven_temperature
+      - humidity
+      - belt_speed
+      - vision_camera
+      - cycle_time
+      sensor_justifications:
+        vision_camera: final-cure vision inspection bolted onto the cure-oven exit, not part of the base CURING_ENVIRONMENTAL
+          template
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters:
+        target_oven_temperature_c: 165
+      notes: EFFECTIVE SERVICE/HEADWAY ABSTRACTION, same principle as S15/dev-line S06. Paint-zone exit gate before final
+        assembly.
+    S21:
+      station_name: Trim Preparation
+      station_type: MANUAL_ASSEMBLY
+      specific_operation: Manual preparation of interior trim components for install
+      baseline_cycle_time_seconds: 75
+      cycle_time_variability: 0.2
+      sensor_maturity: poor
+      available_sensors:
+      - cycle_time
+      - checklist_completion
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters: {}
+      notes: Legacy manual station.
+    S22:
+      station_name: Wiring Harness Installation
+      station_type: MANUAL_ASSEMBLY
+      specific_operation: Manual installation of main wiring harness
+      baseline_cycle_time_seconds: 88
+      cycle_time_variability: 0.24
+      sensor_maturity: poor
+      available_sensors:
+      - cycle_time
+      - checklist_completion
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters: {}
+      notes: Legacy manual station; matches dev-line wiring precedent.
+    S23:
+      station_name: Instrument Panel Installation
+      station_type: ROBOTIC_HANDLING_ASSEMBLY
+      specific_operation: Robot-assisted instrument panel placement
+      baseline_cycle_time_seconds: 40
+      cycle_time_variability: 0.07
+      sensor_maturity: rich
+      available_sensors:
+      - force_sensor
+      - position_sensor
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters: {}
+      notes: Robot places IP assembly; fastening handled separately downstream.
+    S24:
+      station_name: HVAC / Interior Module Installation
+      station_type: MANUAL_ASSEMBLY
+      specific_operation: Manual installation of HVAC unit and interior modules
+      baseline_cycle_time_seconds: 75
+      cycle_time_variability: 0.2
+      sensor_maturity: poor
+      available_sensors:
+      - cycle_time
+      - checklist_completion
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters: {}
+      notes: Legacy manual station.
+    S25:
+      station_name: Glass Installation / Sealing
+      station_type: ADHESIVE_SEALING
+      specific_operation: Robotic windshield/window glass bonding
+      baseline_cycle_time_seconds: 36
+      cycle_time_variability: 0.1
+      sensor_maturity: partial
+      available_sensors:
+      - adhesive_flow_rate
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters:
+        target_adhesive_flow_rate_ml_s: 3.5
+      notes: Older glass-set cell, flow meter only.
+    S26:
+      station_name: Powertrain / Battery Pack Marriage
+      station_type: ROBOTIC_HANDLING_ASSEMBLY
+      specific_operation: Robotic marriage of chassis subframe (powertrain or battery pack) to body
+      baseline_cycle_time_seconds: 72
+      cycle_time_variability: 0.09
+      sensor_maturity: rich
+      available_sensors:
+      - force_sensor
+      - position_sensor
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters:
+        target_insertion_force_n: 1850
+      variant_overrides:
+        ICE_SEDAN:
+          operation_profile: powertrain_marriage
+          cycle_time_multiplier: 1.0
+        ICE_SUV:
+          operation_profile: powertrain_marriage
+          cycle_time_multiplier: 1.1
+        EV:
+          operation_profile: battery_pack_marriage
+          cycle_time_multiplier: 1.2
+      notes: Same physical station, semantically different operation by variant (matches dev-line S07 precedent).
+    S27:
+      station_name: Powertrain / Battery Pack Mounting Fastening
+      station_type: TORQUE_FASTENING
+      specific_operation: Torque-controlled fastening of powertrain/battery-pack mounts
+      baseline_cycle_time_seconds: 22
+      cycle_time_variability: 0.08
+      sensor_maturity: rich
+      available_sensors:
+      - torque_value
+      - torque_angle
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters:
+        target_torque_nm: 48
+      notes: Secures the subframe married at S26.
+    S28:
+      station_name: Suspension / Chassis Fastening
+      station_type: TORQUE_FASTENING
+      specific_operation: Torque-controlled fastening of suspension/chassis components
+      baseline_cycle_time_seconds: 26
+      cycle_time_variability: 0.08
+      sensor_maturity: rich
+      available_sensors:
+      - torque_value
+      - torque_angle
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters:
+        target_torque_nm: 90
+      notes: Same TYPE as S27, distinct fastening operation/target.
+    S29:
+      station_name: Seat Installation
+      station_type: MANUAL_ASSEMBLY
+      specific_operation: Semi-automated seat placement (lift-assisted manual install)
+      baseline_cycle_time_seconds: 55
+      cycle_time_variability: 0.15
+      sensor_maturity: partial
+      available_sensors:
+      - cycle_time
+      - checklist_completion
+      - position_sensor
+      sensor_justifications:
+        position_sensor: lift-assist rig retrofit provides a basic seat-placement position reading, beyond the base MANUAL_ASSEMBLY
+          template
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters: {}
+      notes: "Partially instrumented manual station \u2014 a meaningful step above poor."
+    S30:
+      station_name: Seat Torque Verification
+      station_type: TORQUE_FASTENING
+      specific_operation: Torque-controlled seat mounting bolt verification
+      baseline_cycle_time_seconds: 18
+      cycle_time_variability: 0.1
+      sensor_maturity: partial
+      available_sensors:
+      - torque_value
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters:
+        target_torque_nm: 45
+      notes: Older pneumatic tool, final torque only, no angle curve (matches dev-line S10 precedent).
+    S31:
+      station_name: Wheel Installation
+      station_type: ROBOTIC_HANDLING_ASSEMBLY
+      specific_operation: Robotic wheel mounting onto hub
+      baseline_cycle_time_seconds: 20
+      cycle_time_variability: 0.07
+      sensor_maturity: rich
+      available_sensors:
+      - force_sensor
+      - position_sensor
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters: {}
+      notes: Robotic wheel-mounter; fastening handled separately at S32.
+    S32:
+      station_name: Wheel Torque
+      station_type: TORQUE_FASTENING
+      specific_operation: Torque-controlled wheel bolt tightening
+      baseline_cycle_time_seconds: 16
+      cycle_time_variability: 0.1
+      sensor_maturity: partial
+      available_sensors:
+      - torque_value
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters:
+        target_torque_nm: 140
+      notes: Legacy pneumatic tool (matches dev-line precedent exactly).
+    S33:
+      station_name: Door / Closure Finishing
+      station_type: MANUAL_ASSEMBLY
+      specific_operation: Manual final fit/finish adjustment of doors and closures
+      baseline_cycle_time_seconds: 58
+      cycle_time_variability: 0.2
+      sensor_maturity: poor
+      available_sensors:
+      - cycle_time
+      - checklist_completion
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters: {}
+      notes: Legacy manual station.
+    S34:
+      station_name: Electrical Connection / System Check
+      station_type: MANUAL_ASSEMBLY
+      specific_operation: Manual connection of remaining electrical systems with basic continuity check
+      baseline_cycle_time_seconds: 68
+      cycle_time_variability: 0.16
+      sensor_maturity: partial
+      available_sensors:
+      - cycle_time
+      - checklist_completion
+      - functional_test_suite
+      sensor_justifications:
+        functional_test_suite: a basic pass/fail continuity tester was retrofitted at this manual station, beyond the base
+          MANUAL_ASSEMBLY template
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters: {}
+      notes: Partially instrumented manual station.
+    S35:
+      station_name: Fluid-Related Process / Preparation
+      station_type: FLUID_FILL_FUNCTIONAL
+      specific_operation: Fuel system fill and preparation (ICE only)
+      baseline_cycle_time_seconds: 38
+      cycle_time_variability: 0.12
+      sensor_maturity: partial
+      available_sensors:
+      - flow_rate
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      process_parameters:
+        target_fill_volume_l: 55
+      notes: 'ICE-only: EV has no fuel system and skips this station entirely (the one deliberate route branch/skip in this
+        line, same principle as dev-line S11).'
+    S36:
+      station_name: Variant-Specific ICE / EV Process
+      station_type: FLUID_FILL_FUNCTIONAL
+      specific_operation: Final fluid-system check (ICE) or battery thermal-loop conditioning check (EV)
+      baseline_cycle_time_seconds: 42
+      cycle_time_variability: 0.08
+      sensor_maturity: rich
+      available_sensors:
+      - flow_rate
+      - fill_pressure
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters: {}
+      variant_overrides:
+        ICE_SEDAN:
+          operation_profile: ice_final_fluid_system_check
+          cycle_time_multiplier: 1.0
+        ICE_SUV:
+          operation_profile: ice_final_fluid_system_check
+          cycle_time_multiplier: 1.05
+        EV:
+          operation_profile: ev_battery_thermal_conditioning_check
+          cycle_time_multiplier: 1.15
+      notes: "PRIMARY variant-profile station (Section G): all three variants pass through S36 on the shared route, but perform\
+        \ a semantically different check via variant_overrides.operation_profile \u2014 same mechanism as S26, not a route\
+        \ skip. The one actual skip in this zone is at S35."
+    S37:
+      station_name: Functional Assembly Check
+      station_type: INSPECTION_EOL_TESTING
+      specific_operation: Mid-line functional check of assembled electrical/mechanical systems
+      baseline_cycle_time_seconds: 46
+      cycle_time_variability: 0.06
+      sensor_maturity: rich
+      available_sensors:
+      - functional_test_suite
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters: {}
+      notes: "Not a QC gate \u2014 an internal functional check before final trim."
+    S38:
+      station_name: Final Trim / Manual Inspection
+      station_type: MANUAL_ASSEMBLY
+      specific_operation: Manual final trim adjustment and visual inspection
+      baseline_cycle_time_seconds: 60
+      cycle_time_variability: 0.2
+      sensor_maturity: poor
+      available_sensors:
+      - cycle_time
+      - checklist_completion
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters: {}
+      notes: Legacy manual station; final assembly-zone exit gate.
+    S39:
+      station_name: Dimensional / Final Visual Check
+      station_type: DIMENSIONAL_INSPECTION
+      specific_operation: Automated final dimensional and visual scan
+      baseline_cycle_time_seconds: 28
+      cycle_time_variability: 0.05
+      sensor_maturity: rich
+      available_sensors:
+      - laser_scan
+      - vision_camera
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters: {}
+      notes: First EOL inspection gate.
+    S40:
+      station_name: Electrical Diagnostics
+      station_type: INSPECTION_EOL_TESTING
+      specific_operation: Full-vehicle electrical diagnostic scan
+      baseline_cycle_time_seconds: 40
+      cycle_time_variability: 0.06
+      sensor_maturity: rich
+      available_sensors:
+      - functional_test_suite
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters: {}
+      notes: Diagnostic scan of all electrical subsystems.
+    S41:
+      station_name: Leak / Pressure Test
+      station_type: FLUID_FILL_FUNCTIONAL
+      specific_operation: Pressure-based leak test of fluid systems
+      baseline_cycle_time_seconds: 35
+      cycle_time_variability: 0.11
+      sensor_maturity: partial
+      available_sensors:
+      - fill_pressure
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters: {}
+      notes: Older leak-test rig; no dedicated leak_sensor retrofit yet.
+    S42:
+      station_name: Functional Test
+      station_type: INSPECTION_EOL_TESTING
+      specific_operation: Comprehensive functional test of vehicle systems
+      baseline_cycle_time_seconds: 50
+      cycle_time_variability: 0.06
+      sensor_maturity: rich
+      available_sensors:
+      - functional_test_suite
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters: {}
+      notes: Broader functional test than S37/S40.
+    S43:
+      station_name: Dynamic / Roll Test
+      station_type: INSPECTION_EOL_TESTING
+      specific_operation: Dynamometer roll test
+      baseline_cycle_time_seconds: 55
+      cycle_time_variability: 0.06
+      sensor_maturity: rich
+      available_sensors:
+      - roll_test_sensor
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters: {}
+      notes: Drive-system validation under load.
+    S44:
+      station_name: Final Quality Inspection
+      station_type: INSPECTION_EOL_TESTING
+      specific_operation: Final comprehensive visual and functional quality inspection
+      baseline_cycle_time_seconds: 52
+      cycle_time_variability: 0.06
+      sensor_maturity: rich
+      available_sensors:
+      - vision_camera
+      - functional_test_suite
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters: {}
+      notes: Last inspection before release/EOL QC.
+    S45:
+      station_name: Release / End-of-Line QC
+      station_type: INSPECTION_EOL_TESTING
+      specific_operation: Final release inspection and binary QC outcome recording
+      baseline_cycle_time_seconds: 45
+      cycle_time_variability: 0.06
+      sensor_maturity: rich
+      available_sensors:
+      - functional_test_suite
+      - vision_camera
+      - roll_test_sensor
+      - cycle_time
+      applicable_vehicle_variants:
+      - ICE_SEDAN
+      - ICE_SUV
+      - EV
+      process_parameters: {}
+      notes: "THE definitive final QC station (Step 4). QC_RESULT_RECORDED is emitted only here \u2014 never earlier, never\
+        \ inferred from any other station."
+  buffers:
+    B01:
+      upstream_station: S01
+      downstream_station: S02
+      capacity: 4
+    B02:
+      upstream_station: S02
+      downstream_station: S03
+      capacity: 4
+    B03:
+      upstream_station: S03
+      downstream_station: S04
+      capacity: 4
+    B04:
+      upstream_station: S04
+      downstream_station: S05
+      capacity: 4
+    B05:
+      upstream_station: S05
+      downstream_station: S06
+      capacity: 4
+    B06:
+      upstream_station: S06
+      downstream_station: S07
+      capacity: 4
+    B07:
+      upstream_station: S07
+      downstream_station: S08
+      capacity: 4
+    B08:
+      upstream_station: S08
+      downstream_station: S09
+      capacity: 4
+    B09:
+      upstream_station: S09
+      downstream_station: S10
+      capacity: 4
+    B10:
+      upstream_station: S10
+      downstream_station: S11
+      capacity: 3
+    B11:
+      upstream_station: S11
+      downstream_station: S12
+      capacity: 5
+    B12:
+      upstream_station: S12
+      downstream_station: S13
+      capacity: 5
+    B13:
+      upstream_station: S13
+      downstream_station: S14
+      capacity: 4
+    B14:
+      upstream_station: S14
+      downstream_station: S15
+      capacity: 5
+    B15:
+      upstream_station: S15
+      downstream_station: S16
+      capacity: 5
+    B16:
+      upstream_station: S16
+      downstream_station: S17
+      capacity: 4
+    B17:
+      upstream_station: S17
+      downstream_station: S18
+      capacity: 4
+    B18:
+      upstream_station: S18
+      downstream_station: S19
+      capacity: 4
+    B19:
+      upstream_station: S19
+      downstream_station: S20
+      capacity: 4
+    B20:
+      upstream_station: S20
+      downstream_station: S21
+      capacity: 5
+    B21:
+      upstream_station: S21
+      downstream_station: S22
+      capacity: 4
+    B22:
+      upstream_station: S22
+      downstream_station: S23
+      capacity: 4
+    B23:
+      upstream_station: S23
+      downstream_station: S24
+      capacity: 3
+    B24:
+      upstream_station: S24
+      downstream_station: S25
+      capacity: 4
+    B25:
+      upstream_station: S25
+      downstream_station: S26
+      capacity: 4
+    B26:
+      upstream_station: S26
+      downstream_station: S27
+      capacity: 5
+    B27:
+      upstream_station: S27
+      downstream_station: S28
+      capacity: 4
+    B28:
+      upstream_station: S28
+      downstream_station: S29
+      capacity: 4
+    B29:
+      upstream_station: S29
+      downstream_station: S30
+      capacity: 4
+    B30:
+      upstream_station: S30
+      downstream_station: S31
+      capacity: 4
+    B31:
+      upstream_station: S31
+      downstream_station: S32
+      capacity: 4
+    B32:
+      upstream_station: S32
+      downstream_station: S33
+      capacity: 4
+    B33:
+      upstream_station: S33
+      downstream_station: S34
+      capacity: 3
+    B34:
+      upstream_station: S34
+      downstream_station: S35
+      capacity: 5
+    B35:
+      upstream_station: S35
+      downstream_station: S36
+      capacity: 4
+    B36:
+      upstream_station: S34
+      downstream_station: S36
+      capacity: 5
+    B37:
+      upstream_station: S36
+      downstream_station: S37
+      capacity: 4
+    B38:
+      upstream_station: S37
+      downstream_station: S38
+      capacity: 3
+    B39:
+      upstream_station: S38
+      downstream_station: S39
+      capacity: 5
+    B40:
+      upstream_station: S39
+      downstream_station: S40
+      capacity: 4
+    B41:
+      upstream_station: S40
+      downstream_station: S41
+      capacity: 4
+    B42:
+      upstream_station: S41
+      downstream_station: S42
+      capacity: 4
+    B43:
+      upstream_station: S42
+      downstream_station: S43
+      capacity: 3
+    B44:
+      upstream_station: S43
+      downstream_station: S44
+      capacity: 4
+    B45:
+      upstream_station: S44
+      downstream_station: S45
+      capacity: 4
+  vehicle_variants:
+    ICE_SEDAN:
+      display_name: ICE Sedan
+      route:
+      - S01
+      - S02
+      - S03
+      - S04
+      - S05
+      - S06
+      - S07
+      - S08
+      - S09
+      - S10
+      - S11
+      - S12
+      - S13
+      - S14
+      - S15
+      - S16
+      - S17
+      - S18
+      - S19
+      - S20
+      - S21
+      - S22
+      - S23
+      - S24
+      - S25
+      - S26
+      - S27
+      - S28
+      - S29
+      - S30
+      - S31
+      - S32
+      - S33
+      - S34
+      - S35
+      - S36
+      - S37
+      - S38
+      - S39
+      - S40
+      - S41
+      - S42
+      - S43
+      - S44
+      - S45
+      processing_time_modifiers: {}
+      notes: Reference variant; all modifiers below are relative to this baseline.
+    ICE_SUV:
+      display_name: ICE SUV
+      route:
+      - S01
+      - S02
+      - S03
+      - S04
+      - S05
+      - S06
+      - S07
+      - S08
+      - S09
+      - S10
+      - S11
+      - S12
+      - S13
+      - S14
+      - S15
+      - S16
+      - S17
+      - S18
+      - S19
+      - S20
+      - S21
+      - S22
+      - S23
+      - S24
+      - S25
+      - S26
+      - S27
+      - S28
+      - S29
+      - S30
+      - S31
+      - S32
+      - S33
+      - S34
+      - S35
+      - S36
+      - S37
+      - S38
+      - S39
+      - S40
+      - S41
+      - S42
+      - S43
+      - S44
+      - S45
+      processing_time_modifiers:
+        S01: 1.06
+        S02: 1.06
+        S03: 1.08
+        S04: 1.06
+        S17: 1.03
+        S18: 1.03
+        S19: 1.03
+        S27: 1.05
+        S28: 1.05
+        S30: 1.05
+        S32: 1.05
+      notes: Heavier body/frame slightly increases weld, paint, and fastening cycle times; same route as ICE Sedan. S26/S36
+        multipliers come from their own variant_overrides instead.
+    EV:
+      display_name: EV
+      route:
+      - S01
+      - S02
+      - S03
+      - S04
+      - S05
+      - S06
+      - S07
+      - S08
+      - S09
+      - S10
+      - S11
+      - S12
+      - S13
+      - S14
+      - S15
+      - S16
+      - S17
+      - S18
+      - S19
+      - S20
+      - S21
+      - S22
+      - S23
+      - S24
+      - S25
+      - S26
+      - S27
+      - S28
+      - S29
+      - S30
+      - S31
+      - S32
+      - S33
+      - S34
+      - S36
+      - S37
+      - S38
+      - S39
+      - S40
+      - S41
+      - S42
+      - S43
+      - S44
+      - S45
+      processing_time_modifiers:
+        S22: 1.15
+      notes: "Skips S35 (Fuel System Fill/Prep) entirely \u2014 no fuel system. Wiring install (S22) takes longer due to added\
+        \ high-voltage wiring. S26/S36 multipliers and operation profiles come from their own variant_overrides."
+sensor_models:
+  S01:
+    weld_current:
+      unit: amps
+      baseline: 9200
+      noise_std: 150
+      valid_min: 7000
+      valid_max: 11000
+    weld_time:
+      unit: ms
+      baseline: 380
+      noise_std: 15
+      valid_min: 200
+      valid_max: 600
+    electrode_force:
+      unit: newtons
+      baseline: 2200
+      noise_std: 80
+      valid_min: 1500
+      valid_max: 3000
+  S02:
+    weld_current:
+      unit: amps
+      baseline: 9000
+      noise_std: 145
+      valid_min: 6800
+      valid_max: 10800
+    weld_time:
+      unit: ms
+      baseline: 400
+      noise_std: 16
+      valid_min: 200
+      valid_max: 620
+    electrode_force:
+      unit: newtons
+      baseline: 2150
+      noise_std: 78
+      valid_min: 1500
+      valid_max: 3000
+  S03:
+    weld_current:
+      unit: amps
+      baseline: 8800
+      noise_std: 140
+      valid_min: 6500
+      valid_max: 10500
+    weld_voltage:
+      unit: volts
+      baseline: 4.2
+      noise_std: 0.15
+      valid_min: 3.0
+      valid_max: 6.0
+    weld_time:
+      unit: ms
+      baseline: 420
+      noise_std: 16
+      valid_min: 220
+      valid_max: 640
+  S04:
+    weld_current:
+      unit: amps
+      baseline: 8600
+      noise_std: 135
+      valid_min: 6300
+      valid_max: 10300
+    weld_time:
+      unit: ms
+      baseline: 340
+      noise_std: 14
+      valid_min: 180
+      valid_max: 560
+  S05:
+    adhesive_flow_rate:
+      unit: ml_per_s
+      baseline: 4.0
+      noise_std: 0.3
+      valid_min: 1.0
+      valid_max: 8.0
+  S06:
+    force_sensor:
+      unit: newtons
+      baseline: 1200
+      noise_std: 50
+      valid_min: 700
+      valid_max: 1800
+    position_sensor:
+      unit: mm_deviation
+      baseline: 0.25
+      noise_std: 0.08
+      valid_min: 0.0
+      valid_max: 4.0
+  S07:
+    position_sensor:
+      unit: mm_deviation
+      baseline: 0.4
+      noise_std: 0.12
+      valid_min: 0.0
+      valid_max: 5.0
+  S08:
+    laser_scan:
+      unit: mm_deviation
+      baseline: 0.5
+      noise_std: 0.15
+      valid_min: 0.0
+      valid_max: 5.0
+    vision_camera:
+      unit: alignment_score
+      baseline: 0.98
+      noise_std: 0.01
+      valid_min: 0.0
+      valid_max: 1.0
+  S09:
+    weld_current:
+      unit: amps
+      baseline: 9400
+      noise_std: 150
+      valid_min: 7200
+      valid_max: 11200
+    weld_time:
+      unit: ms
+      baseline: 300
+      noise_std: 12
+      valid_min: 150
+      valid_max: 480
+    electrode_force:
+      unit: newtons
+      baseline: 2300
+      noise_std: 82
+      valid_min: 1600
+      valid_max: 3100
+  S10:
+    weld_current:
+      unit: amps
+      baseline: 8700
+      noise_std: 138
+      valid_min: 6400
+      valid_max: 10400
+    weld_voltage:
+      unit: volts
+      baseline: 4.1
+      noise_std: 0.14
+      valid_min: 3.0
+      valid_max: 6.0
+    weld_time:
+      unit: ms
+      baseline: 360
+      noise_std: 15
+      valid_min: 200
+      valid_max: 580
+  S11:
+    checklist_completion:
+      unit: fraction_complete
+      baseline: 1.0
+      noise_std: 0.02
+      valid_min: 0.0
+      valid_max: 1.0
+  S12:
+    laser_scan:
+      unit: mm_deviation
+      baseline: 0.45
+      noise_std: 0.14
+      valid_min: 0.0
+      valid_max: 5.0
+    vision_camera:
+      unit: alignment_score
+      baseline: 0.98
+      noise_std: 0.01
+      valid_min: 0.0
+      valid_max: 1.0
+  S13:
+    booth_temperature:
+      unit: celsius
+      baseline: 35.0
+      noise_std: 0.8
+      valid_min: 25.0
+      valid_max: 45.0
+    booth_humidity:
+      unit: percent
+      baseline: 60.0
+      noise_std: 2.5
+      valid_min: 30.0
+      valid_max: 85.0
+  S14:
+    booth_temperature:
+      unit: celsius
+      baseline: 30.0
+      noise_std: 0.6
+      valid_min: 20.0
+      valid_max: 40.0
+    film_thickness:
+      unit: micrometers
+      baseline: 20.0
+      noise_std: 1.2
+      valid_min: 8.0
+      valid_max: 35.0
+  S15:
+    oven_temperature:
+      unit: celsius
+      baseline: 175.0
+      noise_std: 2.0
+      valid_min: 140.0
+      valid_max: 210.0
+    belt_speed:
+      unit: meters_per_min
+      baseline: 3.2
+      noise_std: 0.1
+      valid_min: 1.0
+      valid_max: 6.0
+  S16:
+    adhesive_flow_rate:
+      unit: ml_per_s
+      baseline: 5.0
+      noise_std: 0.35
+      valid_min: 1.5
+      valid_max: 9.0
+  S17:
+    booth_temperature:
+      unit: celsius
+      baseline: 22.0
+      noise_std: 0.5
+      valid_min: 15.0
+      valid_max: 30.0
+    booth_humidity:
+      unit: percent
+      baseline: 55.0
+      noise_std: 2.0
+      valid_min: 30.0
+      valid_max: 80.0
+    film_thickness:
+      unit: micrometers
+      baseline: 30.0
+      noise_std: 1.6
+      valid_min: 12.0
+      valid_max: 48.0
+  S18:
+    booth_temperature:
+      unit: celsius
+      baseline: 22.0
+      noise_std: 0.5
+      valid_min: 15.0
+      valid_max: 30.0
+    booth_humidity:
+      unit: percent
+      baseline: 55.0
+      noise_std: 2.0
+      valid_min: 30.0
+      valid_max: 80.0
+    film_thickness:
+      unit: micrometers
+      baseline: 18.0
+      noise_std: 1.2
+      valid_min: 8.0
+      valid_max: 32.0
+  S19:
+    booth_temperature:
+      unit: celsius
+      baseline: 22.0
+      noise_std: 0.5
+      valid_min: 15.0
+      valid_max: 30.0
+    film_thickness:
+      unit: micrometers
+      baseline: 22.0
+      noise_std: 1.3
+      valid_min: 10.0
+      valid_max: 36.0
+  S20:
+    oven_temperature:
+      unit: celsius
+      baseline: 165.0
+      noise_std: 2.0
+      valid_min: 130.0
+      valid_max: 200.0
+    humidity:
+      unit: percent
+      baseline: 40.0
+      noise_std: 2.0
+      valid_min: 20.0
+      valid_max: 70.0
+    belt_speed:
+      unit: meters_per_min
+      baseline: 3.0
+      noise_std: 0.1
+      valid_min: 1.0
+      valid_max: 6.0
+    vision_camera:
+      unit: alignment_score
+      baseline: 0.97
+      noise_std: 0.015
+      valid_min: 0.0
+      valid_max: 1.0
+  S21:
+    checklist_completion:
+      unit: fraction_complete
+      baseline: 1.0
+      noise_std: 0.02
+      valid_min: 0.0
+      valid_max: 1.0
+  S22:
+    checklist_completion:
+      unit: fraction_complete
+      baseline: 1.0
+      noise_std: 0.02
+      valid_min: 0.0
+      valid_max: 1.0
+  S23:
+    force_sensor:
+      unit: newtons
+      baseline: 900
+      noise_std: 40
+      valid_min: 500
+      valid_max: 1400
+    position_sensor:
+      unit: mm_deviation
+      baseline: 0.3
+      noise_std: 0.1
+      valid_min: 0.0
+      valid_max: 4.0
+  S24:
+    checklist_completion:
+      unit: fraction_complete
+      baseline: 1.0
+      noise_std: 0.02
+      valid_min: 0.0
+      valid_max: 1.0
+  S25:
+    adhesive_flow_rate:
+      unit: ml_per_s
+      baseline: 3.5
+      noise_std: 0.28
+      valid_min: 1.0
+      valid_max: 7.0
+  S26:
+    force_sensor:
+      unit: newtons
+      baseline: 1850
+      noise_std: 60
+      valid_min: 1200
+      valid_max: 2600
+    position_sensor:
+      unit: mm_deviation
+      baseline: 0.3
+      noise_std: 0.1
+      valid_min: 0.0
+      valid_max: 5.0
+  S27:
+    torque_value:
+      unit: newton_meters
+      baseline: 48.0
+      noise_std: 1.6
+      valid_min: 32.0
+      valid_max: 64.0
+    torque_angle:
+      unit: degrees
+      baseline: 90.0
+      noise_std: 3.0
+      valid_min: 0.0
+      valid_max: 180.0
+  S28:
+    torque_value:
+      unit: newton_meters
+      baseline: 90.0
+      noise_std: 3.0
+      valid_min: 60.0
+      valid_max: 120.0
+    torque_angle:
+      unit: degrees
+      baseline: 85.0
+      noise_std: 3.0
+      valid_min: 0.0
+      valid_max: 180.0
+  S29:
+    checklist_completion:
+      unit: fraction_complete
+      baseline: 1.0
+      noise_std: 0.02
+      valid_min: 0.0
+      valid_max: 1.0
+    position_sensor:
+      unit: mm_deviation
+      baseline: 0.6
+      noise_std: 0.2
+      valid_min: 0.0
+      valid_max: 6.0
+  S30:
+    torque_value:
+      unit: newton_meters
+      baseline: 45.0
+      noise_std: 2.0
+      valid_min: 30.0
+      valid_max: 60.0
+  S31:
+    force_sensor:
+      unit: newtons
+      baseline: 1400
+      noise_std: 55
+      valid_min: 900
+      valid_max: 2000
+    position_sensor:
+      unit: mm_deviation
+      baseline: 0.3
+      noise_std: 0.1
+      valid_min: 0.0
+      valid_max: 4.0
+  S32:
+    torque_value:
+      unit: newton_meters
+      baseline: 140.0
+      noise_std: 4.5
+      valid_min: 100.0
+      valid_max: 180.0
+  S33:
+    checklist_completion:
+      unit: fraction_complete
+      baseline: 1.0
+      noise_std: 0.02
+      valid_min: 0.0
+      valid_max: 1.0
+  S34:
+    checklist_completion:
+      unit: fraction_complete
+      baseline: 1.0
+      noise_std: 0.02
+      valid_min: 0.0
+      valid_max: 1.0
+    functional_test_suite:
+      unit: pass_score
+      baseline: 0.97
+      noise_std: 0.02
+      valid_min: 0.0
+      valid_max: 1.0
+  S35:
+    flow_rate:
+      unit: liters_per_min
+      baseline: 3.5
+      noise_std: 0.3
+      valid_min: 1.0
+      valid_max: 8.0
+  S36:
+    flow_rate:
+      unit: liters_per_min
+      baseline: 3.0
+      noise_std: 0.25
+      valid_min: 1.0
+      valid_max: 7.0
+    fill_pressure:
+      unit: kpa
+      baseline: 210.0
+      noise_std: 8.0
+      valid_min: 150.0
+      valid_max: 280.0
+  S37:
+    functional_test_suite:
+      unit: pass_score
+      baseline: 0.98
+      noise_std: 0.015
+      valid_min: 0.0
+      valid_max: 1.0
+  S38:
+    checklist_completion:
+      unit: fraction_complete
+      baseline: 1.0
+      noise_std: 0.02
+      valid_min: 0.0
+      valid_max: 1.0
+  S39:
+    laser_scan:
+      unit: mm_deviation
+      baseline: 0.4
+      noise_std: 0.12
+      valid_min: 0.0
+      valid_max: 4.0
+    vision_camera:
+      unit: alignment_score
+      baseline: 0.98
+      noise_std: 0.01
+      valid_min: 0.0
+      valid_max: 1.0
+  S40:
+    functional_test_suite:
+      unit: pass_score
+      baseline: 0.98
+      noise_std: 0.015
+      valid_min: 0.0
+      valid_max: 1.0
+  S41:
+    fill_pressure:
+      unit: kpa
+      baseline: 200.0
+      noise_std: 9.0
+      valid_min: 140.0
+      valid_max: 270.0
+  S42:
+    functional_test_suite:
+      unit: pass_score
+      baseline: 0.98
+      noise_std: 0.015
+      valid_min: 0.0
+      valid_max: 1.0
+  S43:
+    roll_test_sensor:
+      unit: deviation_score
+      baseline: 0.05
+      noise_std: 0.02
+      valid_min: 0.0
+      valid_max: 1.0
+  S44:
+    vision_camera:
+      unit: alignment_score
+      baseline: 0.97
+      noise_std: 0.015
+      valid_min: 0.0
+      valid_max: 1.0
+    functional_test_suite:
+      unit: pass_score
+      baseline: 0.98
+      noise_std: 0.015
+      valid_min: 0.0
+      valid_max: 1.0
+  S45:
+    functional_test_suite:
+      unit: pass_score
+      baseline: 0.98
+      noise_std: 0.015
+      valid_min: 0.0
+      valid_max: 1.0
+    vision_camera:
+      unit: alignment_score
+      baseline: 0.97
+      noise_std: 0.015
+      valid_min: 0.0
+      valid_max: 1.0
+    roll_test_sensor:
+      unit: deviation_score
+      baseline: 0.05
+      noise_std: 0.02
+      valid_min: 0.0
+      valid_max: 1.0
+batch_relevant_stations:
+  S05: 6
+  S16: 6
+  S25: 5
+  S27: 10
+  S32: 12
