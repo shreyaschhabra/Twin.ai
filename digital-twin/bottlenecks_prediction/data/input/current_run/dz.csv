@@ -1,0 +1,6 @@
+dark_zone_id,name,start_station_id,end_station_id,sensor_telemetry,manual_checks,checkpoints
+DZ_SAMPLE_01,Sample Dark S08,S08,S08,false,true,true
+DZ_SAMPLE_02,Sample Dark S13,S13,S13,false,true,true
+DZ_SAMPLE_03,Sample Dark S18,S18,S18,false,true,true
+DZ_SAMPLE_04,Sample Dark S24,S24,S24,false,true,true
+DZ_SAMPLE_05,Sample Dark S30,S30,S30,false,true,true

@@ -1,0 +1,17 @@
+{
+  "defects": [
+    {"type":"WELD_MISALIGNMENT","introductionStations":[3,4,5,6],"baseProbability":0.006,"degradationSensitivity":0.030,"effects":[
+      {"stationId":13,"cycleTimeMultiplier":1.08,"extraCV":0.05,"sensorEffects":{"VIBRATION":{"meanShift":0.20}}},
+      {"stationId":14,"sensorEffects":{"VIBRATION":{"meanShift":0.16},"TEMPERATURE":{"meanShift":1.5}}},
+      {"stationId":17,"manualCheckEffects":[{"measurement":"VISUAL_ALIGNMENT","failProbability":0.55}]},
+      {"stationId":20,"inspection":{"detectionProbability":0.65,"severity":4}},
+      {"stationId":30,"inspection":{"detectionProbability":0.85,"severity":4}}
+    ]},
+    {"type":"SEALER_VOID","introductionStations":[10,11],"baseProbability":0.003,"degradationSensitivity":0.020,"effects":[
+      {"stationId":12,"manualCheckEffects":[{"measurement":"VISUAL_ALIGNMENT","failProbability":0.28}]},
+      {"stationId":14,"sensorEffects":{"TEMPERATURE":{"meanShift":1.0}}},
+      {"stationId":20,"inspection":{"detectionProbability":0.40,"severity":2}},
+      {"stationId":30,"inspection":{"detectionProbability":0.75,"severity":2}}
+    ]}
+  ]
+}

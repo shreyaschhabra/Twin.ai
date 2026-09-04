@@ -1,0 +1,8 @@
+{
+  "run_id": "FINAL_RELEASE_GATE",
+  "random_seed": 20260831,
+  "simulation_duration_ms": 600000,
+  "station_count": 32,
+  "units_created": 17,
+  "schema_version": "2.1"
+}

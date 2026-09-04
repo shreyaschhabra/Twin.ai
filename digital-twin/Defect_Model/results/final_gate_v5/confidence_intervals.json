@@ -1,0 +1,89 @@
+{
+  "point_metrics": {
+    "pr_auc": 0.336710626136745,
+    "roc_auc": 0.7810768247734373,
+    "brier": 0.022983940706392172,
+    "unit_recall": 0.8571428571428571,
+    "false_warning_rate": 0.044182621502209134,
+    "unit_precision": 0.375,
+    "median_first_alert_station_index": 15.0
+  },
+  "unit_level_95_intervals": {
+    "unit_recall": {
+      "numerator_detected_defects": 54,
+      "denominator_defective_units": 63,
+      "point_estimate": 0.8571428571428571,
+      "method": "Wilson binomial interval",
+      "lower_95": 0.7502543407837413,
+      "upper_95": 0.922980516652793
+    },
+    "false_warning_rate": {
+      "numerator_false_warned_normal_units": 90,
+      "denominator_normal_units": 2037,
+      "point_estimate": 0.044182621502209134,
+      "method": "Wilson binomial interval",
+      "lower_95": 0.036083690225517884,
+      "upper_95": 0.05399751526259848
+    },
+    "unit_precision": {
+      "numerator_true_alerts": 54,
+      "denominator_all_alerted_units": 144,
+      "point_estimate": 0.375,
+      "method": "Wilson binomial interval",
+      "lower_95": 0.3001424864299469,
+      "upper_95": 0.45635342285581226
+    },
+    "median_first_alert_station_index": {
+      "detected_positive_units": 54,
+      "point_estimate": 15.0,
+      "method": "10,000 unit bootstrap draws",
+      "lower_95": 15.0,
+      "upper_95": 16.0
+    }
+  },
+  "run_block_95_intervals": {
+    "pr_auc": {
+      "point_estimate": 0.336710626136745,
+      "lower_95": 0.17944988665650966,
+      "upper_95": 0.4055014352104358,
+      "bootstrap_iterations": 750
+    },
+    "roc_auc": {
+      "point_estimate": 0.7810768247734373,
+      "lower_95": 0.688876855915258,
+      "upper_95": 0.8144131614719315,
+      "bootstrap_iterations": 750
+    },
+    "brier": {
+      "point_estimate": 0.022983940706392172,
+      "lower_95": 0.011774349823200667,
+      "upper_95": 0.03825477424591387,
+      "bootstrap_iterations": 750
+    },
+    "unit_recall": {
+      "point_estimate": 0.8571428571428571,
+      "lower_95": 0.7297297297297297,
+      "upper_95": 0.9166666666666666,
+      "bootstrap_iterations": 750
+    },
+    "false_warning_rate": {
+      "point_estimate": 0.044182621502209134,
+      "lower_95": 0.01931434089811685,
+      "upper_95": 0.06871345029239766,
+      "bootstrap_iterations": 750
+    },
+    "unit_precision": {
+      "point_estimate": 0.375,
+      "lower_95": 0.18620689655172415,
+      "upper_95": 0.5122146362278642,
+      "bootstrap_iterations": 750
+    },
+    "median_first_alert_station_index": {
+      "point_estimate": 15.0,
+      "lower_95": 15.0,
+      "upper_95": 16.0,
+      "bootstrap_iterations": 750
+    }
+  },
+  "run_block_note": "This is deliberately conservative scenario-level uncertainty. There are only five validation runs, so these intervals are wide."
+}

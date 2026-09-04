@@ -1,0 +1,336 @@
+{
+    "stations":  [
+                     {
+                         "id":  0,
+                         "name":  "Body Infeed",
+                         "archetype":  "AUTOMATED",
+                         "meanCycleTimeMs":  36000,
+                         "cycleTimeCV":  0.10,
+                         "bufferCapacity":  0,
+                         "sensorCoverage":  "HIGH",
+                         "source":  true
+                     },
+                     {
+                         "id":  1,
+                         "name":  "Underbody Weld",
+                         "archetype":  "AUTOMATED",
+                         "meanCycleTimeMs":  39000,
+                         "cycleTimeCV":  0.10,
+                         "bufferCapacity":  4,
+                         "sensorCoverage":  "HIGH"
+                     },
+                     {
+                         "id":  2,
+                         "name":  "Floor Pan Weld",
+                         "archetype":  "AUTOMATED",
+                         "meanCycleTimeMs":  41000,
+                         "cycleTimeCV":  0.10,
+                         "bufferCapacity":  4,
+                         "sensorCoverage":  "HIGH"
+                     },
+                     {
+                         "id":  3,
+                         "name":  "Side Frame Weld",
+                         "archetype":  "AUTOMATED",
+                         "meanCycleTimeMs":  43000,
+                         "cycleTimeCV":  0.11,
+                         "bufferCapacity":  4,
+                         "sensorCoverage":  "PARTIAL"
+                     },
+                     {
+                         "id":  4,
+                         "name":  "Roof Fit",
+                         "archetype":  "AUTOMATED",
+                         "meanCycleTimeMs":  44000,
+                         "cycleTimeCV":  0.10,
+                         "bufferCapacity":  4,
+                         "sensorCoverage":  "HIGH"
+                     },
+                     {
+                         "id":  5,
+                         "name":  "Weld Verification",
+                         "archetype":  "AUTOMATED",
+                         "meanCycleTimeMs":  40000,
+                         "cycleTimeCV":  0.10,
+                         "bufferCapacity":  4,
+                         "sensorCoverage":  "HIGH"
+                     },
+                     {
+                         "id":  6,
+                         "name":  "Door Aperture Weld",
+                         "archetype":  "AUTOMATED",
+                         "meanCycleTimeMs":  45000,
+                         "cycleTimeCV":  0.12,
+                         "bufferCapacity":  4,
+                         "sensorCoverage":  "HIGH"
+                     },
+                     {
+                         "id":  7,
+                         "name":  "Manual Seam Dress",
+                         "archetype":  "MANUAL",
+                         "meanCycleTimeMs":  58000,
+                         "cycleTimeCV":  0.18,
+                         "bufferCapacity":  2,
+                         "sensorCoverage":  "NONE"
+                     },
+                     {
+                         "id":  8,
+                         "name":  "Body Geometry Scan",
+                         "archetype":  "AUTOMATED",
+                         "meanCycleTimeMs":  42000,
+                         "cycleTimeCV":  0.10,
+                         "bufferCapacity":  4,
+                         "sensorCoverage":  "PARTIAL"
+                     },
+                     {
+                         "id":  9,
+                         "name":  "Pre-Paint Inspection",
+                         "archetype":  "INSPECTION",
+                         "meanCycleTimeMs":  52000,
+                         "cycleTimeCV":  0.12,
+                         "bufferCapacity":  3,
+                         "sensorCoverage":  "PARTIAL"
+                     },
+                     {
+                         "id":  10,
+                         "name":  "Sealer Apply",
+                         "archetype":  "AUTOMATED",
+                         "meanCycleTimeMs":  40000,
+                         "cycleTimeCV":  0.10,
+                         "bufferCapacity":  4,
+                         "sensorCoverage":  "HIGH"
+                     },
+                     {
+                         "id":  11,
+                         "name":  "Legacy Alignment A",
+                         "archetype":  "AUTOMATED",
+                         "meanCycleTimeMs":  46000,
+                         "cycleTimeCV":  0.12,
+                         "bufferCapacity":  3,
+                         "sensorCoverage":  "HIGH"
+                     },
+                     {
+                         "id":  12,
+                         "name":  "Legacy Alignment Manual",
+                         "archetype":  "MANUAL",
+                         "meanCycleTimeMs":  62000,
+                         "cycleTimeCV":  0.20,
+                         "bufferCapacity":  2,
+                         "sensorCoverage":  "NONE"
+                     },
+                     {
+                         "id":  13,
+                         "name":  "Legacy Alignment B",
+                         "archetype":  "AUTOMATED",
+                         "meanCycleTimeMs":  48000,
+                         "cycleTimeCV":  0.12,
+                         "bufferCapacity":  3,
+                         "sensorCoverage":  "PARTIAL"
+                     },
+                     {
+                         "id":  14,
+                         "name":  "Legacy Alignment C",
+                         "archetype":  "AUTOMATED",
+                         "meanCycleTimeMs":  45000,
+                         "cycleTimeCV":  0.12,
+                         "bufferCapacity":  3,
+                         "sensorCoverage":  "HIGH"
+                     },
+                     {
+                         "id":  15,
+                         "name":  "E-Coat Load",
+                         "archetype":  "AUTOMATED",
+                         "meanCycleTimeMs":  41000,
+                         "cycleTimeCV":  0.10,
+                         "bufferCapacity":  4,
+                         "sensorCoverage":  "HIGH"
+                     },
+                     {
+                         "id":  16,
+                         "name":  "E-Coat Bake",
+                         "archetype":  "AUTOMATED",
+                         "meanCycleTimeMs":  55000,
+                         "cycleTimeCV":  0.10,
+                         "bufferCapacity":  4,
+                         "sensorCoverage":  "HIGH"
+                     },
+                     {
+                         "id":  17,
+                         "name":  "Manual Surface Check",
+                         "archetype":  "MANUAL",
+                         "meanCycleTimeMs":  60000,
+                         "cycleTimeCV":  0.18,
+                         "bufferCapacity":  2,
+                         "sensorCoverage":  "NONE"
+                     },
+                     {
+                         "id":  18,
+                         "name":  "Primer Spray",
+                         "archetype":  "AUTOMATED",
+                         "meanCycleTimeMs":  43000,
+                         "cycleTimeCV":  0.10,
+                         "bufferCapacity":  4,
+                         "sensorCoverage":  "HIGH"
+                     },
+                     {
+                         "id":  19,
+                         "name":  "Topcoat Spray",
+                         "archetype":  "AUTOMATED",
+                         "meanCycleTimeMs":  45000,
+                         "cycleTimeCV":  0.11,
+                         "bufferCapacity":  4,
+                         "sensorCoverage":  "HIGH"
+                     },
+                     {
+                         "id":  20,
+                         "name":  "Paint Inspection",
+                         "archetype":  "INSPECTION",
+                         "meanCycleTimeMs":  54000,
+                         "cycleTimeCV":  0.12,
+                         "bufferCapacity":  3,
+                         "sensorCoverage":  "PARTIAL"
+                     },
+                     {
+                         "id":  21,
+                         "name":  "Glass Install",
+                         "archetype":  "AUTOMATED",
+                         "meanCycleTimeMs":  43000,
+                         "cycleTimeCV":  0.10,
+                         "bufferCapacity":  4,
+                         "sensorCoverage":  "HIGH"
+                     },
+                     {
+                         "id":  22,
+                         "name":  "Instrument Install",
+                         "archetype":  "AUTOMATED",
+                         "meanCycleTimeMs":  46000,
+                         "cycleTimeCV":  0.12,
+                         "bufferCapacity":  4,
+                         "sensorCoverage":  "HIGH"
+                     },
+                     {
+                         "id":  23,
+                         "name":  "Manual Trim Fit",
+                         "archetype":  "MANUAL",
+                         "meanCycleTimeMs":  62000,
+                         "cycleTimeCV":  0.18,
+                         "bufferCapacity":  2,
+                         "sensorCoverage":  "NONE"
+                     },
+                     {
+                         "id":  24,
+                         "name":  "Seat Install",
+                         "archetype":  "AUTOMATED",
+                         "meanCycleTimeMs":  44000,
+                         "cycleTimeCV":  0.10,
+                         "bufferCapacity":  4,
+                         "sensorCoverage":  "HIGH"
+                     },
+                     {
+                         "id":  25,
+                         "name":  "Wheel Install",
+                         "archetype":  "AUTOMATED",
+                         "meanCycleTimeMs":  42000,
+                         "cycleTimeCV":  0.10,
+                         "bufferCapacity":  4,
+                         "sensorCoverage":  "HIGH"
+                     },
+                     {
+                         "id":  26,
+                         "name":  "Fluid Fill",
+                         "archetype":  "AUTOMATED",
+                         "meanCycleTimeMs":  43000,
+                         "cycleTimeCV":  0.10,
+                         "bufferCapacity":  4,
+                         "sensorCoverage":  "PARTIAL"
+                     },
+                     {
+                         "id":  27,
+                         "name":  "Electrical Test",
+                         "archetype":  "AUTOMATED",
+                         "meanCycleTimeMs":  48000,
+                         "cycleTimeCV":  0.12,
+                         "bufferCapacity":  4,
+                         "sensorCoverage":  "HIGH"
+                     },
+                     {
+                         "id":  28,
+                         "name":  "Dynamic Test",
+                         "archetype":  "AUTOMATED",
+                         "meanCycleTimeMs":  50000,
+                         "cycleTimeCV":  0.12,
+                         "bufferCapacity":  4,
+                         "sensorCoverage":  "HIGH"
+                     },
+                     {
+                         "id":  29,
+                         "name":  "Final Audit",
+                         "archetype":  "MANUAL",
+                         "meanCycleTimeMs":  58000,
+                         "cycleTimeCV":  0.16,
+                         "bufferCapacity":  2,
+                         "sensorCoverage":  "NONE"
+                     },
+                     {
+                         "id":  30,
+                         "name":  "End-of-Line Inspection",
+                         "archetype":  "INSPECTION",
+                         "meanCycleTimeMs":  52000,
+                         "cycleTimeCV":  0.12,
+                         "bufferCapacity":  3,
+                         "sensorCoverage":  "PARTIAL"
+                     },
+                     {
+                         "id":  31,
+                         "name":  "Vehicle Dispatch",
+                         "archetype":  "AUTOMATED",
+                         "meanCycleTimeMs":  35000,
+                         "cycleTimeCV":  0.08,
+                         "bufferCapacity":  4,
+                         "sensorCoverage":  "PARTIAL",
+                         "sink":  true
+                     }
+                 ],
+    "darkZones":  [
+                      {
+                          "id":  "DZ_BODY_01",
+                          "name":  "Legacy Body Alignment Section",
+                          "startStationId":  10,
+                          "endStationId":  12,
+                          "observability":  {
+                                                "sensorTelemetry":  true,
+                                                "manualChecks":  true,
+                                                "checkpoints":  true
+                                            }
+                      }
+                  ],
+    "checkpoints":  [
+                        {
+                            "id":  "CP_ALIGN_RFID",
+                            "stationId":  12,
+                            "type":  "RFID",
+                            "progress":  0.45,
+                            "reliability":  0.90,
+                            "falsePositiveRate":  0.01,
+                            "identifiesUnit":  true
+                        },
+                        {
+                            "id":  "CP_ALIGN_POWER",
+                            "stationId":  13,
+                            "type":  "POWER_DRAW",
+                            "progress":  0.55,
+                            "reliability":  0.85,
+                            "falsePositiveRate":  0.00,
+                            "identifiesUnit":  false
+                        },
+                        {
+                            "id":  "CP_FINAL_RFID",
+                            "stationId":  29,
+                            "type":  "RFID",
+                            "progress":  0.50,
+                            "reliability":  0.92,
+                            "falsePositiveRate":  0.01,
+                            "identifiesUnit":  true
+                        }
+                    ]
+}

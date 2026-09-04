@@ -1,0 +1,3 @@
+# Complete Digital Twin Python environment.
+-r bottlenecks_prediction/requirements.txt
+-r Defect_Model/requirements.txt

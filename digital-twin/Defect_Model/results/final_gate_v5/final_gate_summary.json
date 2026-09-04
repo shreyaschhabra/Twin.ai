@@ -1,0 +1,33 @@
+{
+  "version": "v5",
+  "purpose": "final model audit only; no retraining or retuning",
+  "selected_alert_policy": "raw",
+  "frozen_alert_threshold": 0.1421320160758933,
+  "point_metrics": {
+    "pr_auc": 0.336710626136745,
+    "roc_auc": 0.7810768247734373,
+    "brier": 0.022983940706392172,
+    "unit_recall": 0.8571428571428571,
+    "false_warning_rate": 0.044182621502209134,
+    "unit_precision": 0.375,
+    "median_first_alert_station_index": 15.0
+  },
+  "confidence_intervals_file": "confidence_intervals.json",
+  "threshold_robustness_file": "threshold_robustness.csv",
+  "runtime_parity_file": "runtime_parity_report.json",
+  "threshold_local_stability": {
+    "window": [
+      0.135,
+      0.155
+    ],
+    "unit_recall_span": 0.015873015873015928,
+    "false_warning_rate_span": 0.007854688267059401,
+    "interpretation": "PASS"
+  },
+  "checks": {
+    "runtime_parity": "PASS",
+    "frozen_threshold_below_5pct_fwr": "PASS",
+    "threshold_not_on_local_cliff": "PASS"
+  },
+  "important_limitation": "A brand-new untouched simulator test realization was not run. The original consumed test is not used in this audit."
+}

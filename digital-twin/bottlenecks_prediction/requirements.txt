@@ -1,0 +1,15 @@
+# Core runtime
+numpy
+pandas
+scipy
+joblib
+xgboost==3.2.0
+
+# Offline training / validation / analysis utilities included in this repository
+scikit-learn
+matplotlib
+
+# Permanent project tests
+pytest
+
+pyarrow

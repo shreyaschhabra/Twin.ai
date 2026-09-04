@@ -1,0 +1,30 @@
+name: digital-twin-ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  python-system-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: Install complete Python environment
+        run: python -m pip install -r requirements.txt
+      - name: Run full bottleneck + defect + system regression suite
+        run: python -m pytest -q
+
+  simulator-build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure simulator
+        run: cmake -S simulation -B simulation/build -DBUILD_TESTING=ON
+      - name: Build simulator
+        run: cmake --build simulation/build --config Release --parallel 2
+      - name: Run simulator tests
+        run: ctest --test-dir simulation/build --output-on-failure -C Release

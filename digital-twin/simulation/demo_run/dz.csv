@@ -1,0 +1,2 @@
+dark_zone_id,name,start_station_id,end_station_id,sensor_telemetry,manual_checks,checkpoints
+DZ_BODY_01,Legacy Body Alignment Section,S12,S15,true,true,true

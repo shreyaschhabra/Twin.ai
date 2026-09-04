@@ -1,0 +1,4 @@
+{"randomSeed":123,"durationMs":28800000,"degradation":[
+ {"stationId":5,"scenario":"GRADUAL","initialLevel":0.20},
+ {"stationId":10,"scenario":"INTERMITTENT","initialLevel":0.12}
+]}

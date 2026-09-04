@@ -1,0 +1,9 @@
+{
+  "run_id": "packaged_current_run_sample",
+  "random_seed": 0,
+  "simulation_duration_ms": 1953094,
+  "station_count": 32,
+  "units_created": 643,
+  "schema_version": "2.1",
+  "sample_migrated_from_legacy": true
+}

@@ -1,0 +1,130 @@
+{
+  "version": "v5",
+  "feature_count": 30,
+  "features": [
+    "torque_delta_recent_vs_history",
+    "manual_fail_count_cum",
+    "prediction_station_index",
+    "torque_mean_history",
+    "line_fraction",
+    "last_manual_fail",
+    "manual_check_count_cum",
+    "torque_mean_recent",
+    "queue_history_mean",
+    "current_mean_recent",
+    "current_missing_recent",
+    "vibration_delta_recent_vs_history",
+    "current_mean_history",
+    "torque_max_recent",
+    "temperature_mean_history",
+    "torque_max_history",
+    "supplier_batch",
+    "current_max_history",
+    "cycle_history_max",
+    "temperature_max_recent",
+    "vibration_mean_history",
+    "temperature_max_history",
+    "stations_since_last_manual_fail",
+    "vehicle_model",
+    "vibration_max_history",
+    "vibration_max_recent",
+    "temperature_mean_recent",
+    "torque_std_history",
+    "queue_history_std",
+    "cycle_history_std"
+  ],
+  "categorical_features": [
+    "supplier_batch",
+    "vehicle_model"
+  ],
+  "catboost_params": {
+    "depth": 4,
+    "learning_rate": 0.05,
+    "iterations": 500,
+    "l2_leaf_reg": 5,
+    "loss_function": "Logloss",
+    "random_seed": 42,
+    "verbose": false,
+    "allow_writing_files": false,
+    "thread_count": -1
+  },
+  "selected_candidate": "hard_positive_w2p0_natural",
+  "selected_candidate_config": {
+    "kind": "hard_positive",
+    "family": "hard_positive",
+    "components": [
+      "natural",
+      "hard_positive_weight_2.0"
+    ],
+    "target_rate": null,
+    "hard_positive_weight": 2.0,
+    "mining_source": "bagging_5p0pct_x5_nested_group_oof"
+  },
+  "number_of_models": 1,
+  "effective_training_unit_positive_rate": 0.025650035137034434,
+  "selected_calibration": "none",
+  "calibration_applies_to_probability_reporting": true,
+  "alert_score_space": "raw_probability",
+  "row_threshold_score_space": "raw_probability",
+  "row_thresholds": {
+    "max_f1": {
+      "threshold": 0.15757151360147878,
+      "precision": 0.5288554801163918,
+      "recall": 0.3319634703196347,
+      "f1": 0.4078922760426407,
+      "f2": 0.35866991185370345
+    },
+    "max_f2": {
+      "threshold": 0.09900141247161029,
+      "precision": 0.39205384994253817,
+      "recall": 0.3634703196347032,
+      "f1": 0.377221388515915,
+      "f2": 0.36884866083840473
+    }
+  },
+  "selected_alert_policy": "raw",
+  "selected_alert_score_column": "score",
+  "selected_alert_threshold": 0.1421320160758933,
+  "false_warning_cap": 0.05,
+  "group_kfold_splits": 5,
+  "bagging_rates": [
+    0.045,
+    0.05,
+    0.055
+  ],
+  "bagging_seeds_5": [
+    42,
+    52,
+    62,
+    72,
+    82
+  ],
+  "bagging_seeds_7": [
+    42,
+    52,
+    62,
+    72,
+    82,
+    92,
+    102
+  ],
+  "hard_example_mining": {
+    "source_candidate": "bagging_5p0pct_x5",
+    "source_policy": "raw",
+    "source_alert_threshold": 0.2154867703185923,
+    "source_unit_recall": 0.8493150684931506,
+    "source_false_warning_rate": 0.04700084144728934,
+    "hard_negative_fraction": 0.1,
+    "hard_negative_score_cutoff": 0.12595448358082256,
+    "hard_negative_units": 832,
+    "hard_positive_units": 33
+  },
+  "combination_decision": {
+    "created": false,
+    "reason": "No hard-example or stage candidate strictly outranked best bagging on train OOF",
+    "best_bagging": "bagging_5p5pct_x5",
+    "helpful_enhancers": []
+  },
+  "random_seed": 42,
+  "old_consumed_test_accessed": false
+}

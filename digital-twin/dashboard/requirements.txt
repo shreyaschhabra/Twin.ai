@@ -1,0 +1,11 @@
+# Dashboard-only dependencies.
+#
+# Deliberately separate from the simulator/model requirements: the dashboard is
+# downstream of them, and installing it must never be a prerequisite for running the
+# simulator, the bottleneck model, the defect model, or the coordinated runtime.
+#
+#   py -m pip install -r dashboard/requirements.txt
+#   py -m streamlit run dashboard/app.py
+#
+# Persistence is SQLite via the Python standard library -- no server, no extra driver.
+streamlit>=1.36

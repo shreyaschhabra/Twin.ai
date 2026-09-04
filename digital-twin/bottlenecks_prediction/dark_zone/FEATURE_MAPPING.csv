@@ -1,0 +1,29 @@
+feature,light_zone_semantics,dark_zone_reconstruction,units,provenance
+capacity_headroom,buffer_capacity-current_occupancy,same formula using reconstructed queue,queue units,derived
+station_id,current station id,single station config or corridor most-likely station,categorical,config/posterior
+base_cycle_time_ms,configured base cycle time,same stations.csv value,ms,config
+station_archetype,configured archetype,same stations.csv value,categorical,config
+configured_cycle_std_ms,configured cycle std,same stations.csv value,ms,config
+station_index,numeric station number minus 1,same numeric rule with safe fallback,index,config
+buffer_capacity,configured station buffer capacity,same stations.csv value,queue units,config
+line_fraction,station_index/(number_of_stations-1),same formula using full stations.csv,ratio,config
+queue_max_10m,max queue observation in causal recent 10m,max reconstructed station queue snapshot in same window,queue units,queue ledger/posterior
+queue_mean_10m,mean queue observation in causal recent 10m,mean reconstructed station queue snapshot in same window,queue units,queue ledger/posterior
+current_occupancy,last causal queue state,current causal queue ledger or corridor posterior expected waiting queue; corridor posterior uses historical load-conditioned station-residence priors when supplied,queue units,queue ledger/posterior
+queue_std_10m,sample std ddof=1 of recent queue observations,same statistic on reconstructed queue snapshots,queue units,queue ledger/posterior
+capacity_utilization,current_occupancy/buffer_capacity,same formula,ratio,derived
+arrival_rate_per_min_prev10m,UNIT_ARRIVED count in previous 10m divided by 10,single uses observed UNIT_ARRIVED; corridor uses posterior expected station crossings in same window,events/min,boundary/posterior
+service_rate_per_min_prev10m,PROCESSING_COMPLETED count in previous 10m divided by 10,single uses observed completions; corridor posterior expected station completions,events/min,boundary/posterior
+service_rate_per_min_10m,PROCESSING_COMPLETED count in recent 10m divided by 10,single uses observed completions; corridor posterior expected station completions,events/min,boundary/posterior
+arrival_rate_per_min_10m,UNIT_ARRIVED count in recent 10m divided by 10,single uses observed UNIT_ARRIVED; corridor posterior expected station crossings,events/min,boundary/posterior
+utilization_headroom,1-capacity_utilization,same formula,ratio,derived
+cycle_max_10m,max completed cycle_time_ms in recent 10m,observed completed cycles when available; otherwise station dwell-prior q99 fallback; processing-cycle prior remains separate from corridor residence calibration,ms,boundary/historical prior
+flow_pressure_10m,recent arrival COUNT minus recent service COUNT,same count-difference semantics using observed/inferred counts,event count,derived
+queue_delta_10m,recent queue mean minus previous queue mean,same formula on reconstructed queue snapshots,queue units,derived
+cycle_mean_10m,mean completed cycle_time_ms in recent 10m,observed completed cycles when available; otherwise station dwell-prior mean; processing-cycle prior remains separate from corridor residence calibration,ms,boundary/historical prior
+queue_slope_10m,least-squares queue slope against timestamp_ms in recent 10m,same regression/time basis on reconstructed queue snapshots,queue units/ms,derived
+net_flow_rate_10m,(recent arrival COUNT-recent service COUNT)/10,same formula using observed/inferred counts,events/min,derived
+cycle_std_10m,sample std ddof=1 of completed cycle_time_ms in recent 10m,observed completed cycles when available; otherwise station dwell-prior std; processing-cycle prior remains separate from corridor residence calibration,ms,boundary/historical prior
+state_confidence,confidence/reliability of current queue state [0..1],single exact queue ledger=1; weak fallback decays; corridor exp(-posterior queue std),ratio,queue uncertainty mapping
+progress_std,uncertainty of current occupancy used by Light-Zone eta propagation,queue-state posterior std (NOT vehicle progress std),queue units,queue uncertainty mapping
+eta_std,delta-method uncertainty of headroom/positive queue_slope using slope_std and progress_std,same delta-method and milliseconds; vehicle ETA uncertainty stays dashboard-only,ms,derived queue uncertainty

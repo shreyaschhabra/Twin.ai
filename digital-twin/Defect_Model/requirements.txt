@@ -1,0 +1,10 @@
+# Defect V5 runtime / training
+catboost==1.2.8
+numpy
+pandas
+scipy
+joblib
+scikit-learn
+
+# Permanent defect/system tests
+pytest

@@ -1,0 +1,42 @@
+{
+  "dashboard_contract": "DASHBOARD_CONTRACTS.md",
+  "dashboard_outputs_merged": false,
+  "date": "2026-08-30",
+  "default_models": {
+    "bottleneck": "base",
+    "defect": "base"
+  },
+  "known_external_build_dependency": "Initial CMake simulator build fetches nlohmann/json unless already available; packaged reviewer demo does not require simulator compilation.",
+  "protected_assets": {
+    "Defect_Model/saved_models/defect_v5_calibrator.joblib": {
+      "sha256": "9c298d589a2158eb513cb52191144518a2acab2cb0c04f1df14fca0f712fa4a1",
+      "size_bytes": 4
+    },
+    "Defect_Model/saved_models/defect_v5_config.json": {
+      "sha256": "fede6a1ff15e96eedb74a7de49655471f6909ce1bb4f76748a24a93c2cad0f18",
+      "size_bytes": 3494
+    },
+    "Defect_Model/saved_models/defect_v5_models.joblib": {
+      "sha256": "6df46ac892587790d9c0fdcbde0e088918da3374271747d56774466f37a4fc67",
+      "size_bytes": 176619
+    },
+    "bottlenecks_prediction/ml/bottleneck_model/bottleneck_model_artifacts/bottleneck_model_bundle.joblib": {
+      "sha256": "b2cbd80a790321e77ad092cb44c6d31d0699d4e2752e913505c3aded68361b49",
+      "size_bytes": 956
+    },
+    "bottlenecks_prediction/ml/bottleneck_model/bottleneck_model_artifacts/bottleneck_xgboost.json": {
+      "sha256": "e4609b50179eb200206b08309a2e029411f551a8c1fb74de6812306ee3646c04",
+      "size_bytes": 421686
+    }
+  },
+  "regression_tests_passed": 69,
+  "review_demo": "simulation/demo_run",
+  "runtime_hardening": {
+    "dark_defect_retrospective_history_recovery": true,
+    "dark_defect_runtime_clock_rewind_prevented": true,
+    "live_failure_policy_default": "isolate",
+    "strict_validation_failure_policy": "fail-fast"
+  },
+  "schema_version": "digital-twin-final-package-v1",
+  "validation_report": "FINAL_RELEASE_GATE.md"
+}

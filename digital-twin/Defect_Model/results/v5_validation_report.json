@@ -1,0 +1,119 @@
+{
+  "version": "v5",
+  "feature_count": 30,
+  "selected_candidate": "hard_positive_w2p0_natural",
+  "selected_calibration": "none",
+  "probability_score_space": "raw_probability",
+  "alert_score_space": "raw_probability",
+  "row_threshold_score_space": "raw_probability",
+  "selected_alert_policy": "raw",
+  "selected_alert_threshold": 0.1421320160758933,
+  "validation_rows": 63000,
+  "validation_runs": 5,
+  "validation_units": 2100,
+  "validation_row_positive_rate": 0.03,
+  "validation_unit_positive_rate": 0.03,
+  "raw_probability_metrics": {
+    "pr_auc": 0.336710626136745,
+    "roc_auc": 0.7810768247734373,
+    "brier": 0.022983940706392172,
+    "log_loss": 0.1036353246346016,
+    "ece15": 0.004357625285263927,
+    "mean_predicted_probability": 0.030806045153046642,
+    "actual_positive_rate": 0.03
+  },
+  "probability_metrics": {
+    "pr_auc": 0.336710626136745,
+    "roc_auc": 0.7810768247734373,
+    "brier": 0.022983940706392172,
+    "log_loss": 0.1036353246346016,
+    "ece15": 0.004357625285263927,
+    "mean_predicted_probability": 0.030806045153046642,
+    "actual_positive_rate": 0.03
+  },
+  "row_metrics_at_frozen_f1_threshold": {
+    "threshold": 0.15757151360147878,
+    "precision": 0.5724572457245725,
+    "recall": 0.33650793650793653,
+    "f1": 0.4238587137620793,
+    "f2": 0.3667397070695422
+  },
+  "row_metrics_at_frozen_f2_threshold": {
+    "threshold": 0.09900141247161029,
+    "precision": 0.44058154235145386,
+    "recall": 0.36878306878306877,
+    "f1": 0.4014976958525346,
+    "f2": 0.3812076132137388
+  },
+  "unit_metrics_at_frozen_alert_policy": {
+    "unit_recall": 0.8571428571428571,
+    "false_warning_rate": 0.044182621502209134,
+    "unit_precision": 0.375,
+    "median_first_alert_station_index": 15.0,
+    "detected_before_final_inspection": 0.8571428571428571,
+    "positive_units": 63,
+    "negative_units": 2037,
+    "alerted_positive_units": 54,
+    "alerted_negative_units": 90
+  },
+  "selection_used_validation": false,
+  "old_consumed_test_accessed": false,
+  "v2_v3_v4_v5_validation_comparison": [
+    {
+      "version": "V2",
+      "validation_pr_auc": 0.24304594684786518,
+      "validation_roc_auc": 0.7311390380257996,
+      "validation_brier": 0.025558342618518144,
+      "validation_precision": 0.521598272138229,
+      "validation_recall": 0.25555555555555554,
+      "validation_f1": 0.3430397727272727,
+      "validation_f2": 0.3065934065934066,
+      "validation_unit_recall": 0.6825396825396826,
+      "validation_false_warning_rate": 0.030927835051546393,
+      "validation_unit_precision": 0.4056603773584906,
+      "median_first_alert_station_index": 20.0
+    },
+    {
+      "version": "V3",
+      "validation_pr_auc": 0.23215066766701364,
+      "validation_roc_auc": 0.7348795908843364,
+      "validation_brier": 0.025208298892874535,
+      "validation_precision": 0.5399159663865546,
+      "validation_recall": 0.27195767195767195,
+      "validation_f1": 0.36171710063335677,
+      "validation_f2": 0.30232039268183847,
+      "validation_unit_recall": 0.6825396825396826,
+      "validation_false_warning_rate": 0.029455081001472753,
+      "validation_unit_precision": 0.4174757281553398,
+      "median_first_alert_station_index": 19.0
+    },
+    {
+      "version": "V4",
+      "validation_pr_auc": 0.24256605921695124,
+      "validation_roc_auc": 0.733378109039212,
+      "validation_brier": 0.025124207705288074,
+      "validation_precision": 0.5399159663865546,
+      "validation_recall": 0.27195767195767195,
+      "validation_f1": 0.36171710063335677,
+      "validation_f2": 0.300920850690638,
+      "validation_unit_recall": 0.6825396825396826,
+      "validation_false_warning_rate": 0.033382425135002454,
+      "validation_unit_precision": 0.38738738738738737,
+      "median_first_alert_station_index": 19.0
+    },
+    {
+      "version": "V5",
+      "validation_pr_auc": 0.336710626136745,
+      "validation_roc_auc": 0.7810768247734373,
+      "validation_brier": 0.022983940706392172,
+      "validation_precision": 0.5724572457245725,
+      "validation_recall": 0.33650793650793653,
+      "validation_f1": 0.4238587137620793,
+      "validation_f2": 0.3812076132137388,
+      "validation_unit_recall": 0.8571428571428571,
+      "validation_false_warning_rate": 0.044182621502209134,
+      "validation_unit_precision": 0.375,
+      "median_first_alert_station_index": 15.0
+    }
+  ]
+}
